@@ -34,7 +34,7 @@ export default function RegisterPage() {
   })
 
   const password = form.watch('password')
-  
+
   // Password strength indicators
   const passwordCriteria = [
     { label: 'At least 8 characters', met: password.length >= 8 },
@@ -45,7 +45,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
-    
+
     try {
       const { error } = await supabase.auth.signUp({
         email: data.email,
@@ -68,13 +68,13 @@ export default function RegisterPage() {
 
       toast({
         title: 'Account created successfully!',
-        description: 'Welcome to Moneytor. Let\'s start managing your finances.',
+        description: "Welcome to Moneytor. Let's start managing your finances.",
       })
 
       // Small delay to ensure session is set, then redirect
       await new Promise(resolve => setTimeout(resolve, 100))
       router.push('/dashboard')
-    } catch (_error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Something went wrong',
@@ -86,16 +86,14 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card className="border-0 shadow-xl glass-effect">
-      <CardHeader className="text-center pb-8">
-        <CardTitle className="text-2xl font-bold text-gray-900">
-          Create Your Account
-        </CardTitle>
+    <Card className="glass-effect border-0 shadow-xl">
+      <CardHeader className="pb-8 text-center">
+        <CardTitle className="text-2xl font-bold text-gray-900">Create Your Account</CardTitle>
         <CardDescription className="text-gray-600">
           Join thousands of users taking control of their finances
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
@@ -139,42 +137,40 @@ export default function RegisterPage() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Create a strong password"
-                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                className="h-12 border-gray-200 pr-12 focus:border-blue-500 focus:ring-blue-500"
                 {...form.register('password')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
-            
+
             {/* Password strength indicators */}
             {password && (
               <div className="mt-3 space-y-2">
                 {passwordCriteria.map((criterion, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                      criterion.met ? 'bg-green-500' : 'bg-gray-200'
-                    }`}>
-                      {criterion.met && <Check className="w-3 h-3 text-white" />}
+                    <div
+                      className={`flex h-4 w-4 items-center justify-center rounded-full ${
+                        criterion.met ? 'bg-green-500' : 'bg-gray-200'
+                      }`}
+                    >
+                      {criterion.met && <Check className="h-3 w-3 text-white" />}
                     </div>
-                    <span className={`text-xs ${
-                      criterion.met ? 'text-green-600' : 'text-gray-500'
-                    }`}>
+                    <span
+                      className={`text-xs ${criterion.met ? 'text-green-600' : 'text-gray-500'}`}
+                    >
                       {criterion.label}
                     </span>
                   </div>
                 ))}
               </div>
             )}
-            
+
             {form.formState.errors.password && (
               <p className="text-sm text-red-600">{form.formState.errors.password.message}</p>
             )}
@@ -189,23 +185,21 @@ export default function RegisterPage() {
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm your password"
-                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                className="h-12 border-gray-200 pr-12 focus:border-blue-500 focus:ring-blue-500"
                 {...form.register('confirmPassword')}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
               >
-                {showConfirmPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
             {form.formState.errors.confirmPassword && (
-              <p className="text-sm text-red-600">{form.formState.errors.confirmPassword.message}</p>
+              <p className="text-sm text-red-600">
+                {form.formState.errors.confirmPassword.message}
+              </p>
             )}
           </div>
 
@@ -213,11 +207,11 @@ export default function RegisterPage() {
             <input type="checkbox" className="mt-1 rounded border-gray-300" required />
             <p className="text-sm text-gray-600">
               I agree to the{' '}
-              <Link href="/terms" className="text-blue-600 hover:text-blue-800 transition-colors">
+              <Link href="/terms" className="text-blue-600 transition-colors hover:text-blue-800">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-blue-600 hover:text-blue-800 transition-colors">
+              <Link href="/privacy" className="text-blue-600 transition-colors hover:text-blue-800">
                 Privacy Policy
               </Link>
             </p>
@@ -226,7 +220,7 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="h-12 w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
           >
             {isLoading ? (
               <>
@@ -242,9 +236,9 @@ export default function RegisterPage() {
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             Already have an account?{' '}
-            <Link 
-              href="/login" 
-              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            <Link
+              href="/login"
+              className="font-medium text-blue-600 transition-colors hover:text-blue-800"
             >
               Sign in here
             </Link>

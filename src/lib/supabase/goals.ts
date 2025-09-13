@@ -1,12 +1,13 @@
 import { supabase } from '@/lib/supabase/client'
-import { 
-  differenceInDays,
-  isAfter,
-  isBefore,
-  startOfDay,
-  endOfDay
-} from 'date-fns'
-import type { Goal, GoalInput, GoalFilters, GoalWithProgress, GoalStatus, GoalContribution } from '@/lib/validations/goal'
+import { differenceInDays, isAfter } from 'date-fns'
+import type {
+  Goal,
+  GoalInput,
+  GoalFilters,
+  GoalWithProgress,
+  GoalStatus,
+  GoalContribution,
+} from '@/lib/validations/goal'
 
 export async function getGoals(
   userId: string,
@@ -15,7 +16,8 @@ export async function getGoals(
   try {
     let query = supabase
       .from('saving_goals')
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -24,7 +26,8 @@ export async function getGoals(
           color,
           icon
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
@@ -64,7 +67,7 @@ export async function getGoals(
     const transformedData = filteredData.map(goal => ({
       ...goal,
       // Ensure status field exists (fallback for old records)
-      status: goal.status || 'active'
+      status: goal.status || 'active',
     }))
 
     return { data: transformedData, error: null }
@@ -80,7 +83,7 @@ export async function getGoalsWithProgress(
 ): Promise<{ data: GoalWithProgress[]; error: string | null }> {
   try {
     const { data: goals, error: goalError } = await getGoals(userId, filters)
-    
+
     if (goalError) {
       return { data: [], error: goalError }
     }
@@ -92,7 +95,7 @@ export async function getGoalsWithProgress(
       const progressPercentage = targetAmount > 0 ? (currentAmount / targetAmount) * 100 : 0
       const remainingAmount = Math.max(0, targetAmount - currentAmount)
       const isCompleted = currentAmount >= targetAmount || goal.status === 'completed'
-      
+
       // Calculate days remaining and daily targets
       let daysRemaining: number | undefined
       let dailyTarget: number | undefined
@@ -104,23 +107,28 @@ export async function getGoalsWithProgress(
         const now = new Date()
         const targetDate = new Date(goal.target_date)
         daysRemaining = Math.max(0, differenceInDays(targetDate, now))
-        
+
         // Calculate daily target needed to reach goal
         if (daysRemaining > 0 && remainingAmount > 0) {
           dailyTarget = remainingAmount / daysRemaining
           monthlyTarget = dailyTarget * 30
         }
-        
+
         // Calculate if on track (simplified heuristic)
         if (daysRemaining > 0 && targetAmount > 0) {
-          const expectedProgress = ((differenceInDays(targetDate, new Date(goal.created_at)) - daysRemaining) / differenceInDays(targetDate, new Date(goal.created_at))) * 100
-          isOnTrack = progressPercentage >= (expectedProgress * 0.8) // 80% of expected progress
+          const expectedProgress =
+            ((differenceInDays(targetDate, new Date(goal.created_at)) - daysRemaining) /
+              differenceInDays(targetDate, new Date(goal.created_at))) *
+            100
+          isOnTrack = progressPercentage >= expectedProgress * 0.8 // 80% of expected progress
         }
-        
+
         // Project completion date based on current progress
         if (dailyTarget && currentAmount > 0) {
-          const daysToComplete = remainingAmount / (currentAmount / Math.max(1, differenceInDays(now, new Date(goal.created_at))))
-          const projectedDate = new Date(now.getTime() + (daysToComplete * 24 * 60 * 60 * 1000))
+          const daysToComplete =
+            remainingAmount /
+            (currentAmount / Math.max(1, differenceInDays(now, new Date(goal.created_at))))
+          const projectedDate = new Date(now.getTime() + daysToComplete * 24 * 60 * 60 * 1000)
           projectedCompletion = projectedDate.toISOString().split('T')[0]
         }
       }
@@ -152,7 +160,8 @@ export async function getGoal(
   try {
     const { data, error } = await supabase
       .from('saving_goals')
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -161,7 +170,8 @@ export async function getGoal(
           color,
           icon
         )
-      `)
+      `
+      )
       .eq('id', id)
       .eq('user_id', userId)
       .single()
@@ -174,7 +184,7 @@ export async function getGoal(
     // Ensure status field exists
     const transformedData = {
       ...data,
-      status: data.status || 'active'
+      status: data.status || 'active',
     }
 
     return { data: transformedData, error: null }
@@ -204,7 +214,8 @@ export async function createGoal(
     const { data, error } = await supabase
       .from('saving_goals')
       .insert(insertData)
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -213,7 +224,8 @@ export async function createGoal(
           color,
           icon
         )
-      `)
+      `
+      )
       .single()
 
     if (error) {
@@ -243,7 +255,9 @@ export async function updateGoal(
     if (updates.status !== undefined) updateData.status = updates.status
     if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId
     if (updates.targetDate !== undefined) {
-      updateData.target_date = updates.targetDate ? updates.targetDate.toISOString().split('T')[0] : null
+      updateData.target_date = updates.targetDate
+        ? updates.targetDate.toISOString().split('T')[0]
+        : null
     }
 
     const { data, error } = await supabase
@@ -251,7 +265,8 @@ export async function updateGoal(
       .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -260,7 +275,8 @@ export async function updateGoal(
           color,
           icon
         )
-      `)
+      `
+      )
       .single()
 
     if (error) {
@@ -275,10 +291,7 @@ export async function updateGoal(
   }
 }
 
-export async function deleteGoal(
-  id: string,
-  userId: string
-): Promise<{ error: string | null }> {
+export async function deleteGoal(id: string, userId: string): Promise<{ error: string | null }> {
   try {
     const { error } = await supabase
       .from('saving_goals')
@@ -306,7 +319,7 @@ export async function contributeToGoal(
   try {
     // First, get the current goal
     const { data: currentGoal, error: fetchError } = await getGoal(id, userId)
-    
+
     if (fetchError || !currentGoal) {
       return { data: null, error: fetchError || 'Goal not found' }
     }
@@ -332,9 +345,7 @@ export async function contributeToGoal(
   }
 }
 
-export async function getGoalOverview(
-  userId: string
-): Promise<{ 
+export async function getGoalOverview(userId: string): Promise<{
   data: {
     totalGoals: number
     activeGoals: number
@@ -344,11 +355,11 @@ export async function getGoalOverview(
     totalProgress: number
     overdue: number
   } | null
-  error: string | null 
+  error: string | null
 }> {
   try {
     const { data: goalsWithProgress, error } = await getGoalsWithProgress(userId)
-    
+
     if (error) {
       return { data: null, error }
     }
@@ -360,13 +371,13 @@ export async function getGoalOverview(
       completedGoals: goalsWithProgress.filter(g => g.status === 'completed').length,
       totalTargetAmount: goalsWithProgress.reduce((sum, g) => sum + Number(g.target_amount), 0),
       totalCurrentAmount: goalsWithProgress.reduce((sum, g) => sum + Number(g.current_amount), 0),
-      totalProgress: goalsWithProgress.length > 0 
-        ? goalsWithProgress.reduce((sum, g) => sum + g.progress_percentage, 0) / goalsWithProgress.length 
-        : 0,
-      overdue: goalsWithProgress.filter(g => 
-        g.target_date && 
-        isAfter(now, new Date(g.target_date)) && 
-        g.status === 'active'
+      totalProgress:
+        goalsWithProgress.length > 0
+          ? goalsWithProgress.reduce((sum, g) => sum + g.progress_percentage, 0) /
+            goalsWithProgress.length
+          : 0,
+      overdue: goalsWithProgress.filter(
+        g => g.target_date && isAfter(now, new Date(g.target_date)) && g.status === 'active'
       ).length,
     }
 

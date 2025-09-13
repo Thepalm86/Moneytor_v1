@@ -1,16 +1,12 @@
 import { supabase } from '@/lib/supabase/client'
-import { 
-  startOfMonth, 
-  endOfMonth, 
-  startOfWeek, 
-  endOfWeek, 
-  startOfYear, 
-  endOfYear, 
-  differenceInDays,
-  isAfter,
-  isBefore
-} from 'date-fns'
-import type { Budget, BudgetInput, BudgetFilters, BudgetWithStats, BudgetPeriod } from '@/lib/validations/budget'
+import { endOfMonth, endOfWeek, endOfYear, differenceInDays, isAfter, isBefore } from 'date-fns'
+import type {
+  Budget,
+  BudgetInput,
+  BudgetFilters,
+  BudgetWithStats,
+  BudgetPeriod,
+} from '@/lib/validations/budget'
 
 export async function getBudgets(
   userId: string,
@@ -19,7 +15,8 @@ export async function getBudgets(
   try {
     let query = supabase
       .from('budgets')
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -28,7 +25,8 @@ export async function getBudgets(
           color,
           icon
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
@@ -40,7 +38,7 @@ export async function getBudgets(
       if (filters.categoryId) {
         query = query.eq('category_id', filters.categoryId)
       }
-      
+
       // Status filter requires date logic - we'll handle this in the results
     }
 
@@ -57,8 +55,10 @@ export async function getBudgets(
       const now = new Date()
       filteredData = filteredData.filter(budget => {
         const startDate = new Date(budget.start_date)
-        const endDate = budget.end_date ? new Date(budget.end_date) : getPeriodEndDate(startDate, budget.period)
-        
+        const endDate = budget.end_date
+          ? new Date(budget.end_date)
+          : getPeriodEndDate(startDate, budget.period)
+
         switch (filters.status) {
           case 'active':
             return !isBefore(now, startDate) && !isAfter(now, endDate)
@@ -85,7 +85,7 @@ export async function getBudgetsWithStats(
 ): Promise<{ data: BudgetWithStats[]; error: string | null }> {
   try {
     const { data: budgets, error: budgetError } = await getBudgets(userId, filters)
-    
+
     if (budgetError) {
       return { data: [], error: budgetError }
     }
@@ -94,7 +94,7 @@ export async function getBudgetsWithStats(
     const budgetsWithStats = await Promise.all(
       budgets.map(async (budget): Promise<BudgetWithStats> => {
         const periodRange = getBudgetPeriodRange(budget)
-        
+
         // Get transactions for this budget's category and period
         const { data: transactions, error: transactionsError } = await supabase
           .from('transactions')
@@ -117,11 +117,11 @@ export async function getBudgetsWithStats(
         const remainingAmount = budgetAmount - spentAmount
         const spentPercentage = budgetAmount > 0 ? (spentAmount / budgetAmount) * 100 : 0
         const isOverBudget = spentAmount > budgetAmount
-        
+
         // Calculate days remaining in period
         const now = new Date()
         const daysRemaining = Math.max(0, differenceInDays(periodRange.end, now))
-        
+
         // Calculate daily average and projection
         const totalDays = differenceInDays(periodRange.end, periodRange.start) + 1
         const daysPassed = totalDays - daysRemaining
@@ -143,7 +143,7 @@ export async function getBudgetsWithStats(
     )
 
     // Apply over budget filter if specified
-    const finalData = filters?.overBudget 
+    const finalData = filters?.overBudget
       ? budgetsWithStats.filter(b => b.is_over_budget === filters.overBudget)
       : budgetsWithStats
 
@@ -161,7 +161,8 @@ export async function getBudget(
   try {
     const { data, error } = await supabase
       .from('budgets')
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -170,7 +171,8 @@ export async function getBudget(
           color,
           icon
         )
-      `)
+      `
+      )
       .eq('id', id)
       .eq('user_id', userId)
       .single()
@@ -204,7 +206,8 @@ export async function createBudget(
         start_date: budget.startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
       })
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -213,7 +216,8 @@ export async function createBudget(
           color,
           icon
         )
-      `)
+      `
+      )
       .single()
 
     if (error) {
@@ -241,11 +245,13 @@ export async function updateBudget(
     if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId
     if (updates.startDate !== undefined) {
       updateData.start_date = updates.startDate.toISOString().split('T')[0]
-      
+
       // If start date is updated and no explicit end date, recalculate end date
       if (!updates.endDate) {
         const period = updates.period || 'monthly' // Default period
-        updateData.end_date = getPeriodEndDate(updates.startDate, period).toISOString().split('T')[0]
+        updateData.end_date = getPeriodEndDate(updates.startDate, period)
+          .toISOString()
+          .split('T')[0]
       }
     }
     if (updates.endDate !== undefined) {
@@ -257,7 +263,8 @@ export async function updateBudget(
       .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -266,7 +273,8 @@ export async function updateBudget(
           color,
           icon
         )
-      `)
+      `
+      )
       .single()
 
     if (error) {
@@ -281,16 +289,9 @@ export async function updateBudget(
   }
 }
 
-export async function deleteBudget(
-  id: string,
-  userId: string
-): Promise<{ error: string | null }> {
+export async function deleteBudget(id: string, userId: string): Promise<{ error: string | null }> {
   try {
-    const { error } = await supabase
-      .from('budgets')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
+    const { error } = await supabase.from('budgets').delete().eq('id', id).eq('user_id', userId)
 
     if (error) {
       console.error('Error deleting budget:', error)
@@ -320,16 +321,14 @@ function getPeriodEndDate(startDate: Date, period: BudgetPeriod): Date {
 
 function getBudgetPeriodRange(budget: Budget): { start: Date; end: Date } {
   const startDate = new Date(budget.start_date)
-  const endDate = budget.end_date 
-    ? new Date(budget.end_date) 
+  const endDate = budget.end_date
+    ? new Date(budget.end_date)
     : getPeriodEndDate(startDate, budget.period)
-  
+
   return { start: startDate, end: endDate }
 }
 
-export async function getBudgetOverview(
-  userId: string
-): Promise<{ 
+export async function getBudgetOverview(userId: string): Promise<{
   data: {
     totalBudgets: number
     totalBudgetAmount: number
@@ -337,11 +336,13 @@ export async function getBudgetOverview(
     overBudgetCount: number
     activeBudgets: number
   } | null
-  error: string | null 
+  error: string | null
 }> {
   try {
-    const { data: budgetsWithStats, error } = await getBudgetsWithStats(userId, { status: 'active' })
-    
+    const { data: budgetsWithStats, error } = await getBudgetsWithStats(userId, {
+      status: 'active',
+    })
+
     if (error) {
       return { data: null, error }
     }

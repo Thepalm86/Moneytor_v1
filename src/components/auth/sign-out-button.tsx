@@ -14,10 +14,10 @@ export function SignOutButton() {
 
   const handleSignOut = async () => {
     setIsLoading(true)
-    
+
     try {
       const { error } = await supabase.auth.signOut()
-      
+
       if (error) {
         toast({
           variant: 'destructive',
@@ -34,7 +34,7 @@ export function SignOutButton() {
 
       router.push('/login')
       router.refresh()
-    } catch (_error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Something went wrong',
@@ -51,7 +51,7 @@ export function SignOutButton() {
       disabled={isLoading}
       variant="outline"
       size="sm"
-      className="text-gray-600 hover:text-red-600 hover:border-red-300"
+      className="text-gray-600 hover:border-red-300 hover:text-red-600"
     >
       {isLoading ? (
         <>

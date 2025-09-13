@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
-    
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
@@ -56,7 +56,7 @@ export default function LoginPage() {
       // Small delay to ensure session is set, then redirect
       await new Promise(resolve => setTimeout(resolve, 100))
       router.push('/dashboard')
-    } catch (_error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Something went wrong',
@@ -68,16 +68,14 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="border-0 shadow-xl glass-effect">
-      <CardHeader className="text-center pb-8">
-        <CardTitle className="text-2xl font-bold text-gray-900">
-          Welcome Back
-        </CardTitle>
+    <Card className="glass-effect border-0 shadow-xl">
+      <CardHeader className="pb-8 text-center">
+        <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
         <CardDescription className="text-gray-600">
           Sign in to your account to continue managing your finances
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
@@ -105,19 +103,15 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
-                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                className="h-12 border-gray-200 pr-12 focus:border-blue-500 focus:ring-blue-500"
                 {...form.register('password')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
             {form.formState.errors.password && (
@@ -126,13 +120,13 @@ export default function LoginPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="flex items-center space-x-2 cursor-pointer">
+            <label className="flex cursor-pointer items-center space-x-2">
               <input type="checkbox" className="rounded border-gray-300" />
               <span className="text-sm text-gray-600">Remember me</span>
             </label>
-            <Link 
-              href="/forgot-password" 
-              className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            <Link
+              href="/forgot-password"
+              className="text-sm text-blue-600 transition-colors hover:text-blue-800"
             >
               Forgot password?
             </Link>
@@ -141,7 +135,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="h-12 w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
           >
             {isLoading ? (
               <>
@@ -157,9 +151,9 @@ export default function LoginPage() {
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             Don't have an account?{' '}
-            <Link 
-              href="/register" 
-              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            <Link
+              href="/register"
+              className="font-medium text-blue-600 transition-colors hover:text-blue-800"
             >
               Create one now
             </Link>

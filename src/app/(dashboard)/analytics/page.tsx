@@ -2,24 +2,33 @@
 
 import { useState } from 'react'
 import { Calendar, BarChart3, PieChart, TrendingUp } from 'lucide-react'
-import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { format, subDays, subMonths } from 'date-fns'
 
 import { useUser } from '@/hooks/use-user'
-import { SpendingTrendsChart, CategoryBreakdownChart, MonthlyOverviewChart } from '@/components/charts'
+import {
+  SpendingTrendsChart,
+  CategoryBreakdownChart,
+  MonthlyOverviewChart,
+} from '@/components/charts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function AnalyticsPage() {
   const { user, isLoading } = useUser()
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '6m' | '1y'>('30d')
-  
+
   // Calculate date ranges
   const getDateRange = (range: string) => {
     const now = new Date()
-    
+
     switch (range) {
       case '7d':
         return { from: subDays(now, 6), to: now }
@@ -40,15 +49,15 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-600">Please log in to view analytics</p>
       </div>
     )
@@ -57,14 +66,17 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Financial Analytics</h1>
-          <p className="text-gray-600">Comprehensive insights into your spending patterns and trends</p>
+          <p className="text-gray-600">
+            Comprehensive insights into your spending patterns and trends
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm">
-            {format(currentDateRange.from, 'MMM dd')} - {format(currentDateRange.to, 'MMM dd, yyyy')}
+            {format(currentDateRange.from, 'MMM dd')} -{' '}
+            {format(currentDateRange.to, 'MMM dd, yyyy')}
           </Badge>
           <Select value={dateRange} onValueChange={(value: any) => setDateRange(value)}>
             <SelectTrigger className="w-[140px]">
@@ -85,19 +97,19 @@ export default function AnalyticsPage() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
+            <BarChart3 className="h-4 w-4" />
             Overview
           </TabsTrigger>
           <TabsTrigger value="trends" className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
+            <TrendingUp className="h-4 w-4" />
             Trends
           </TabsTrigger>
           <TabsTrigger value="categories" className="flex items-center gap-2">
-            <PieChart className="w-4 h-4" />
+            <PieChart className="h-4 w-4" />
             Categories
           </TabsTrigger>
           <TabsTrigger value="monthly" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
+            <Calendar className="h-4 w-4" />
             Monthly
           </TabsTrigger>
         </TabsList>
@@ -106,32 +118,22 @@ export default function AnalyticsPage() {
           <div className="grid gap-6">
             {/* Trends and Categories side by side */}
             <div className="grid gap-6 lg:grid-cols-2">
-              <SpendingTrendsChart 
-                userId={user.id} 
-                dateRange={currentDateRange}
-              />
-              <CategoryBreakdownChart 
-                userId={user.id} 
+              <SpendingTrendsChart userId={user.id} dateRange={currentDateRange} />
+              <CategoryBreakdownChart
+                userId={user.id}
                 type="expense"
                 dateRange={currentDateRange}
               />
             </div>
-            
+
             {/* Monthly overview full width */}
-            <MonthlyOverviewChart 
-              userId={user.id} 
-              monthsCount={6}
-            />
+            <MonthlyOverviewChart userId={user.id} monthsCount={6} />
           </div>
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-6">
-          <SpendingTrendsChart 
-            userId={user.id} 
-            dateRange={currentDateRange}
-            className="w-full"
-          />
-          
+          <SpendingTrendsChart userId={user.id} dateRange={currentDateRange} className="w-full" />
+
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -139,9 +141,9 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-blue-900 mb-2 text-sm">💡 Analysis Tips</h4>
-                    <ul className="text-xs text-blue-800 space-y-1">
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                    <h4 className="mb-2 text-sm font-semibold text-blue-900">💡 Analysis Tips</h4>
+                    <ul className="space-y-1 text-xs text-blue-800">
                       <li>• Look for unusual spikes in spending</li>
                       <li>• Track if income is keeping up with expenses</li>
                       <li>• Identify patterns in your financial behavior</li>
@@ -159,13 +161,21 @@ export default function AnalyticsPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="text-sm">
-                    <span className="font-medium">Period:</span> {format(currentDateRange.from, 'MMM dd, yyyy')} to {format(currentDateRange.to, 'MMM dd, yyyy')}
+                    <span className="font-medium">Period:</span>{' '}
+                    {format(currentDateRange.from, 'MMM dd, yyyy')} to{' '}
+                    {format(currentDateRange.to, 'MMM dd, yyyy')}
                   </div>
                   <div className="text-sm">
-                    <span className="font-medium">Days:</span> {Math.ceil((currentDateRange.to.getTime() - currentDateRange.from.getTime()) / (1000 * 60 * 60 * 24))} days
+                    <span className="font-medium">Days:</span>{' '}
+                    {Math.ceil(
+                      (currentDateRange.to.getTime() - currentDateRange.from.getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    )}{' '}
+                    days
                   </div>
                   <p className="text-xs text-gray-600">
-                    Adjust the date range using the selector above to analyze different time periods.
+                    Adjust the date range using the selector above to analyze different time
+                    periods.
                   </p>
                 </div>
               </CardContent>
@@ -175,23 +185,23 @@ export default function AnalyticsPage() {
 
         <TabsContent value="categories" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-1">
-            <CategoryBreakdownChart 
-              userId={user.id} 
+            <CategoryBreakdownChart
+              userId={user.id}
               type="all"
               dateRange={currentDateRange}
               className="w-full"
             />
           </div>
-          
+
           <div className="grid gap-6 lg:grid-cols-2">
-            <CategoryBreakdownChart 
-              userId={user.id} 
+            <CategoryBreakdownChart
+              userId={user.id}
               type="expense"
               dateRange={currentDateRange}
               className="w-full"
             />
-            <CategoryBreakdownChart 
-              userId={user.id} 
+            <CategoryBreakdownChart
+              userId={user.id}
               type="income"
               dateRange={currentDateRange}
               className="w-full"
@@ -200,28 +210,22 @@ export default function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="monthly" className="space-y-6">
-          <MonthlyOverviewChart 
-            userId={user.id} 
-            monthsCount={12}
-            className="w-full"
-          />
-          
+          <MonthlyOverviewChart userId={user.id} monthsCount={12} className="w-full" />
+
           <div className="grid gap-6 lg:grid-cols-2">
-            <MonthlyOverviewChart 
-              userId={user.id} 
-              monthsCount={6}
-              className="w-full"
-            />
-            
+            <MonthlyOverviewChart userId={user.id} monthsCount={6} className="w-full" />
+
             <Card>
               <CardHeader>
                 <CardTitle>Monthly Analysis Tips</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                    <h4 className="font-semibold text-green-900 mb-2 text-sm">📊 What to Look For</h4>
-                    <ul className="text-xs text-green-800 space-y-1">
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                    <h4 className="mb-2 text-sm font-semibold text-green-900">
+                      📊 What to Look For
+                    </h4>
+                    <ul className="space-y-1 text-xs text-green-800">
                       <li>• Seasonal spending patterns</li>
                       <li>• Monthly income consistency</li>
                       <li>• Expense growth trends</li>
@@ -229,10 +233,10 @@ export default function AnalyticsPage() {
                       <li>• Average monthly net income</li>
                     </ul>
                   </div>
-                  
-                  <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <h4 className="font-semibold text-orange-900 mb-2 text-sm">🎯 Action Items</h4>
-                    <ul className="text-xs text-orange-800 space-y-1">
+
+                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                    <h4 className="mb-2 text-sm font-semibold text-orange-900">🎯 Action Items</h4>
+                    <ul className="space-y-1 text-xs text-orange-800">
                       <li>• Set monthly budget targets</li>
                       <li>• Plan for seasonal expenses</li>
                       <li>• Identify months to save more</li>

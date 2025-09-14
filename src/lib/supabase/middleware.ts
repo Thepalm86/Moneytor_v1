@@ -36,7 +36,14 @@ export async function updateSession(request: NextRequest) {
   const pathname = url.pathname
 
   // Protected routes - require authentication
-  const protectedRoutes = ['/dashboard', '/transactions', '/budgets', '/goals', '/reports', '/settings']
+  const protectedRoutes = [
+    '/dashboard',
+    '/transactions',
+    '/budgets',
+    '/goals',
+    '/reports',
+    '/settings',
+  ]
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Auth routes - redirect if already authenticated
@@ -57,6 +64,10 @@ export async function updateSession(request: NextRequest) {
   if (pathname === '/') {
     if (user) {
       url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    } else {
+      // Redirect unauthenticated users directly to login
+      url.pathname = '/login'
       return NextResponse.redirect(url)
     }
   }

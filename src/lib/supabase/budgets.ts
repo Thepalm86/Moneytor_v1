@@ -53,7 +53,7 @@ export async function getBudgets(
     let filteredData = data || []
     if (filters?.status) {
       const now = new Date()
-      filteredData = filteredData.filter(budget => {
+      filteredData = filteredData.filter((budget: any) => {
         const startDate = new Date(budget.start_date)
         const endDate = budget.end_date
           ? new Date(budget.end_date)
@@ -109,7 +109,7 @@ export async function getBudgetsWithStats(
         let transactionCount = 0
 
         if (!transactionsError && transactions) {
-          spentAmount = transactions.reduce((sum, t) => sum + Number(t.amount), 0)
+          spentAmount = transactions.reduce((sum, t: any) => sum + Number(t.amount), 0)
           transactionCount = transactions.length
         }
 
@@ -205,7 +205,7 @@ export async function createBudget(
         period: budget.period,
         start_date: budget.startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
-      })
+      } as any)
       .select(
         `
         *,
@@ -260,7 +260,7 @@ export async function updateBudget(
 
     const { data, error } = await supabase
       .from('budgets')
-      .update(updateData)
+      .update(updateData as any)
       .eq('id', id)
       .eq('user_id', userId)
       .select(

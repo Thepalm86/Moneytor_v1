@@ -5,39 +5,36 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useState } from 'react'
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => 
-    new QueryClient({
-      defaultOptions: {
-        queries: {
-          staleTime: 60 * 1000, // 1 minute
-          refetchOnWindowFocus: false,
-          retry: (failureCount, error) => {
-            // Don't retry on 4xx errors
-            if (error && typeof error === 'object' && 'status' in error) {
-              const status = (error as any).status
-              if (status >= 400 && status < 500) {
-                return false
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000, // 1 minute
+            refetchOnWindowFocus: false,
+            retry: (failureCount, error) => {
+              // Don't retry on 4xx errors
+              if (error && typeof error === 'object' && 'status' in error) {
+                const status = (error as any).status
+                if (status >= 400 && status < 500) {
+                  return false
+                }
               }
-            }
-            // Retry up to 3 times for other errors
-            return failureCount < 3
+              // Retry up to 3 times for other errors
+              return failureCount < 3
+            },
+          },
+          mutations: {
+            retry: false,
           },
         },
-        mutations: {
-          retry: false,
-        },
-      },
-    })
+      })
   )
 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools 
-        initialIsOpen={false} 
-        position="bottom-right"
-        buttonPosition="bottom-right"
-      />
+      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
     </QueryClientProvider>
   )
 }

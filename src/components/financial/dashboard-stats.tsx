@@ -3,9 +3,10 @@
 import { useMemo } from 'react'
 import { TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react'
 
-import { formatCurrency } from '@/lib/utils/currency'
 import { useTransactionStats } from '@/hooks/use-transactions'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { FinancialCard } from '@/components/ui/financial-card'
+import { AnimatedCounter } from '@/components/ui/animated-counter'
+import { formatCurrency } from '@/lib/utils/currency'
 
 interface DashboardStatsProps {
   userId: string
@@ -16,11 +17,7 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ userId, dateRange }: DashboardStatsProps) {
-  const { data: statsData, isLoading } = useTransactionStats(
-    userId,
-    dateRange?.from,
-    dateRange?.to
-  )
+  const { data: statsData, isLoading } = useTransactionStats(userId, dateRange?.from, dateRange?.to)
 
   const stats = statsData?.data
 
@@ -30,39 +27,47 @@ export function DashboardStats({ userId, dateRange }: DashboardStatsProps) {
     return [
       {
         title: 'Total Income',
-        value: formatCurrency(stats.totalIncome),
-        icon: TrendingUp,
+        value: <AnimatedCounter value={stats.totalIncome} formatter={formatCurrency} />,
+        icon: <TrendingUp className="h-6 w-6" />,
         change: '+12.5%',
+        changeType: 'positive' as const,
         trend: 'up' as const,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
+        variant: 'income' as const,
+        subtitle: 'This month',
+        formatAsCurrency: false,
       },
       {
         title: 'Total Expenses',
-        value: formatCurrency(stats.totalExpenses),
-        icon: TrendingDown,
+        value: <AnimatedCounter value={stats.totalExpenses} formatter={formatCurrency} />,
+        icon: <TrendingDown className="h-6 w-6" />,
         change: '+8.2%',
+        changeType: 'negative' as const,
         trend: 'up' as const,
-        color: 'text-red-600',
-        bgColor: 'bg-red-50',
+        variant: 'expense' as const,
+        subtitle: 'This month',
+        formatAsCurrency: false,
       },
       {
         title: 'Net Amount',
-        value: formatCurrency(stats.netAmount),
-        icon: DollarSign,
-        change: stats.netAmount > 0 ? '+' : '',
+        value: <AnimatedCounter value={stats.netAmount} formatter={formatCurrency} />,
+        icon: <DollarSign className="h-6 w-6" />,
+        change: stats.netAmount > 0 ? '+5.3%' : '-2.1%',
+        changeType: stats.netAmount > 0 ? ('positive' as const) : ('negative' as const),
         trend: stats.netAmount > 0 ? ('up' as const) : ('down' as const),
-        color: stats.netAmount > 0 ? 'text-green-600' : 'text-red-600',
-        bgColor: stats.netAmount > 0 ? 'bg-green-50' : 'bg-red-50',
+        variant: stats.netAmount > 0 ? ('income' as const) : ('expense' as const),
+        subtitle: 'vs last month',
+        formatAsCurrency: false,
       },
       {
         title: 'Transactions',
-        value: stats.transactionCount.toString(),
-        icon: CreditCard,
-        change: '',
-        trend: 'neutral' as const,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50',
+        value: <AnimatedCounter value={stats.transactionCount} />,
+        icon: <CreditCard className="h-6 w-6" />,
+        change: '+15 this month',
+        changeType: 'neutral' as const,
+        trend: 'up' as const,
+        variant: 'primary' as const,
+        subtitle: 'Total count',
+        formatAsCurrency: false,
       },
     ]
   }, [stats])
@@ -70,19 +75,37 @@ export function DashboardStats({ userId, dateRange }: DashboardStatsProps) {
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-              </CardTitle>
-              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded animate-pulse w-24 mb-1"></div>
-              <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
-            </CardContent>
-          </Card>
+        {[
+          {
+            title: 'Total Income',
+            variant: 'income' as const,
+            icon: <TrendingUp className="h-6 w-6" />,
+          },
+          {
+            title: 'Total Expenses',
+            variant: 'expense' as const,
+            icon: <TrendingDown className="h-6 w-6" />,
+          },
+          {
+            title: 'Net Amount',
+            variant: 'primary' as const,
+            icon: <DollarSign className="h-6 w-6" />,
+          },
+          {
+            title: 'Transactions',
+            variant: 'neutral' as const,
+            icon: <CreditCard className="h-6 w-6" />,
+          },
+        ].map((item, i) => (
+          <FinancialCard
+            key={i}
+            title={item.title}
+            value="Loading..."
+            icon={item.icon}
+            variant={item.variant}
+            formatAsCurrency={false}
+            className="animate-pulse opacity-75"
+          />
         ))}
       </div>
     )
@@ -92,21 +115,41 @@ export function DashboardStats({ userId, dateRange }: DashboardStatsProps) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { title: 'Total Income', icon: TrendingUp, color: 'text-green-600' },
-          { title: 'Total Expenses', icon: TrendingDown, color: 'text-red-600' },
-          { title: 'Net Amount', icon: DollarSign, color: 'text-blue-600' },
-          { title: 'Transactions', icon: CreditCard, color: 'text-blue-600' },
+          {
+            title: 'Total Income',
+            variant: 'income' as const,
+            icon: <TrendingUp className="h-6 w-6" />,
+            formatAsCurrency: true,
+          },
+          {
+            title: 'Total Expenses',
+            variant: 'expense' as const,
+            icon: <TrendingDown className="h-6 w-6" />,
+            formatAsCurrency: true,
+          },
+          {
+            title: 'Net Amount',
+            variant: 'primary' as const,
+            icon: <DollarSign className="h-6 w-6" />,
+            formatAsCurrency: true,
+          },
+          {
+            title: 'Transactions',
+            variant: 'neutral' as const,
+            icon: <CreditCard className="h-6 w-6" />,
+            formatAsCurrency: false,
+          },
         ].map((item, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-              <item.icon className={`h-4 w-4 ${item.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$0.00</div>
-              <p className="text-xs text-muted-foreground">No data available</p>
-            </CardContent>
-          </Card>
+          <FinancialCard
+            key={i}
+            title={item.title}
+            value={0}
+            icon={item.icon}
+            variant={item.variant}
+            subtitle="No data available"
+            formatAsCurrency={item.formatAsCurrency}
+            className="opacity-60"
+          />
         ))}
       </div>
     )
@@ -115,26 +158,20 @@ export function DashboardStats({ userId, dateRange }: DashboardStatsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {statsCards.map((stat, index) => (
-        <Card key={index}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <div className={`p-2 rounded-full ${stat.bgColor}`}>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            {stat.change && (
-              <p className={`text-xs ${
-                stat.trend === 'up' ? 'text-green-600' : 
-                stat.trend === 'down' ? 'text-red-600' : 
-                'text-muted-foreground'
-              }`}>
-                {stat.change} from last month
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <FinancialCard
+          key={index}
+          title={stat.title}
+          value={stat.value}
+          icon={stat.icon}
+          variant={stat.variant}
+          change={stat.change}
+          changeType={stat.changeType}
+          trend={stat.trend}
+          subtitle={stat.subtitle}
+          formatAsCurrency={stat.formatAsCurrency}
+          className="animate-fade-in"
+          style={{ animationDelay: `${index * 100}ms` }}
+        />
       ))}
     </div>
   )

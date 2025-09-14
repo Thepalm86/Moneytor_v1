@@ -13,7 +13,13 @@ import { getIcon, AVAILABLE_ICONS } from '@/lib/utils/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Form,
@@ -47,12 +53,7 @@ interface CategoryFormProps {
   onCancel?: () => void
 }
 
-export function CategoryForm({ 
-  userId, 
-  initialData, 
-  onSuccess, 
-  onCancel 
-}: CategoryFormProps) {
+export function CategoryForm({ userId, initialData, onSuccess, onCancel }: CategoryFormProps) {
   const [categoryType, setCategoryType] = useState<'income' | 'expense'>(
     initialData?.type || 'expense'
   )
@@ -97,54 +98,43 @@ export function CategoryForm({
     }
   }
 
-  const handleTypeChange = (type: 'income' | 'expense') => {
-    setCategoryType(type)
-    form.setValue('type', type)
+  const handleTypeChange = (type: string) => {
+    const validType = type as 'income' | 'expense'
+    setCategoryType(validType)
+    form.setValue('type', validType)
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>
-          {isEditing ? 'Edit Category' : 'Create New Category'}
-        </CardTitle>
+        <CardTitle>{isEditing ? 'Edit Category' : 'Create New Category'}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Category Type Tabs */}
-            <Tabs
-              value={categoryType}
-              onValueChange={handleTypeChange}
-              className="w-full"
-            >
+            <Tabs value={categoryType} onValueChange={handleTypeChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger 
-                  value="expense" 
+                <TabsTrigger
+                  value="expense"
                   className="text-red-600 data-[state=active]:text-red-600"
                 >
                   Expense Category
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="income" 
+                <TabsTrigger
+                  value="income"
                   className="text-green-600 data-[state=active]:text-green-600"
                 >
                   Income Category
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="expense" className="space-y-4 mt-6">
-                <CategoryFormFields 
-                  form={form}
-                  categoryType="expense"
-                />
+              <TabsContent value="expense" className="mt-6 space-y-4">
+                <CategoryFormFields form={form} categoryType="expense" />
               </TabsContent>
 
-              <TabsContent value="income" className="space-y-4 mt-6">
-                <CategoryFormFields 
-                  form={form}
-                  categoryType="income"
-                />
+              <TabsContent value="income" className="mt-6 space-y-4">
+                <CategoryFormFields form={form} categoryType="income" />
               </TabsContent>
             </Tabs>
 
@@ -154,23 +144,18 @@ export function CategoryForm({
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  "flex-1",
-                  categoryType === 'income' 
-                    ? "bg-green-600 hover:bg-green-700" 
-                    : "bg-red-600 hover:bg-red-700"
+                  'flex-1',
+                  categoryType === 'income'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
                 )}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditing ? 'Update Category' : 'Create Category'}
               </Button>
-              
+
               {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                >
+                <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
                   Cancel
                 </Button>
               )}
@@ -195,12 +180,14 @@ function CategoryFormFields({ form, categoryType }: CategoryFormFieldsProps) {
   // Filter icons appropriate for category type
   const getRelevantIcons = (type: 'income' | 'expense') => {
     if (type === 'income') {
-      return AVAILABLE_ICONS.filter(icon => 
-        ['DollarSign', 'TrendingUp', 'Briefcase', 'CreditCard', 'PiggyBank', 'Coins'].includes(icon.name)
+      return AVAILABLE_ICONS.filter(icon =>
+        ['DollarSign', 'TrendingUp', 'Briefcase', 'CreditCard', 'PiggyBank', 'Coins'].includes(
+          icon.name
+        )
       )
     } else {
-      return AVAILABLE_ICONS.filter(icon => 
-        !['DollarSign', 'TrendingUp', 'Briefcase'].includes(icon.name)
+      return AVAILABLE_ICONS.filter(
+        icon => !['DollarSign', 'TrendingUp', 'Briefcase'].includes(icon.name)
       )
     }
   }
@@ -220,9 +207,9 @@ function CategoryFormFields({ form, categoryType }: CategoryFormFieldsProps) {
               <Input
                 {...field}
                 placeholder={
-                  categoryType === 'income' 
-                    ? "e.g., Salary, Freelance, Investment Returns" 
-                    : "e.g., Groceries, Transportation, Entertainment"
+                  categoryType === 'income'
+                    ? 'e.g., Salary, Freelance, Investment Returns'
+                    : 'e.g., Groceries, Transportation, Entertainment'
                 }
               />
             </FormControl>
@@ -232,20 +219,16 @@ function CategoryFormFields({ form, categoryType }: CategoryFormFieldsProps) {
       />
 
       {/* Preview */}
-      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border">
+      <div className="flex items-center gap-4 rounded-lg border bg-gray-50 p-4">
         <div
-          className="w-12 h-12 rounded-full flex items-center justify-center shadow-sm"
+          className="flex h-12 w-12 items-center justify-center rounded-full shadow-sm"
           style={{ backgroundColor: watchedColor }}
         >
-          <IconComponent className="w-6 h-6 text-white" />
+          <IconComponent className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h4 className="font-medium text-gray-900">
-            {form.watch('name') || 'Category Name'}
-          </h4>
-          <p className="text-sm text-gray-500 capitalize">
-            {categoryType} Category
-          </p>
+          <h4 className="font-medium text-gray-900">{form.watch('name') || 'Category Name'}</h4>
+          <p className="text-sm capitalize text-gray-500">{categoryType} Category</p>
         </div>
       </div>
 
@@ -256,20 +239,20 @@ function CategoryFormFields({ form, categoryType }: CategoryFormFieldsProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">
-              <Palette className="w-4 h-4" />
+              <Palette className="h-4 w-4" />
               Color
             </FormLabel>
             <FormControl>
               <div className="grid grid-cols-6 gap-2">
-                {CATEGORY_COLORS.map((color) => (
+                {CATEGORY_COLORS.map(color => (
                   <button
                     key={color}
                     type="button"
                     className={cn(
-                      "w-8 h-8 rounded-full border-2 transition-all",
-                      field.value === color 
-                        ? "border-gray-400 ring-2 ring-offset-1 ring-gray-300" 
-                        : "border-gray-200 hover:border-gray-300"
+                      'h-8 w-8 rounded-full border-2 transition-all',
+                      field.value === color
+                        ? 'border-gray-400 ring-2 ring-gray-300 ring-offset-1'
+                        : 'border-gray-200 hover:border-gray-300'
                     )}
                     style={{ backgroundColor: color }}
                     onClick={() => field.onChange(color)}
@@ -296,12 +279,12 @@ function CategoryFormFields({ form, categoryType }: CategoryFormFieldsProps) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent className="max-h-60">
-                {relevantIcons.map((iconInfo) => {
+                {relevantIcons.map(iconInfo => {
                   const IconComponent = iconInfo.component
                   return (
                     <SelectItem key={iconInfo.name} value={iconInfo.name}>
                       <div className="flex items-center gap-2">
-                        <IconComponent className="w-4 h-4" />
+                        <IconComponent className="h-4 w-4" />
                         {iconInfo.label}
                       </div>
                     </SelectItem>

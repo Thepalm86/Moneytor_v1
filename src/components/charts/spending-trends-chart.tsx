@@ -1,22 +1,22 @@
 'use client'
 
 import { useMemo } from 'react'
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
-  ReferenceLine
+  ReferenceLine,
 } from 'recharts'
-import { format, subDays, eachDayOfInterval, startOfDay, isEqual } from 'date-fns'
+import { format, subDays, eachDayOfInterval, startOfDay } from 'date-fns'
 
 import { formatCurrency } from '@/lib/utils/currency'
 import { useTransactions } from '@/hooks/use-transactions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Transaction } from '@/lib/validations/transaction'
+import { cn } from '@/lib/utils'
 
 interface SpendingTrendsChartProps {
   userId: string
@@ -27,26 +27,22 @@ interface SpendingTrendsChartProps {
   className?: string
 }
 
-export function SpendingTrendsChart({ 
-  userId, 
-  dateRange, 
-  className 
-}: SpendingTrendsChartProps) {
+export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTrendsChartProps) {
   // Default to last 30 days if no date range provided
-  const defaultDateRange = useMemo(() => ({
-    from: subDays(new Date(), 29),
-    to: new Date()
-  }), [])
+  const defaultDateRange = useMemo(
+    () => ({
+      from: subDays(new Date(), 29),
+      to: new Date(),
+    }),
+    []
+  )
 
   const finalDateRange = dateRange || defaultDateRange
 
-  const { data: transactionsData, isLoading } = useTransactions(
-    userId,
-    {
-      dateFrom: finalDateRange.from,
-      dateTo: finalDateRange.to,
-    }
-  )
+  const { data: transactionsData, isLoading } = useTransactions(userId, {
+    dateFrom: finalDateRange.from,
+    dateTo: finalDateRange.to,
+  })
 
   const chartData = useMemo(() => {
     if (!transactionsData?.data) return []
@@ -56,32 +52,35 @@ export function SpendingTrendsChart({
     // Generate all days in the range
     const days = eachDayOfInterval({
       start: startOfDay(finalDateRange.from),
-      end: startOfDay(finalDateRange.to)
+      end: startOfDay(finalDateRange.to),
     })
 
     // Group transactions by date
-    const transactionsByDate = transactions.reduce((acc, transaction) => {
-      const transactionDate = startOfDay(new Date(transaction.date))
-      const dateKey = transactionDate.toISOString()
-      
-      if (!acc[dateKey]) {
-        acc[dateKey] = { income: 0, expenses: 0 }
-      }
-      
-      if (transaction.type === 'income') {
-        acc[dateKey].income += Number(transaction.amount)
-      } else {
-        acc[dateKey].expenses += Number(transaction.amount)
-      }
-      
-      return acc
-    }, {} as Record<string, { income: number; expenses: number }>)
+    const transactionsByDate = transactions.reduce(
+      (acc, transaction) => {
+        const transactionDate = startOfDay(new Date(transaction.date))
+        const dateKey = transactionDate.toISOString()
+
+        if (!acc[dateKey]) {
+          acc[dateKey] = { income: 0, expenses: 0 }
+        }
+
+        if (transaction.type === 'income') {
+          acc[dateKey].income += Number(transaction.amount)
+        } else {
+          acc[dateKey].expenses += Number(transaction.amount)
+        }
+
+        return acc
+      },
+      {} as Record<string, { income: number; expenses: number }>
+    )
 
     // Create chart data for each day
     return days.map(day => {
       const dayKey = day.toISOString()
       const dayData = transactionsByDate[dayKey] || { income: 0, expenses: 0 }
-      
+
       return {
         date: day,
         dateLabel: format(day, 'MMM dd'),
@@ -100,11 +99,11 @@ export function SpendingTrendsChart({
   const chartDataWithCumulative = useMemo(() => {
     let cumulativeIncome = 0
     let cumulativeExpenses = 0
-    
+
     return chartData.map(item => {
       cumulativeIncome += item.income
       cumulativeExpenses += item.expenses
-      
+
       return {
         ...item,
         cumulativeIncome,
@@ -114,34 +113,51 @@ export function SpendingTrendsChart({
     })
   }, [chartData])
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
-      
+
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <h4 className="font-medium text-gray-900 mb-2">
+        <div className="glass-card border-premium max-w-xs animate-fade-in p-4">
+          <h4 className="text-display-sm mb-3 font-semibold text-foreground">
             {format(data.date, 'EEEE, MMM dd, yyyy')}
           </h4>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between items-center gap-4">
-              <span className="text-green-600">Income:</span>
-              <span className="font-medium">{formatCurrency(data.income)}</span>
+          <div className="text-body-sm space-y-2">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-gradient-to-r from-success-400 to-success-600"></div>
+                <span className="font-medium text-success-700 dark:text-success-300">Income:</span>
+              </div>
+              <span className="text-currency-sm font-semibold">{formatCurrency(data.income)}</span>
             </div>
-            <div className="flex justify-between items-center gap-4">
-              <span className="text-red-600">Expenses:</span>
-              <span className="font-medium">{formatCurrency(data.expenses)}</span>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-gradient-to-r from-error-400 to-error-600"></div>
+                <span className="font-medium text-error-700 dark:text-error-300">Expenses:</span>
+              </div>
+              <span className="text-currency-sm font-semibold">
+                {formatCurrency(data.expenses)}
+              </span>
             </div>
-            <div className="flex justify-between items-center gap-4 pt-1 border-t">
-              <span className="text-blue-600">Net:</span>
-              <span className={`font-medium ${data.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="flex items-center justify-between gap-4 border-t border-border/50 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="from-primary-400 to-primary-600 h-3 w-3 rounded-full bg-gradient-to-r"></div>
+                <span className="text-primary-700 dark:text-primary-300 font-medium">Net:</span>
+              </div>
+              <span
+                className={`text-currency-sm font-bold ${data.net >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}
+              >
                 {formatCurrency(data.net)}
               </span>
             </div>
-            <div className="pt-2 border-t text-xs text-gray-500">
-              <div className="flex justify-between items-center gap-4">
-                <span>Cumulative Net:</span>
-                <span className={`font-medium ${data.cumulativeNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="border-t border-border/30 pt-2">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-caption font-medium text-muted-foreground">
+                  Cumulative Net:
+                </span>
+                <span
+                  className={`text-currency-sm font-bold ${data.cumulativeNet >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}
+                >
                   {formatCurrency(data.cumulativeNet)}
                 </span>
               </div>
@@ -150,21 +166,26 @@ export function SpendingTrendsChart({
         </div>
       )
     }
-    
+
     return null
   }
 
   if (isLoading) {
     return (
-      <Card className={className}>
+      <Card className={cn('glass-card border-premium', className)}>
         <CardHeader>
-          <CardTitle>Spending Trends</CardTitle>
+          <CardTitle className="text-display-md">Spending Trends</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[350px] flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="text-sm text-gray-600 mt-2">Loading chart data...</p>
+          <div className="flex h-[350px] items-center justify-center">
+            <div className="space-y-4 text-center">
+              <div className="relative">
+                <div className="border-primary-200 border-t-primary-600 mx-auto h-12 w-12 animate-spin rounded-full border-4"></div>
+                <div className="from-primary-400 to-primary-600 absolute inset-0 animate-pulse rounded-full bg-gradient-to-r opacity-20"></div>
+              </div>
+              <p className="text-body-sm font-medium text-muted-foreground">
+                Loading chart data...
+              </p>
             </div>
           </div>
         </CardContent>
@@ -174,17 +195,24 @@ export function SpendingTrendsChart({
 
   if (chartDataWithCumulative.length === 0) {
     return (
-      <Card className={className}>
+      <Card className={cn('glass-card border-premium', className)}>
         <CardHeader>
-          <CardTitle>Spending Trends</CardTitle>
+          <CardTitle className="text-display-md">Spending Trends</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[350px] flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-600 mb-2">No transaction data available</p>
-              <p className="text-sm text-gray-500">
-                Add some transactions to see your spending trends
-              </p>
+          <div className="flex h-[350px] items-center justify-center">
+            <div className="space-y-3 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-muted to-muted/50">
+                <div className="from-primary-400 to-primary-600 h-8 w-8 rounded-full bg-gradient-to-br opacity-60"></div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-body-md font-medium text-foreground">
+                  No transaction data available
+                </p>
+                <p className="text-body-sm text-muted-foreground">
+                  Add some transactions to see your spending trends
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -193,11 +221,12 @@ export function SpendingTrendsChart({
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Spending Trends</CardTitle>
-        <p className="text-sm text-gray-600">
-          {format(finalDateRange.from, 'MMM dd, yyyy')} - {format(finalDateRange.to, 'MMM dd, yyyy')}
+    <Card className={cn('glass-card border-premium interactive-card', className)}>
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-display-md">Spending Trends</CardTitle>
+        <p className="text-body-sm text-muted-foreground">
+          {format(finalDateRange.from, 'MMM dd, yyyy')} -{' '}
+          {format(finalDateRange.to, 'MMM dd, yyyy')}
         </p>
       </CardHeader>
       <CardContent>
@@ -205,53 +234,92 @@ export function SpendingTrendsChart({
           <LineChart
             data={chartDataWithCumulative}
             margin={{
-              top: 5,
+              top: 20,
               right: 30,
               left: 20,
-              bottom: 5,
+              bottom: 20,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-            <XAxis 
+            <defs>
+              <linearGradient id="incomeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="hsl(var(--success-600))" />
+                <stop offset="100%" stopColor="hsl(var(--success-400))" />
+              </linearGradient>
+              <linearGradient id="expenseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="hsl(var(--error-600))" />
+                <stop offset="100%" stopColor="hsl(var(--error-400))" />
+              </linearGradient>
+              <linearGradient id="netGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="hsl(var(--primary-600))" />
+                <stop offset="50%" stopColor="hsl(var(--primary-500))" />
+                <stop offset="100%" stopColor="hsl(var(--primary-400))" />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+            <XAxis
               dataKey="dateLabel"
-              fontSize={12}
+              fontSize={11}
               tickLine={false}
               axisLine={false}
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              dy={10}
             />
-            <YAxis 
-              fontSize={12}
+            <YAxis
+              fontSize={11}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => formatCurrency(value)}
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tickFormatter={value => formatCurrency(value)}
+              dx={-10}
             />
             <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="2 2" />
-            
+            <ReferenceLine
+              y={0}
+              stroke="hsl(var(--muted-foreground))"
+              strokeDasharray="4 4"
+              opacity={0.5}
+            />
+
             <Line
               type="monotone"
               dataKey="cumulativeIncome"
-              stroke="#10b981"
-              strokeWidth={2}
-              dot={{ fill: '#10b981', strokeWidth: 2, r: 3 }}
-              activeDot={{ r: 5, stroke: '#10b981', strokeWidth: 2 }}
+              stroke="url(#incomeGradient)"
+              strokeWidth={3}
+              dot={{ fill: 'hsl(var(--success-500))', strokeWidth: 2, r: 4 }}
+              activeDot={{
+                r: 6,
+                stroke: 'hsl(var(--success-500))',
+                strokeWidth: 3,
+                fill: 'hsl(var(--success-400))',
+              }}
               name="Cumulative Income"
             />
             <Line
               type="monotone"
               dataKey="cumulativeExpenses"
-              stroke="#ef4444"
-              strokeWidth={2}
-              dot={{ fill: '#ef4444', strokeWidth: 2, r: 3 }}
-              activeDot={{ r: 5, stroke: '#ef4444', strokeWidth: 2 }}
+              stroke="url(#expenseGradient)"
+              strokeWidth={3}
+              dot={{ fill: 'hsl(var(--error-500))', strokeWidth: 2, r: 4 }}
+              activeDot={{
+                r: 6,
+                stroke: 'hsl(var(--error-500))',
+                strokeWidth: 3,
+                fill: 'hsl(var(--error-400))',
+              }}
               name="Cumulative Expenses"
             />
             <Line
               type="monotone"
               dataKey="cumulativeNet"
-              stroke="#3b82f6"
-              strokeWidth={3}
-              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+              stroke="url(#netGradient)"
+              strokeWidth={4}
+              dot={{ fill: 'hsl(var(--primary-500))', strokeWidth: 2, r: 5 }}
+              activeDot={{
+                r: 8,
+                stroke: 'hsl(var(--primary-500))',
+                strokeWidth: 3,
+                fill: 'hsl(var(--primary-400))',
+              }}
               name="Cumulative Net"
             />
           </LineChart>

@@ -15,7 +15,13 @@ import { getIcon } from '@/lib/utils/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -35,11 +41,11 @@ interface TransactionFormProps {
   onCancel?: () => void
 }
 
-export function TransactionForm({ 
-  userId, 
-  initialData, 
-  onSuccess, 
-  onCancel 
+export function TransactionForm({
+  userId,
+  initialData,
+  onSuccess,
+  onCancel,
 }: TransactionFormProps) {
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>(
     initialData?.type || 'expense'
@@ -96,47 +102,48 @@ export function TransactionForm({
     }
   }
 
-  const handleTypeChange = (type: 'income' | 'expense') => {
-    setTransactionType(type)
-    form.setValue('type', type)
+  const handleTypeChange = (type: string) => {
+    const validType = type as 'income' | 'expense'
+    setTransactionType(validType)
+    form.setValue('type', validType)
     form.setValue('categoryId', '') // Reset category when type changes
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>
-          {isEditing ? 'Edit Transaction' : 'Add New Transaction'}
-        </CardTitle>
+        <CardTitle>{isEditing ? 'Edit Transaction' : 'Add New Transaction'}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Transaction Type Tabs */}
-            <Tabs
-              value={transactionType}
-              onValueChange={handleTypeChange}
-              className="w-full"
-            >
+            <Tabs value={transactionType} onValueChange={handleTypeChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="expense" className="text-red-600 data-[state=active]:text-red-600">
+                <TabsTrigger
+                  value="expense"
+                  className="text-red-600 data-[state=active]:text-red-600"
+                >
                   Expense
                 </TabsTrigger>
-                <TabsTrigger value="income" className="text-green-600 data-[state=active]:text-green-600">
+                <TabsTrigger
+                  value="income"
+                  className="text-green-600 data-[state=active]:text-green-600"
+                >
                   Income
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="expense" className="space-y-4 mt-6">
-                <TransactionFormFields 
+              <TabsContent value="expense" className="mt-6 space-y-4">
+                <TransactionFormFields
                   form={form}
                   categories={categories}
                   transactionType="expense"
                 />
               </TabsContent>
 
-              <TabsContent value="income" className="space-y-4 mt-6">
-                <TransactionFormFields 
+              <TabsContent value="income" className="mt-6 space-y-4">
+                <TransactionFormFields
                   form={form}
                   categories={categories}
                   transactionType="income"
@@ -150,23 +157,18 @@ export function TransactionForm({
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  "flex-1",
-                  transactionType === 'income' 
-                    ? "bg-green-600 hover:bg-green-700" 
-                    : "bg-red-600 hover:bg-red-700"
+                  'flex-1',
+                  transactionType === 'income'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
                 )}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditing ? 'Update Transaction' : 'Add Transaction'}
               </Button>
-              
+
               {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                >
+                <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
                   Cancel
                 </Button>
               )}
@@ -196,7 +198,7 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
             <FormLabel>Amount</FormLabel>
             <FormControl>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500">
                   $
                 </span>
                 <Input
@@ -225,9 +227,9 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
               <Input
                 {...field}
                 placeholder={
-                  transactionType === 'income' 
-                    ? "e.g., Salary payment, Freelance work" 
-                    : "e.g., Grocery shopping, Coffee"
+                  transactionType === 'income'
+                    ? 'e.g., Salary payment, Freelance work'
+                    : 'e.g., Grocery shopping, Coffee'
                 }
               />
             </FormControl>
@@ -250,16 +252,16 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {categories.map((category) => {
+                {categories.map(category => {
                   const IconComponent = getIcon(category.icon)
                   return (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-4 h-4 rounded-full flex items-center justify-center"
+                          className="flex h-4 w-4 items-center justify-center rounded-full"
                           style={{ backgroundColor: category.color }}
                         >
-                          <IconComponent className="w-3 h-3 text-white" />
+                          <IconComponent className="h-3 w-3 text-white" />
                         </div>
                         {category.name}
                       </div>
@@ -286,15 +288,11 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !field.value && "text-muted-foreground"
+                      'w-full pl-3 text-left font-normal',
+                      !field.value && 'text-muted-foreground'
                     )}
                   >
-                    {field.value ? (
-                      format(field.value, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
+                    {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                   </Button>
                 </FormControl>
@@ -304,9 +302,7 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
                   mode="single"
                   selected={field.value}
                   onSelect={field.onChange}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
+                  disabled={date => date > new Date() || date < new Date('1900-01-01')}
                   initialFocus
                 />
               </PopoverContent>

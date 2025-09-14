@@ -278,6 +278,19 @@
     animation: bounce-gentle 0.6s ease-out;
   }
 
+  /* Form Animation Classes */
+  .animate-form-focus {
+    animation: form-focus 0.2s ease-out forwards;
+  }
+
+  .animate-form-error {
+    animation: form-error 0.3s ease-out forwards;
+  }
+
+  .animate-skeleton-pulse {
+    animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
   /* Glass Morphism Effects */
   .glass-effect {
     background: hsl(var(--glass-bg));
@@ -387,5 +400,153 @@
 
   .border-premium-soft {
     @apply border border-gray-100 dark:border-gray-800;
+  }
+
+  /* Progress Animations */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  /* Milestone Progress Effects */
+  .milestone-reached {
+    @apply scale-110 border-2 border-current bg-white shadow-lg;
+    animation: milestone-pulse 0.6s ease-out;
+  }
+
+  .milestone-pending {
+    @apply scale-90 border-white/40 bg-white/60;
+  }
+
+  @keyframes milestone-pulse {
+    0% {
+      transform: scale(0.9);
+      opacity: 0.7;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+  }
+
+  /* Circular Progress Glow */
+  @keyframes progress-glow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 4px currentColor);
+    }
+    50% {
+      filter: drop-shadow(0 0 12px currentColor) drop-shadow(0 0 24px currentColor);
+    }
+  }
+
+  .animate-progress-glow {
+    animation: progress-glow 2s ease-in-out infinite;
+  }
+
+  /* Additional Animation Keyframes */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes bounce-gentle {
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-3px);
+    }
+    60% {
+      transform: translateY(-2px);
+    }
+  }
+
+  @keyframes form-focus {
+    from {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.2);
+    }
+    to {
+      box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
+    }
+  }
+
+  @keyframes form-error {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+      transform: translateX(-2px);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+      transform: translateX(2px);
+    }
+  }
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
 }

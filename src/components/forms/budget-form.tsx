@@ -14,7 +14,13 @@ import { getIcon } from '@/lib/utils/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -34,12 +40,7 @@ interface BudgetFormProps {
   onCancel?: () => void
 }
 
-export function BudgetForm({ 
-  userId, 
-  initialData, 
-  onSuccess, 
-  onCancel 
-}: BudgetFormProps) {
+export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetFormProps) {
   const form = useForm<BudgetInput>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
@@ -84,19 +85,21 @@ export function BudgetForm({
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-            <Target className="w-4 h-4 text-white" />
+    <Card className="glass-card mx-auto w-full max-w-2xl animate-fade-in">
+      <CardHeader className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+            <Target className="h-5 w-5 text-white" />
           </div>
-          <CardTitle>
-            {isEditing ? 'Edit Budget' : 'Create New Budget'}
-          </CardTitle>
+          <div>
+            <CardTitle className="text-display-sm text-foreground">
+              {isEditing ? 'Edit Budget' : 'Create New Budget'}
+            </CardTitle>
+            <p className="text-body-sm mt-1 text-muted-foreground">
+              Set spending limits for your expense categories to track your financial goals.
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-gray-600">
-          Set spending limits for your expense categories to track your financial goals.
-        </p>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -115,16 +118,16 @@ export function BudgetForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.map((category) => {
+                      {categories.map(category => {
                         const IconComponent = getIcon(category.icon)
                         return (
                           <SelectItem key={category.id} value={category.id}>
                             <div className="flex items-center gap-2">
                               <div
-                                className="w-4 h-4 rounded-full flex items-center justify-center"
+                                className="flex h-4 w-4 items-center justify-center rounded-full"
                                 style={{ backgroundColor: category.color }}
                               >
-                                <IconComponent className="w-3 h-3 text-white" />
+                                <IconComponent className="h-3 w-3 text-white" />
                               </div>
                               {category.name}
                             </div>
@@ -150,7 +153,7 @@ export function BudgetForm({
                   <FormLabel>Budget Amount</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500">
                         $
                       </span>
                       <Input
@@ -160,7 +163,7 @@ export function BudgetForm({
                         min="0"
                         placeholder="0.00"
                         className="pl-8"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </div>
                   </FormControl>
@@ -191,15 +194,13 @@ export function BudgetForm({
                       <SelectItem value="yearly">Yearly</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    How often should this budget reset?
-                  </FormDescription>
+                  <FormDescription>How often should this budget reset?</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Start Date */}
               <FormField
                 control={form.control}
@@ -213,12 +214,12 @@ export function BudgetForm({
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, 'PPP')
                             ) : (
                               <span>Pick start date</span>
                             )}
@@ -231,9 +232,7 @@ export function BudgetForm({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date("1900-01-01")
-                          }
+                          disabled={date => date < new Date('1900-01-01')}
                           initialFocus
                         />
                       </PopoverContent>
@@ -256,15 +255,11 @@ export function BudgetForm({
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick end date</span>
-                            )}
+                            {field.value ? format(field.value, 'PPP') : <span>Pick end date</span>}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -274,18 +269,15 @@ export function BudgetForm({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => {
+                          disabled={date => {
                             const startDate = form.getValues('startDate')
-                            return date < new Date("1900-01-01") || 
-                                   (startDate && date <= startDate)
+                            return date < new Date('1900-01-01') || (startDate && date <= startDate)
                           }}
                           initialFocus
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription>
-                      Leave empty for ongoing budget
-                    </FormDescription>
+                    <FormDescription>Leave empty for ongoing budget</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -302,14 +294,9 @@ export function BudgetForm({
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditing ? 'Update Budget' : 'Create Budget'}
               </Button>
-              
+
               {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                >
+                <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
                   Cancel
                 </Button>
               )}

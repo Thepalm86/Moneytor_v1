@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { useCategories } from '@/hooks/use-categories'
 import { useUpdateTransaction, useDeleteTransaction } from '@/hooks/use-transactions'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import type { Transaction } from '@/lib/validations/transaction'
 import { 
   CheckSquare,
@@ -40,6 +40,7 @@ export function BulkOperations({
   onSelectionChange,
   onExport
 }: BulkOperationsProps) {
+  const { formatCurrency } = useCurrency()
   const [activeAction, setActiveAction] = useState<BulkAction>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)

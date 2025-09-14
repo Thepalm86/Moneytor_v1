@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Download, FileText, Mail, Calendar, Settings, Loader2, BarChart3 } from 'lucide-react'
 import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { useFinancialKPIs } from '@/hooks/use-financial-kpis'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useCategoryInsights } from '@/hooks/use-category-insights'
@@ -122,6 +122,7 @@ function generatePDFReport(reportData: any, config: ReportConfig): void {
 }
 
 export function ExportReportingSystem({ userId, dateRange, className }: ExportReportingSystemProps) {
+  const { formatCurrency } = useCurrency()
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     type: 'financial-summary',
     format: 'pdf',

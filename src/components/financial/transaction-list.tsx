@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import { Search, ArrowUpDown, Edit, Trash2, Plus } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { formatTransactionDate } from '@/lib/utils/date'
 import { getIcon } from '@/lib/utils/icons'
 import { useTransactions, useDeleteTransaction } from '@/hooks/use-transactions'
@@ -45,6 +45,7 @@ export function TransactionList({
   onAddTransaction, 
   onEditTransaction 
 }: TransactionListProps) {
+  const { formatCurrency } = useCurrency()
   const [filters, setFilters] = useState<TransactionFilters>({
     type: 'all',
     search: '',
@@ -294,6 +295,7 @@ interface TransactionCardProps {
 }
 
 function TransactionCard({ transaction, onEdit, onDelete }: TransactionCardProps) {
+  const { formatCurrency } = useCurrency()
   const category = transaction.category
   const IconComponent = getIcon(category?.icon || null)
 

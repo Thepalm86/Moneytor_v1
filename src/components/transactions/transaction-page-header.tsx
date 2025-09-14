@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTransactionStats } from '@/hooks/use-transactions'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { 
   Plus,
   TrendingUp,
@@ -44,6 +44,7 @@ const DATE_PERIODS = {
 }
 
 export function TransactionPageHeader({ userId, onAddTransaction }: TransactionPageHeaderProps) {
+  const { formatCurrency } = useCurrency()
   const [selectedPeriod, setSelectedPeriod] = useState<DatePeriod>('month')
   
   const dateRange = DATE_PERIODS[selectedPeriod].getRange()

@@ -2,6 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Card, CardContent, CardHeader } from './card'
 import { cn } from '@/lib/utils'
+import { useCurrency } from '@/contexts/currency-context'
 
 const financialCardVariants = cva('group relative overflow-hidden', {
   variants: {
@@ -59,17 +60,14 @@ const FinancialCard = React.forwardRef<HTMLDivElement, FinancialCardProps>(
     },
     ref
   ) => {
+    const { formatCurrency } = useCurrency()
+
     const formatValue = (val: string | number | React.ReactNode) => {
       if (React.isValidElement(val)) {
         return val
       }
       if (typeof val === 'number' && formatAsCurrency) {
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
-        }).format(val)
+        return formatCurrency(val, { decimals: val % 1 === 0 ? 0 : 2 })
       }
       return val
     }

@@ -12,6 +12,7 @@ import { useCreateGoal, useUpdateGoal } from '@/hooks/use-goals'
 import { useCategories } from '@/hooks/use-categories'
 import { getIcon } from '@/lib/utils/icons'
 import { useGamification } from '@/contexts/gamification-context'
+import { useCurrency } from '@/contexts/currency-context'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,6 +45,7 @@ interface GoalFormProps {
 }
 
 export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormProps) {
+  const { formatCurrency } = useCurrency()
   const form = useForm<GoalInput>({
     resolver: zodResolver(goalSchema),
     defaultValues: {
@@ -119,7 +121,7 @@ export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormP
           showCelebration({
             type: 'subtle',
             title: 'Goal Progress Updated! 💪',
-            message: `Added $${(data.currentAmount - (initialData?.currentAmount || 0)).toFixed(2)} to your goal!`,
+            message: `Added ${formatCurrency(data.currentAmount - (initialData?.currentAmount || 0))} to your goal!`,
             color: '#10b981',
             duration: 3000
           })
@@ -241,7 +243,7 @@ export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormP
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200 }}
               >
-                ${remainingAmount.toFixed(0)}
+{formatCurrency(remainingAmount, { decimals: 0 })}
               </motion.div>
               <div className="text-xs font-medium text-gray-600">Remaining</div>
             </div>
@@ -712,7 +714,7 @@ export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormP
                   <p className="mb-3 text-sm text-gray-700">
                     Save{' '}
                     <span className="text-2xl font-bold text-emerald-600">
-                      ${dailyTarget.toFixed(2)}
+{formatCurrency(dailyTarget)}
                     </span>{' '}
                     each day to reach your goal on time!
                   </p>
@@ -723,7 +725,7 @@ export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormP
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                      <span>${(dailyTarget * 7).toFixed(2)} per week</span>
+                      <span>{formatCurrency(dailyTarget * 7)} per week</span>
                     </div>
                   </div>
                 </div>

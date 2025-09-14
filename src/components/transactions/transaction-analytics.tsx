@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { format, eachWeekOfInterval, endOfWeek } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar } from 'recharts'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import type { Transaction } from '@/lib/validations/transaction'
 import { 
   BarChart3,
@@ -21,6 +21,7 @@ interface TransactionAnalyticsProps {
 // Type interfaces for the chart data
 
 export function TransactionAnalytics({ transactions, dateRange }: TransactionAnalyticsProps) {
+  const { formatCurrency } = useCurrency()
   // Weekly spending trend data
   const weeklyTrendData = useMemo(() => {
     const weeks = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to })

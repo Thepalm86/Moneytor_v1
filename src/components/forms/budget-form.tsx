@@ -11,6 +11,7 @@ import { useCreateBudget, useUpdateBudget } from '@/hooks/use-budgets'
 import { useCategoriesByType } from '@/hooks/use-categories'
 import { getIcon } from '@/lib/utils/icons'
 import { useGamification } from '@/contexts/gamification-context'
+import { useCurrency } from '@/contexts/currency-context'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +43,7 @@ interface BudgetFormProps {
 }
 
 export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetFormProps) {
+  const { formatCurrency, getCurrencySymbol } = useCurrency()
   const form = useForm<BudgetInput>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
@@ -109,7 +111,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
         showCelebration({
           type: 'medium',
           title: 'Budget Created!',
-          message: `Successfully created your ${data.period} budget of $${data.amount.toFixed(2)}!`,
+          message: `Successfully created your ${data.period} budget of ${formatCurrency(data.amount)}!`,
           color: '#10b981',
           duration: 4000,
           showConfetti: false
@@ -245,7 +247,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                       {field.value > 0 && (
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 rounded-lg border border-green-200 bg-green-50 px-2 py-1">
                           <span className="text-xs font-medium text-green-700">
-                            ${field.value.toFixed(2)}
+{formatCurrency(field.value)}
                           </span>
                         </div>
                       )}
@@ -545,7 +547,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                     Budget Amount
                   </p>
                   <p className="text-lg font-bold text-green-700">
-                    ${form.watch('amount').toFixed(2)}
+{formatCurrency(form.watch('amount'))}
                   </p>
                 </div>
                 <div className="space-y-1">

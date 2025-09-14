@@ -17,7 +17,7 @@ import {
 } from 'recharts'
 import { format, subDays, eachDayOfInterval, startOfDay, parseISO } from 'date-fns'
 import { Download, ZoomIn, ZoomOut, RotateCcw, TrendingUp, Calendar, BarChart3 } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { useTransactions } from '@/hooks/use-transactions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -52,11 +52,12 @@ interface ChartDataPoint {
 type ChartMode = 'daily' | 'cumulative' | 'comparison'
 type ZoomLevel = 'all' | '30d' | '7d'
 
-export function InteractiveSpendingTrendsChart({ 
+export function InteractiveSpendingTrendsChart({
   userId, 
   dateRange,
   className 
 }: InteractiveSpendingTrendsChartProps) {
+  const { formatCurrency } = useCurrency()
   const [chartMode, setChartMode] = useState<ChartMode>('daily')
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('all')
   const [selectedDataPoint, setSelectedDataPoint] = useState<ChartDataPoint | null>(null)

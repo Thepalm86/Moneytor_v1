@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { formatTransactionDate } from '@/lib/utils/date'
 import { getIcon } from '@/lib/utils/icons'
 import { useTransactions, useDeleteTransaction } from '@/hooks/use-transactions'
@@ -54,6 +54,7 @@ function TransactionCard({
   onDelete, 
   showBulkSelect 
 }: TransactionCardProps) {
+  const { formatCurrency } = useCurrency()
   const category = transaction.category
   const IconComponent = getIcon(category?.icon || null)
 

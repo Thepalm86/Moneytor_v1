@@ -1,7 +1,7 @@
 'use client'
 
 import { TrendingUp, TrendingDown, DollarSign, Zap, Shield, Target, Activity, PieChart } from 'lucide-react'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { useFinancialKPIs } from '@/hooks/use-financial-kpis'
 import { usePeriodComparison } from '@/hooks/use-period-comparison'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,6 +36,7 @@ interface KPICardProps {
 }
 
 function KPICard({ title, value, subtitle, trend, icon, color, progress, className }: KPICardProps) {
+  const { formatCurrency } = useCurrency()
   const colorClasses = {
     blue: {
       card: 'border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30',

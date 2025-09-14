@@ -18,6 +18,7 @@ import { useBudgetsWithStats, useDeleteBudget } from '@/hooks/use-budgets'
 import { useUser } from '@/hooks/use-user'
 // import { useCategoriesByType } from '@/hooks/use-categories'
 import { useBudgetInsights } from '@/hooks/use-budget-insights'
+import { useCurrency } from '@/contexts/currency-context'
 import { getIcon } from '@/lib/utils/icons'
 import { BudgetForm } from '@/components/forms/budget-form'
 import { BudgetIntelligence } from '@/components/budgets/budget-intelligence'
@@ -57,6 +58,7 @@ import type { BudgetWithStats } from '@/lib/validations/budget'
 
 export default function BudgetsPage() {
   const { user, isLoading: userLoading } = useUser()
+  const { formatCurrency } = useCurrency()
   const [periodFilter, setPeriodFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
@@ -207,7 +209,7 @@ export default function BudgetsPage() {
               <div>
                 <p className="text-sm text-gray-600">Total Savings</p>
                 <p className="text-lg font-semibold text-green-600">
-                  ${analytics.savingsTotal.toFixed(2)}
+                  {formatCurrency(analytics.savingsTotal)}
                 </p>
               </div>
             </div>
@@ -396,6 +398,7 @@ interface BudgetCardProps {
 }
 
 function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
+  const { formatCurrency } = useCurrency()
   const IconComponent = getIcon(budget.category?.icon || 'DollarSign')
   const progressValue = Math.min(budget.spent_percentage, 100)
   const isOverBudget = budget.is_over_budget
@@ -467,7 +470,7 @@ function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">
-                ${budget.spent_amount.toFixed(2)} of ${budget.amount.toFixed(2)}
+                {formatCurrency(budget.spent_amount)} of {formatCurrency(budget.amount)}
               </span>
               <span
                 className={cn(
@@ -498,7 +501,7 @@ function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
                   budget.remaining_amount < 0 ? 'text-red-600' : 'text-green-600'
                 )}
               >
-                ${Math.abs(budget.remaining_amount).toFixed(2)}
+{formatCurrency(Math.abs(budget.remaining_amount))}
                 {budget.remaining_amount < 0 ? ' over' : ' left'}
               </p>
             </div>

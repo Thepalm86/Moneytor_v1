@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import type { Transaction } from '@/lib/validations/transaction'
 import { 
   Download,
@@ -46,11 +46,12 @@ const EXPORT_COLUMNS: ExportColumn[] = [
   { key: 'updated_at', label: 'Updated Date', enabled: false }
 ]
 
-export function ExportTools({ 
+export function ExportTools({
   transactions, 
   selectedTransactionIds = [],
   dateRange 
 }: ExportToolsProps) {
+  const { formatCurrency } = useCurrency()
   const [showDialog, setShowDialog] = useState(false)
   const [exportFormat, setExportFormat] = useState<ExportFormat>('csv')
   const [exportScope, setExportScope] = useState<ExportScope>('filtered')

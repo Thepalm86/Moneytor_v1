@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useCategories } from '@/hooks/use-categories'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import type { TransactionFilters, TransactionSortBy, TransactionSortOrder } from '@/lib/validations/transaction'
 import { 
   Search, 
@@ -90,6 +90,7 @@ export function AdvancedTransactionFilters({
   onSortChange,
   onReset
 }: AdvancedTransactionFiltersProps) {
+  const { formatCurrency } = useCurrency()
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(true)
   const [searchQuery, setSearchQuery] = useState(filters.search || '')

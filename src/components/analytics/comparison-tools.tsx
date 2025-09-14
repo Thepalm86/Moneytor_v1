@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Calendar, TrendingUp, TrendingDown, BarChart3, ArrowUpDown, ArrowRight } from 'lucide-react'
 import { format } from 'date-fns'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { usePeriodComparison } from '@/hooks/use-period-comparison'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -40,6 +40,7 @@ function ComparisonMetric({
   icon,
   subtitle
 }: ComparisonMetricProps) {
+  const { formatCurrency } = useCurrency()
   const isIncrease = change >= 0
   const isGoodChange = isPositive !== undefined ? (isPositive ? isIncrease : !isIncrease) : isIncrease
 
@@ -153,6 +154,7 @@ interface VarianceAnalysisProps {
 }
 
 function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps) {
+  const { formatCurrency } = useCurrency()
   const { currentPeriod, previousPeriod, changes } = comparison
 
   // Calculate variance insights
@@ -295,6 +297,7 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
 }
 
 export function ComparisonTools({ userId, currentPeriod, className }: ComparisonToolsProps) {
+  const { formatCurrency } = useCurrency()
   const [comparisonType, setComparisonType] = useState<'previous' | 'year-over-year'>('previous')
   
   const { data: comparisonData, isLoading, error } = usePeriodComparison(currentPeriod, comparisonType)

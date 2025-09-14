@@ -21,6 +21,7 @@ import { format, formatDistanceToNow, isAfter } from 'date-fns'
 import { useGoalsWithProgress, useDeleteGoal, useContributeToGoal } from '@/hooks/use-goals'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useUser } from '@/hooks/use-user'
+import { useCurrency } from '@/contexts/currency-context'
 import { getIcon } from '@/lib/utils/icons'
 import { GoalForm } from '@/components/forms/goal-form'
 import { GoalAchievements } from '@/components/goals/goal-achievements'
@@ -61,6 +62,7 @@ import type { GoalWithProgress } from '@/lib/validations/goal'
 
 export default function GoalsPage() {
   const { user, isLoading: userLoading } = useUser()
+  const { formatCurrency, getCurrencySymbol } = useCurrency()
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [completionFilter, setCompletionFilter] = useState<string>('all')
 
@@ -488,7 +490,7 @@ export default function GoalsPage() {
                 <label className="text-sm font-medium text-gray-700">Amount</label>
                 <div className="relative mt-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500">
-                    $
+                    {getCurrencySymbol()}
                   </span>
                   <Input
                     type="number"
@@ -503,8 +505,8 @@ export default function GoalsPage() {
               </div>
               {goalToContribute && (
                 <div className="text-sm text-gray-600">
-                  Current progress: ${goalToContribute.current_amount.toFixed(2)} of $
-                  {goalToContribute.target_amount.toFixed(2)}
+                  Current progress: {formatCurrency(goalToContribute.current_amount)} of{' '}
+                  {formatCurrency(goalToContribute.target_amount)}
                 </div>
               )}
             </div>
@@ -597,6 +599,7 @@ interface GoalCardProps {
 }
 
 function GoalCard({ goal, onEdit, onDelete, onContribute }: GoalCardProps) {
+  const { formatCurrency } = useCurrency()
   const IconComponent = getIcon(goal.category?.icon || 'Target')
   const progressValue = Math.min(goal.progress_percentage, 100)
   const isCompleted = goal.is_completed
@@ -681,7 +684,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }: GoalCardProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">
-                ${goal.current_amount.toFixed(2)} of ${goal.target_amount.toFixed(2)}
+                {formatCurrency(goal.current_amount)} of {formatCurrency(goal.target_amount)}
               </span>
               <span
                 className={cn(
@@ -707,7 +710,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }: GoalCardProps) {
             <div>
               <p className="text-gray-600">Remaining</p>
               <p className={cn('font-medium', isCompleted ? 'text-green-600' : 'text-gray-900')}>
-                ${goal.remaining_amount.toFixed(2)}
+                {formatCurrency(goal.remaining_amount)}
                 {isCompleted ? ' saved!' : ' to go'}
               </p>
             </div>
@@ -737,7 +740,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }: GoalCardProps) {
                 )}
               </span>
             )}
-            {goal.daily_target && <span> • Daily target: ${goal.daily_target.toFixed(2)}</span>}
+            {goal.daily_target && <span> • Daily target: {formatCurrency(goal.daily_target)}</span>}
           </div>
         </div>
       </CardContent>

@@ -15,7 +15,7 @@ import {
 } from 'recharts'
 import { format, subMonths, eachMonthOfInterval, startOfMonth, endOfMonth } from 'date-fns'
 
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { useTransactions } from '@/hooks/use-transactions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -33,6 +33,7 @@ export function MonthlyOverviewChart({
   monthsCount = 12,
   className,
 }: MonthlyOverviewChartProps) {
+  const { formatCurrency } = useCurrency()
   const dateRange = useMemo(
     () => ({
       from: subMonths(startOfMonth(new Date()), monthsCount - 1),

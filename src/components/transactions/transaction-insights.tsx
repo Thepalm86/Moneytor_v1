@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { useTransactions } from '@/hooks/use-transactions'
 import { useBudgets } from '@/hooks/use-budgets'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { 
   AlertTriangle,
   Target,
@@ -30,6 +30,7 @@ interface DailySpending {
 // Type interfaces for the insights data
 
 export function TransactionInsights({ userId, dateRange }: TransactionInsightsProps) {
+  const { formatCurrency } = useCurrency()
   const { data: transactionsData } = useTransactions(userId, {
     dateFrom: dateRange.from,
     dateTo: dateRange.to

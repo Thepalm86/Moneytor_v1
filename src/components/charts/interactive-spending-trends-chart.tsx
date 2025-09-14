@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import {
   LineChart,
   Line,
@@ -15,16 +15,18 @@ import {
   ComposedChart,
   Bar
 } from 'recharts'
-import { format, subDays, eachDayOfInterval, startOfDay, parseISO } from 'date-fns'
-import { Download, ZoomIn, ZoomOut, RotateCcw, TrendingUp, Calendar, BarChart3 } from 'lucide-react'
+import { format, subDays, eachDayOfInterval, startOfDay } from 'date-fns'
+import { Download, RotateCcw, TrendingUp, Calendar, BarChart3 } from 'lucide-react'
 import { useCurrency } from '@/contexts/currency-context'
 import { useTransactions } from '@/hooks/use-transactions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { MobileChartWrapper, MobileChartTooltip, mobileChartConfig } from './mobile-chart-wrapper'
+import { useProgressiveLoading, PerformanceMonitor } from '@/lib/utils/performance'
+import { ChartSkeleton, MobileChartSkeleton, ProgressiveSkeleton } from '@/components/ui/enhanced-skeleton'
 
 interface InteractiveSpendingTrendsChartProps {
   userId: string
@@ -62,6 +64,17 @@ export function InteractiveSpendingTrendsChart({
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('all')
   const [selectedDataPoint, setSelectedDataPoint] = useState<ChartDataPoint | null>(null)
   const [brushDomain, setBrushDomain] = useState<[number, number] | null>(null)
+  
+  // Progressive loading for better mobile experience
+  const progressiveStage = useProgressiveLoading(3, 300)
+  
+  // Performance monitoring
+  React.useEffect(() => {
+    PerformanceMonitor.startTiming('chart-render')
+    return () => {
+      PerformanceMonitor.endTiming('chart-render')
+    }
+  }, [chartData])
 
   // Default to last 30 days if no date range provided
   const defaultDateRange = useMemo(
@@ -110,7 +123,7 @@ export function InteractiveSpendingTrendsChart({
 
         return acc
       },
-      {} as Record<string, { income: number; expenses: number; transactions: any[] }>
+      {} as Record<string, { income: number; expenses: number; transactions: unknown[] }>
     )
 
     // Create chart data for each day
@@ -175,13 +188,13 @@ export function InteractiveSpendingTrendsChart({
     return filteredData
   }, [chartData, zoomLevel, brushDomain])
 
-  const handleDataPointClick = useCallback((data: any) => {
+  const handleDataPointClick = useCallback((data: unknown) => {
     if (data && data.activePayload && data.activePayload[0]) {
       setSelectedDataPoint(data.activePayload[0].payload)
     }
   }, [])
 
-  const handleBrushChange = useCallback((domain: any) => {
+  const handleBrushChange = useCallback((domain: { startIndex?: number; endIndex?: number }) => {
     if (domain && domain.startIndex !== undefined && domain.endIndex !== undefined) {
       setBrushDomain([domain.startIndex, domain.endIndex])
     }
@@ -221,7 +234,7 @@ export function InteractiveSpendingTrendsChart({
     URL.revokeObjectURL(url)
   }, [displayData])
 
-  const InteractiveTooltip = ({ active, payload, label }: any) => {
+  const InteractiveTooltip = ({ active, payload, label }: { active?: boolean; payload?: { payload: ChartDataPoint }[]; label?: string }) => {
     if (active && payload && payload.length && label) {
       const data = payload[0].payload as ChartDataPoint
 
@@ -292,26 +305,20 @@ export function InteractiveSpendingTrendsChart({
     return null
   }
 
+  // Progressive loading states
   if (isLoading) {
     return (
-      <Card className={cn('glass-card border-premium', className)}>
-        <CardHeader>
-          <CardTitle className="text-display-md">Interactive Spending Trends</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-[450px] items-center justify-center">
-            <div className="space-y-4 text-center">
-              <div className="relative">
-                <div className="border-primary-200 border-t-primary-600 mx-auto h-12 w-12 animate-spin rounded-full border-4"></div>
-                <div className="from-primary-400 to-primary-600 absolute inset-0 animate-pulse rounded-full bg-gradient-to-r opacity-20"></div>
-              </div>
-              <p className="text-body-sm font-medium text-muted-foreground">
-                Loading interactive chart data...
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <>
+        {/* Mobile progressive loading */}
+        <div className="block lg:hidden">
+          <ProgressiveSkeleton stage={progressiveStage} maxStages={3} />
+        </div>
+        
+        {/* Desktop progressive loading */}
+        <div className="hidden lg:block">
+          <ChartSkeleton className={className} />
+        </div>
+      </>
     )
   }
 
@@ -342,7 +349,19 @@ export function InteractiveSpendingTrendsChart({
     )
   }
 
-  return (
+  // Mobile optimized tooltip
+  const MobileTooltipContent = ({ active, payload, label }: any) => (
+    <MobileChartTooltip
+      active={active}
+      payload={payload}
+      label={label}
+      formatter={(value: number, name: string) => [formatCurrency(value), name]}
+      labelFormatter={(label: string) => format(new Date(label), 'MMM dd, yyyy')}
+    />
+  )
+
+  // Desktop version
+  const DesktopChart = () => (
     <div className={cn('space-y-4', className)}>
       <Card className="glass-card border-premium interactive-card">
         <CardHeader className="space-y-4">
@@ -643,5 +662,163 @@ export function InteractiveSpendingTrendsChart({
         </Card>
       )}
     </div>
+  )
+
+  // Mobile optimized version
+  const MobileChart = () => (
+    <div className={cn('space-y-4', className)}>
+      <MobileChartWrapper
+        title="Spending Trends"
+        subtitle={`${format(finalDateRange.from, 'MMM dd')} - ${format(finalDateRange.to, 'MMM dd')}`}
+        height={280}
+        expandable
+        downloadable
+        onDownload={downloadCSV}
+        loading={isLoading}
+      >
+        <ComposedChart
+          data={displayData}
+          margin={mobileChartConfig.margin}
+        >
+          <defs>
+            <linearGradient id="mobileIncomeGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={mobileChartConfig.colors.secondary} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={mobileChartConfig.colors.secondary} stopOpacity={0.1}/>
+            </linearGradient>
+            <linearGradient id="mobileExpenseGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={mobileChartConfig.colors.danger} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={mobileChartConfig.colors.danger} stopOpacity={0.1}/>
+            </linearGradient>
+          </defs>
+          
+          <CartesianGrid strokeDasharray="3 3" stroke={mobileChartConfig.colors.muted} opacity={0.3} />
+          <XAxis
+            dataKey="dateLabel"
+            {...mobileChartConfig.tickConfig}
+            tick={{ fill: mobileChartConfig.colors.muted }}
+          />
+          <YAxis
+            {...mobileChartConfig.tickConfig}
+            tick={{ fill: mobileChartConfig.colors.muted }}
+            tickFormatter={value => formatCurrency(value)}
+            width={60}
+          />
+          <Tooltip content={<MobileTooltipContent />} />
+          
+          {/* Mobile optimized bars and lines */}
+          <Bar 
+            dataKey="income" 
+            fill="url(#mobileIncomeGradient)"
+            radius={[2, 2, 0, 0]}
+            name="Income"
+          />
+          <Bar 
+            dataKey="expenses" 
+            fill="url(#mobileExpenseGradient)"
+            radius={[2, 2, 0, 0]}
+            name="Expenses"
+          />
+          <Line
+            type="monotone"
+            dataKey="net"
+            stroke={mobileChartConfig.colors.primary}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4, stroke: mobileChartConfig.colors.primary }}
+            name="Net"
+          />
+          
+          <ReferenceLine y={0} stroke={mobileChartConfig.colors.muted} strokeDasharray="2 2" />
+        </ComposedChart>
+      </MobileChartWrapper>
+
+      {/* Mobile chart mode selector */}
+      <div className="flex justify-center">
+        <div className="bg-gray-100 rounded-lg p-1 flex">
+          {(['daily', 'cumulative', 'comparison'] as ChartMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setChartMode(mode)}
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-md transition-all',
+                chartMode === mode
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              )}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile cumulative view */}
+      {chartMode === 'cumulative' && (
+        <MobileChartWrapper
+          title="Cumulative Trends"
+          subtitle="Running totals over time"
+          height={240}
+        >
+          <LineChart
+            data={displayData}
+            margin={mobileChartConfig.margin}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke={mobileChartConfig.colors.muted} opacity={0.3} />
+            <XAxis
+              dataKey="dateLabel"
+              {...mobileChartConfig.tickConfig}
+              tick={{ fill: mobileChartConfig.colors.muted }}
+            />
+            <YAxis
+              {...mobileChartConfig.tickConfig}
+              tick={{ fill: mobileChartConfig.colors.muted }}
+              tickFormatter={value => formatCurrency(value)}
+              width={60}
+            />
+            <Tooltip content={<MobileTooltipContent />} />
+            
+            <Line
+              type="monotone"
+              dataKey="cumulativeIncome"
+              stroke={mobileChartConfig.colors.secondary}
+              strokeWidth={2}
+              dot={false}
+              name="Cumulative Income"
+            />
+            <Line
+              type="monotone"
+              dataKey="cumulativeExpenses"
+              stroke={mobileChartConfig.colors.danger}
+              strokeWidth={2}
+              dot={false}
+              name="Cumulative Expenses"
+            />
+            <Line
+              type="monotone"
+              dataKey="cumulativeNet"
+              stroke={mobileChartConfig.colors.primary}
+              strokeWidth={3}
+              dot={false}
+              name="Cumulative Net"
+            />
+          </LineChart>
+        </MobileChartWrapper>
+      )}
+    </div>
+  )
+
+  // Return responsive version
+  return (
+    <>
+      {/* Mobile version */}
+      <div className="block lg:hidden">
+        <MobileChart />
+      </div>
+      
+      {/* Desktop version */}
+      <div className="hidden lg:block">
+        <DesktopChart />
+      </div>
+    </>
   )
 }

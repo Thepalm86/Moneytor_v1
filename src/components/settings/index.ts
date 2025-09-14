@@ -11,3 +11,7 @@ export { SecuritySettings } from './security-settings'
 export { DataManagementSettings } from './data-management-settings'
 export { SettingsSection } from './settings-section'
 export { SettingsLayout } from './settings-layout'
+
+// Migration: New redesigned components
+export { SettingsPageWrapper } from './settings-page-wrapper'
+export { default as SettingsPageRedesigned } from './redesigned/settings-page-redesigned'

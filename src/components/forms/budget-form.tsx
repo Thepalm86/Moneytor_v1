@@ -43,7 +43,7 @@ interface BudgetFormProps {
 }
 
 export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetFormProps) {
-  const { formatCurrency, getCurrencySymbol } = useCurrency()
+  const { formatCurrency } = useCurrency()
   const form = useForm<BudgetInput>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {

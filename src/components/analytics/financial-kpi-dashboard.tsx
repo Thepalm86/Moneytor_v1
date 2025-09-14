@@ -155,7 +155,7 @@ function KPICard({ title, value, subtitle, trend, icon, color, progress, classNa
   )
 }
 
-export function FinancialKPIDashboard({ userId, dateRange, className }: FinancialKPIDashboardProps) {
+export function FinancialKPIDashboard({ dateRange, className }: FinancialKPIDashboardProps) {
   const { data: kpisData, isLoading: kpisLoading, error: kpisError } = useFinancialKPIs(dateRange)
   const { data: comparisonData, isLoading: comparisonLoading } = usePeriodComparison(dateRange, 'previous')
 

@@ -2,19 +2,52 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
-  ({ className, type, ...props }, ref) => {
+// Enhanced Input component with mobile keyboard optimization
+interface InputProps extends React.ComponentProps<'input'> {
+  inputMode?: 'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search'
+  mobileOptimized?: boolean
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, inputMode, mobileOptimized = true, ...props }, ref) => {
+    // Auto-detect inputMode based on type if not explicitly provided
+    const getInputMode = () => {
+      if (inputMode) return inputMode
+      
+      switch (type) {
+        case 'email': return 'email'
+        case 'tel': return 'tel'
+        case 'url': return 'url'
+        case 'number': return 'decimal'
+        case 'search': return 'search'
+        default: return 'text'
+      }
+    }
+
     return (
       <input
         type={type}
+        inputMode={getInputMode()}
         className={cn(
-          'flex h-12 w-full rounded-xl border border-input bg-background/50 px-4 py-3 text-base ring-offset-background backdrop-blur-sm transition-all duration-300 ease-in-out',
+          // Mobile-first sizing with responsive breakpoints
+          'flex h-14 w-full rounded-xl border-2 border-input bg-background/50 px-5 py-4 text-lg ring-offset-background backdrop-blur-sm transition-all duration-300 ease-in-out touch-manipulation',
+          'md:h-12 md:px-4 md:py-3 md:text-base md:border', // Desktop scaling
           'file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground',
           'placeholder:text-muted-foreground/60',
+          
+          // Enhanced mobile hover and focus states
           'hover:border-primary/40 hover:bg-background/80 hover:shadow-md',
-          'focus-visible:border-primary focus-visible:bg-background focus-visible:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2',
+          'focus:border-primary focus:bg-background focus:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary/20',
+          'active:border-primary active:bg-background',
+          
+          // Mobile-specific improvements
+          mobileOptimized && [
+            'focus:ring-offset-0', // Remove ring offset on mobile for better visibility
+            'focus:shadow-2xl', // Enhanced shadow on mobile
+            'selection:bg-primary/20', // Better text selection color
+          ],
+          
           'disabled:cursor-not-allowed disabled:opacity-50',
-          'md:text-sm',
           className
         )}
         ref={ref}
@@ -25,14 +58,16 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
 )
 Input.displayName = 'Input'
 
-// Floating Label Input Component
+// Enhanced Floating Label Input Component with mobile optimization
 interface FloatingInputProps extends React.ComponentProps<'input'> {
   label: string
   error?: string
+  inputMode?: 'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search'
+  mobileOptimized?: boolean
 }
 
 const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
-  ({ className, label, error, ...props }, ref) => {
+  ({ className, label, error, inputMode, mobileOptimized = true, type, ...props }, ref) => {
     const [isFocused, setIsFocused] = React.useState(false)
     const [hasValue, setHasValue] = React.useState(!!props.value || !!props.defaultValue)
 
@@ -51,22 +86,50 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
       props.onBlur?.(e)
     }
 
+    // Auto-detect inputMode based on type if not explicitly provided
+    const getInputMode = () => {
+      if (inputMode) return inputMode
+      
+      switch (type) {
+        case 'email': return 'email'
+        case 'tel': return 'tel'
+        case 'url': return 'url'
+        case 'number': return 'decimal'
+        case 'search': return 'search'
+        default: return 'text'
+      }
+    }
+
     const isFloating = isFocused || hasValue
 
     return (
       <div className="relative">
         <input
           {...props}
+          type={type}
+          inputMode={getInputMode()}
           ref={ref}
           className={cn(
-            'peer flex h-14 w-full rounded-xl border border-input bg-background/50 px-4 pb-2 pt-6 text-base ring-offset-background backdrop-blur-sm transition-all duration-300 ease-in-out',
+            // Mobile-first sizing with enhanced touch optimization
+            'peer flex h-16 w-full rounded-xl border-2 border-input bg-background/50 px-5 pb-3 pt-7 text-lg ring-offset-background backdrop-blur-sm transition-all duration-300 ease-in-out touch-manipulation',
+            'md:h-14 md:px-4 md:pb-2 md:pt-6 md:text-base md:border', // Desktop scaling
             'file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground',
             'placeholder:text-transparent',
+            
+            // Enhanced mobile hover and focus states
             'hover:border-primary/40 hover:bg-background/80 hover:shadow-md',
-            'focus:border-primary focus:bg-background focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2',
+            'focus:border-primary focus:bg-background focus:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary/20',
+            'active:border-primary active:bg-background',
+            
+            // Mobile-specific improvements
+            mobileOptimized && [
+              'focus:ring-offset-0', // Remove ring offset on mobile
+              'focus:shadow-2xl', // Enhanced shadow on mobile
+              'selection:bg-primary/20', // Better text selection
+            ],
+            
             'disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-destructive focus:border-destructive focus:ring-destructive/20',
-            'md:text-sm',
             className
           )}
           onFocus={handleFocus}
@@ -74,18 +137,27 @@ const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
         />
         <label
           className={cn(
-            'pointer-events-none absolute left-4 top-4 text-base text-muted-foreground/70 transition-all duration-300 ease-in-out',
-            'peer-focus:top-2 peer-focus:text-xs peer-focus:font-medium peer-focus:text-primary',
-            isFloating && 'top-2 text-xs font-medium',
+            // Mobile-first label positioning
+            'pointer-events-none absolute left-5 top-5 text-lg text-muted-foreground/70 transition-all duration-300 ease-in-out',
+            'md:left-4 md:top-4 md:text-base', // Desktop scaling
+            
+            // Focus and floating states
+            'peer-focus:top-2.5 peer-focus:text-sm peer-focus:font-medium peer-focus:text-primary',
+            'md:peer-focus:top-2 md:peer-focus:text-xs',
+            
+            // Floating state styles
+            isFloating && 'top-2.5 text-sm font-medium md:top-2 md:text-xs',
             isFloating && !error && 'text-primary',
-            error && 'text-destructive',
-            'md:text-sm peer-focus:md:text-xs',
-            isFloating && 'md:text-xs'
+            error && 'text-destructive'
           )}
         >
           {label}
         </label>
-        {error && <p className="mt-2 animate-slide-up text-xs text-destructive">{error}</p>}
+        {error && (
+          <p className="mt-3 animate-slide-up text-sm text-destructive md:mt-2 md:text-xs">
+            {error}
+          </p>
+        )}
       </div>
     )
   }

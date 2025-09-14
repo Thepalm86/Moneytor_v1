@@ -33,6 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { MobileTransactionList } from './mobile-transaction-list'
 
 interface TransactionListProps {
   userId: string
@@ -45,7 +46,6 @@ export function TransactionList({
   onAddTransaction, 
   onEditTransaction 
 }: TransactionListProps) {
-  const { formatCurrency } = useCurrency()
   const [filters, setFilters] = useState<TransactionFilters>({
     type: 'all',
     search: '',
@@ -59,8 +59,87 @@ export function TransactionList({
   const { data: categoriesData } = useCategories(userId)
   const deleteTransaction = useDeleteTransaction()
 
-  const transactions = transactionsData?.data || []
+  const transactions = useMemo(() => transactionsData?.data || [], [transactionsData?.data])
   const categories = categoriesData?.data || []
+
+  // Show mobile optimized version on small screens
+  return (
+    <>
+      {/* Mobile-optimized version */}
+      <div className="block lg:hidden">
+        <MobileTransactionList
+          userId={userId}
+          onAddTransaction={onAddTransaction}
+          onEditTransaction={onEditTransaction}
+          enablePullToRefresh
+        />
+      </div>
+
+      {/* Desktop version */}
+      <div className="hidden lg:block">
+        <DesktopTransactionList
+          userId={userId}
+          onAddTransaction={onAddTransaction}
+          onEditTransaction={onEditTransaction}
+          filters={filters}
+          setFilters={setFilters}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+          deleteDialogOpen={deleteDialogOpen}
+          setDeleteDialogOpen={setDeleteDialogOpen}
+          transactionToDelete={transactionToDelete}
+          setTransactionToDelete={setTransactionToDelete}
+          transactions={transactions}
+          categories={categories}
+          isLoading={isLoading}
+          deleteTransaction={deleteTransaction}
+        />
+      </div>
+    </>
+  )
+}
+
+interface DesktopTransactionListProps {
+  userId: string
+  onAddTransaction?: () => void
+  onEditTransaction?: (transaction: Transaction) => void
+  filters: TransactionFilters
+  setFilters: React.Dispatch<React.SetStateAction<TransactionFilters>>
+  sortBy: TransactionSortBy
+  setSortBy: React.Dispatch<React.SetStateAction<TransactionSortBy>>
+  sortOrder: TransactionSortOrder
+  setSortOrder: React.Dispatch<React.SetStateAction<TransactionSortOrder>>
+  deleteDialogOpen: boolean
+  setDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>
+  transactionToDelete: Transaction | null
+  setTransactionToDelete: React.Dispatch<React.SetStateAction<Transaction | null>>
+  transactions: Transaction[]
+  categories: any[]
+  isLoading: boolean
+  deleteTransaction: any
+}
+
+function DesktopTransactionList({ 
+  userId,
+  onAddTransaction,
+  onEditTransaction,
+  filters,
+  setFilters,
+  sortBy,
+  setSortBy,
+  sortOrder,
+  setSortOrder,
+  deleteDialogOpen,
+  setDeleteDialogOpen,
+  transactionToDelete,
+  setTransactionToDelete,
+  transactions,
+  categories,
+  isLoading,
+  deleteTransaction
+}: DesktopTransactionListProps) {
 
   const handleFilterChange = (key: keyof TransactionFilters, value: string) => {
     setFilters(prev => ({

@@ -17,13 +17,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalDescription,
+  ResponsiveModalFooter,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+  QuickActionModal,
+  FormModal,
+} from '@/components/ui/responsive-modal'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -336,73 +338,78 @@ export default function CategoriesPage() {
       {/* Category Usage Analytics */}
       <CategoryUsageAnalytics userId={user?.id || ''} />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
-            <DialogDescription>
+      {/* Delete Confirmation Modal - Quick Action for mobile */}
+      <QuickActionModal open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <ResponsiveModalContent mobileVariant="action-sheet">
+          <ResponsiveModalHeader showMobileClose={true}>
+            <ResponsiveModalTitle>Delete Category</ResponsiveModalTitle>
+            <ResponsiveModalDescription>
               Are you sure you want to delete this category? This action cannot be undone. Any
               transactions using this category will need to be reassigned.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            </ResponsiveModalDescription>
+          </ResponsiveModalHeader>
+          <ResponsiveModalFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="w-full lg:w-auto">
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={confirmDelete}
               disabled={deleteCategory.isPending}
+              className="w-full lg:w-auto"
             >
               {deleteCategory.isPending ? 'Deleting...' : 'Delete'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveModalFooter>
+        </ResponsiveModalContent>
+      </QuickActionModal>
 
-      {/* Create Category Dialog */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+      {/* Create Category Modal - Form Modal for mobile optimization */}
+      <FormModal open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <ResponsiveModalContent mobileVariant="form" className="max-h-[85vh] max-w-3xl overflow-y-auto">
+          <ResponsiveModalHeader showMobileClose={true} mobileVariant="form">
+            <ResponsiveModalTitle className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
               Create New Category
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveModalTitle>
+            <ResponsiveModalDescription>
               Organize your transactions with custom categories and icons.
-            </DialogDescription>
-          </DialogHeader>
-          {user && (
-            <CategoryForm
-              userId={user.id}
-              onSuccess={handleFormSuccess}
-              onCancel={() => setCreateDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+            </ResponsiveModalDescription>
+          </ResponsiveModalHeader>
+          <div className="flex-1 overflow-y-auto px-4 lg:px-0">
+            {user && (
+              <CategoryForm
+                userId={user.id}
+                onSuccess={handleFormSuccess}
+                onCancel={() => setCreateDialogOpen(false)}
+              />
+            )}
+          </div>
+        </ResponsiveModalContent>
+      </FormModal>
 
-      {/* Edit Category Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+      {/* Edit Category Modal - Form Modal for mobile optimization */}
+      <FormModal open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <ResponsiveModalContent mobileVariant="form" className="max-h-[85vh] max-w-3xl overflow-y-auto">
+          <ResponsiveModalHeader showMobileClose={true} mobileVariant="form">
+            <ResponsiveModalTitle className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               Edit Category
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveModalTitle>
+            <ResponsiveModalDescription>
               Update your category details, icon, and color scheme.
-            </DialogDescription>
-          </DialogHeader>
-          {user && categoryToEdit && (
-            <CategoryForm
-              userId={user.id}
-              initialData={categoryToEdit}
-              onSuccess={handleFormSuccess}
-              onCancel={() => setEditDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+            </ResponsiveModalDescription>
+          </ResponsiveModalHeader>
+          <div className="flex-1 overflow-y-auto px-4 lg:px-0">
+            {user && categoryToEdit && (
+              <CategoryForm
+                userId={user.id}
+                initialData={categoryToEdit}
+                onSuccess={handleFormSuccess}
+                onCancel={() => setEditDialogOpen(false)}
+              />
+            )}
+          </div>
+        </ResponsiveModalContent>
+      </FormModal>
     </div>
   )
 }

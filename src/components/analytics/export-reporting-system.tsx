@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, FileText, Mail, Calendar, Settings, Loader2, BarChart3 } from 'lucide-react'
+import { Download, FileText, Settings, Loader2, BarChart3 } from 'lucide-react'
 import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { useCurrency } from '@/contexts/currency-context'
 import { useFinancialKPIs } from '@/hooks/use-financial-kpis'
@@ -44,14 +44,14 @@ interface ReportConfig {
 }
 
 // Generate CSV content
-function generateCSV(data: any[], filename: string): void {
+function generateCSV(data: Record<string, any>[], filename: string): void {
   if (!data.length) return
 
   const headers = Object.keys(data[0])
   const csvContent = [
     headers.join(','),
     ...data.map(row => headers.map(header => {
-      let value = row[header]
+      let value = (row as Record<string, any>)[header]
       if (typeof value === 'string' && value.includes(',')) {
         value = `"${value}"`
       }
@@ -71,9 +71,7 @@ function generateCSV(data: any[], filename: string): void {
 }
 
 // Generate PDF content (simplified version - in production would use proper PDF library)
-function generatePDFReport(reportData: any, config: ReportConfig): void {
-  const { toast } = useToast()
-  
+function generatePDFReport(reportData: any, config: ReportConfig, onSuccess: () => void): void {
   // For now, we'll generate HTML content that can be printed as PDF
   const htmlContent = `
     <!DOCTYPE html>
@@ -100,7 +98,7 @@ function generatePDFReport(reportData: any, config: ReportConfig): void {
         <p>Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}</p>
         ${config.customDescription ? `<p>${config.customDescription}</p>` : ''}
       </div>
-      ${reportData.htmlContent}
+      ${(reportData as any)?.htmlContent || ''}
       <div class="no-print">
         <button onclick="window.print()">Print Report</button>
       </div>
@@ -113,12 +111,8 @@ function generatePDFReport(reportData: any, config: ReportConfig): void {
     printWindow.document.write(htmlContent)
     printWindow.document.close()
     printWindow.focus()
+    onSuccess()
   }
-
-  toast({
-    title: 'PDF Report Generated',
-    description: 'Use the print dialog to save as PDF or print the report.',
-  })
 }
 
 export function ExportReportingSystem({ userId, dateRange, className }: ExportReportingSystemProps) {
@@ -144,7 +138,7 @@ export function ExportReportingSystem({ userId, dateRange, className }: ExportRe
   })
   const { data: categoryInsights } = useCategoryInsights(reportConfig.dateRange, 'all')
 
-  const handleConfigChange = (key: keyof ReportConfig, value: any) => {
+  const handleConfigChange = (key: keyof ReportConfig, value: unknown) => {
     setReportConfig(prev => ({ ...prev, [key]: value }))
   }
 
@@ -322,15 +316,15 @@ export function ExportReportingSystem({ userId, dateRange, className }: ExportRe
           `
         }
 
-        generatePDFReport({ htmlContent }, reportConfig)
+        generatePDFReport({ htmlContent }, reportConfig, () => {
+          toast({
+            title: 'Report Generated Successfully',
+            description: `Your ${reportConfig.type} report has been generated and downloaded.`,
+          })
+        })
       }
 
-      toast({
-        title: 'Report Generated Successfully',
-        description: `Your ${reportConfig.type} report has been generated and downloaded.`,
-      })
-
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error Generating Report',
         description: 'There was an error generating your report. Please try again.',

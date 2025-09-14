@@ -8,7 +8,6 @@ import { usePeriodComparison } from '@/hooks/use-period-comparison'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { DateRange } from '@/lib/supabase/analytics'
@@ -296,8 +295,7 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
   )
 }
 
-export function ComparisonTools({ userId, currentPeriod, className }: ComparisonToolsProps) {
-  const { formatCurrency } = useCurrency()
+export function ComparisonTools({ currentPeriod, className }: ComparisonToolsProps) {
   const [comparisonType, setComparisonType] = useState<'previous' | 'year-over-year'>('previous')
   
   const { data: comparisonData, isLoading, error } = usePeriodComparison(currentPeriod, comparisonType)

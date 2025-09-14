@@ -1,11 +1,11 @@
 'use client'
 
 /**
- * Settings Page Route
- * Main settings page for user preferences and configuration
+ * Settings Page Route - Migrated to Redesigned Version
+ * Uses feature flags for gradual rollout
  */
 
-import { SettingsPage } from '@/components/settings'
+import { SettingsPageWrapper } from '@/components/settings/settings-page-wrapper'
 import { Suspense } from 'react'
 import { LoadingSpinner } from '@/components/layout/loading-spinner'
 
@@ -16,7 +16,7 @@ export default function Settings() {
         <LoadingSpinner />
       </div>
     }>
-      <SettingsPage />
+      <SettingsPageWrapper />
     </Suspense>
   )
 }

@@ -16,6 +16,7 @@
     "db:generate": "supabase gen types typescript --local > src/types/supabase.ts",
     "db:reset": "supabase db reset",
     "db:migrate": "supabase db push",
+    "migrate:settings": "npx tsx scripts/migrate-settings.ts",
     "prepare": "husky"
   },
   "dependencies": {

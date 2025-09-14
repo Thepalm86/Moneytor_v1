@@ -27,6 +27,7 @@ import { GoalAchievements } from '@/components/goals/goal-achievements'
 import { GoalVisualization } from '@/components/goals/goal-visualization'
 import { SmartSavingsEngine } from '@/components/goals/smart-savings-engine'
 import { GoalSocialFeatures } from '@/components/goals/goal-social-features'
+import { PageHeader, PageHeaderAction } from '@/components/layout/page-header'
 import { cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
@@ -92,7 +93,15 @@ export default function GoalsPage() {
       isAfter(new Date(), new Date(goal.target_date))
   )
 
-  const handleShareGoal = (goal: GoalWithProgress, options: { privacy: string; includeProgress: boolean; includeAmount: boolean; customMessage?: string }) => {
+  const handleShareGoal = (
+    goal: GoalWithProgress,
+    options: {
+      privacy: string
+      includeProgress: boolean
+      includeAmount: boolean
+      customMessage?: string
+    }
+  ) => {
     // Handle goal sharing logic
     console.log('Sharing goal:', goal, options)
   }
@@ -164,23 +173,17 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            Saving Goals 
-            <span className="text-2xl">🎯</span>
-          </h1>
-          <p className="text-gray-600">Transform your financial dreams into achievable milestones</p>
-        </div>
-        <Button
-          onClick={() => setCreateDialogOpen(true)}
-          className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Goal
-        </Button>
-      </div>
+      {/* Header */}
+      <PageHeader
+        title="Saving Goals 🎯"
+        subtitle="Transform your financial dreams into achievable milestones with smart tracking and insights"
+        actions={
+          <PageHeaderAction onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Goal
+          </PageHeaderAction>
+        }
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -278,23 +281,23 @@ export default function GoalsPage() {
       <Tabs defaultValue="goals" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-white/50 backdrop-blur-sm">
           <TabsTrigger value="goals" className="flex items-center gap-2">
-            <Target className="w-4 h-4" />
+            <Target className="h-4 w-4" />
             My Goals
           </TabsTrigger>
           <TabsTrigger value="achievements" className="flex items-center gap-2">
-            <Trophy className="w-4 h-4" />
+            <Trophy className="h-4 w-4" />
             Achievements
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
+            <BarChart3 className="h-4 w-4" />
             Analytics
           </TabsTrigger>
           <TabsTrigger value="smart-savings" className="flex items-center gap-2">
-            <Lightbulb className="w-4 h-4" />
+            <Lightbulb className="h-4 w-4" />
             Smart Savings
           </TabsTrigger>
           <TabsTrigger value="social" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
+            <Users className="h-4 w-4" />
             Social
           </TabsTrigger>
         </TabsList>
@@ -303,22 +306,25 @@ export default function GoalsPage() {
         <TabsContent value="goals" className="space-y-4">
           <div className="space-y-4">
             {goals.length === 0 ? (
-              <Card className="border-0 bg-gradient-to-br from-blue-50 to-purple-100 relative overflow-hidden">
+              <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-purple-100">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm" />
                 <CardContent className="relative p-8 text-center">
                   <div className="mb-6">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
                       <Target className="h-10 w-10 text-white" />
                     </div>
-                    <h3 className="mb-2 text-xl font-bold text-gray-900">Start Your Savings Journey! 🚀</h3>
-                    <p className="mb-6 text-gray-600 max-w-md mx-auto">
-                      Every great achievement starts with a single step. Create your first goal and watch your dreams become reality!
+                    <h3 className="mb-2 text-xl font-bold text-gray-900">
+                      Start Your Savings Journey! 🚀
+                    </h3>
+                    <p className="mx-auto mb-6 max-w-md text-gray-600">
+                      Every great achievement starts with a single step. Create your first goal and
+                      watch your dreams become reality!
                     </p>
                   </div>
                   <Button
                     onClick={() => setCreateDialogOpen(true)}
                     size="lg"
-                    className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="bg-gradient-to-r from-green-500 to-blue-600 shadow-lg transition-all duration-200 hover:from-green-600 hover:to-blue-700 hover:shadow-xl"
                   >
                     <Sparkles className="mr-2 h-5 w-5" />
                     Create Your First Goal
@@ -367,10 +373,7 @@ export default function GoalsPage() {
 
         {/* Smart Savings Tab */}
         <TabsContent value="smart-savings">
-          <SmartSavingsEngine 
-            transactions={transactions} 
-            goals={goals} 
-          />
+          <SmartSavingsEngine transactions={transactions} goals={goals} />
         </TabsContent>
 
         {/* Social Tab */}
@@ -378,11 +381,7 @@ export default function GoalsPage() {
           {goals.length > 0 ? (
             <div className="space-y-6">
               {goals.map(goal => (
-                <GoalSocialFeatures 
-                  key={goal.id} 
-                  goal={goal} 
-                  onShare={handleShareGoal}
-                />
+                <GoalSocialFeatures key={goal.id} goal={goal} onShare={handleShareGoal} />
               ))}
             </div>
           ) : (
@@ -400,23 +399,25 @@ export default function GoalsPage() {
       </Tabs>
 
       {/* Enhanced Features Card */}
-      <Card className="border-0 bg-gradient-to-br from-emerald-50 to-teal-100 relative overflow-hidden">
+      <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-emerald-50 to-teal-100">
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm" />
         <CardContent className="relative p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
+              <Sparkles className="h-6 w-6 text-white" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900">Supercharge Your Savings 💫</h3>
-              <p className="text-sm text-gray-600">Powerful features to help you reach your financial goals faster</p>
+              <p className="text-sm text-gray-600">
+                Powerful features to help you reach your financial goals faster
+              </p>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-emerald-200/50 bg-white/50 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Trophy className="w-5 h-5 text-yellow-500" />
+            <div className="rounded-xl border border-emerald-200/50 bg-white/50 p-4 backdrop-blur-sm">
+              <div className="mb-2 flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
                 <h4 className="text-sm font-semibold text-gray-900">🎖️ Achievements</h4>
               </div>
               <ul className="space-y-1 text-xs text-gray-700">
@@ -426,9 +427,9 @@ export default function GoalsPage() {
                 <li>• Compete with friends</li>
               </ul>
             </div>
-            <div className="rounded-xl border border-blue-200/50 bg-white/50 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Lightbulb className="w-5 h-5 text-blue-500" />
+            <div className="rounded-xl border border-blue-200/50 bg-white/50 p-4 backdrop-blur-sm">
+              <div className="mb-2 flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-blue-500" />
                 <h4 className="text-sm font-semibold text-gray-900">🧠 Smart AI</h4>
               </div>
               <ul className="space-y-1 text-xs text-gray-700">
@@ -438,9 +439,9 @@ export default function GoalsPage() {
                 <li>• Goal completion predictions</li>
               </ul>
             </div>
-            <div className="rounded-xl border border-purple-200/50 bg-white/50 backdrop-blur-sm p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-5 h-5 text-purple-500" />
+            <div className="rounded-xl border border-purple-200/50 bg-white/50 p-4 backdrop-blur-sm">
+              <div className="mb-2 flex items-center gap-2">
+                <Users className="h-5 w-5 text-purple-500" />
                 <h4 className="text-sm font-semibold text-gray-900">👥 Social</h4>
               </div>
               <ul className="space-y-1 text-xs text-gray-700">
@@ -529,7 +530,15 @@ export default function GoalsPage() {
 
       {/* Create Goal Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+              Create New Goal 🎯
+            </DialogTitle>
+            <DialogDescription>
+              Set a savings goal and track your progress towards achieving it.
+            </DialogDescription>
+          </DialogHeader>
           {user && (
             <GoalForm
               userId={user.id}
@@ -542,7 +551,15 @@ export default function GoalsPage() {
 
       {/* Edit Goal Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+              Edit Saving Goal
+            </DialogTitle>
+            <DialogDescription>
+              Update your goal details and adjust your target amount or timeline.
+            </DialogDescription>
+          </DialogHeader>
           {user && goalToEdit && (
             <GoalForm
               userId={user.id}

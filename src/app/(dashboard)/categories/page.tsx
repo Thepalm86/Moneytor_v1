@@ -7,8 +7,10 @@ import { useCategories, useDeleteCategory } from '@/hooks/use-categories'
 import { useUser } from '@/hooks/use-user'
 import { getIcon } from '@/lib/utils/icons'
 import { CategoryForm } from '@/components/forms/category-form'
-import { CategoriesPageHeader } from '@/components/categories/categories-page-header'
+import { PageHeader, PageHeaderAction } from '@/components/layout/page-header'
 import { CategoryUsageAnalytics } from '@/components/categories/category-usage-analytics'
+import { useCategoriesWithStats } from '@/hooks/use-categories'
+import { formatCurrency } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,6 +35,7 @@ import type { Category } from '@/lib/validations/category'
 export default function CategoriesPage() {
   const { user, isLoading: userLoading } = useUser()
   const { data: categoriesData, isLoading } = useCategories(user?.id || '')
+  const { data: categoriesStatsData } = useCategoriesWithStats(user?.id || '')
   const deleteCategory = useDeleteCategory()
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -44,14 +47,15 @@ export default function CategoriesPage() {
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
 
   const categories = categoriesData?.data || []
-  
+  const categoriesWithStats = categoriesStatsData?.data || []
+
   // Filter categories based on search and type filter
   const filteredCategories = categories.filter(category => {
     const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesType = filterType === 'all' || category.type === filterType
     return matchesSearch && matchesType
   })
-  
+
   const incomeCategories = filteredCategories.filter(cat => cat.type === 'income')
   const expenseCategories = filteredCategories.filter(cat => cat.type === 'expense')
 
@@ -84,39 +88,136 @@ export default function CategoriesPage() {
 
   if (userLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-600">Please log in to view your categories</p>
       </div>
     )
   }
 
+  // Calculate stats for header
+  const headerIncomeCategories = categoriesWithStats.filter(cat => cat.type === 'income')
+  const headerExpenseCategories = categoriesWithStats.filter(cat => cat.type === 'expense')
+  const totalIncomeAmount = headerIncomeCategories.reduce(
+    (sum, cat) => sum + ((cat as any).total_amount || 0),
+    0
+  )
+  const totalExpenseAmount = headerExpenseCategories.reduce(
+    (sum, cat) => sum + ((cat as any).total_amount || 0),
+    0
+  )
+
   return (
     <div className="space-y-6">
-      {/* Enhanced Header */}
-      <CategoriesPageHeader 
-        userId={user?.id || ''} 
-        onAddCategory={() => setCreateDialogOpen(true)} 
+      {/* Header */}
+      <PageHeader
+        title="Category Management"
+        subtitle="Organize your finances with custom categories and detailed insights"
+        actions={
+          <PageHeaderAction onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Category
+          </PageHeaderAction>
+        }
       />
-      
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-white/20 bg-white/60 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="rounded-lg bg-purple-100 p-2">
+                <span className="text-2xl">📊</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Categories</p>
+                <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {headerIncomeCategories.length} income • {headerExpenseCategories.length} expense
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-green-200/20 bg-gradient-to-br from-green-50/60 to-green-100/30 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="rounded-lg bg-green-100 p-2">
+                <span className="text-2xl">📈</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-green-700">Income Categories</p>
+                <p className="text-2xl font-bold text-green-800">
+                  {formatCurrency(totalIncomeAmount)}
+                </p>
+                <p className="mt-1 text-xs text-green-600">
+                  {headerIncomeCategories.length} categories active
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-red-200/20 bg-gradient-to-br from-red-50/60 to-red-100/30 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="rounded-lg bg-red-100 p-2">
+                <span className="text-2xl">📉</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-red-700">Expense Categories</p>
+                <p className="text-2xl font-bold text-red-800">
+                  {formatCurrency(totalExpenseAmount)}
+                </p>
+                <p className="mt-1 text-xs text-red-600">
+                  {headerExpenseCategories.length} categories active
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-200/20 bg-gradient-to-br from-blue-50/60 to-blue-100/30 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="rounded-lg bg-blue-100 p-2">
+                <span className="text-2xl">💰</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-700">Net Flow</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    totalIncomeAmount - totalExpenseAmount >= 0 ? 'text-green-700' : 'text-red-700'
+                  }`}
+                >
+                  {formatCurrency(totalIncomeAmount - totalExpenseAmount)}
+                </p>
+                <p className="mt-1 text-xs text-blue-600">This period</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Search and Filter */}
-      <Card className="backdrop-blur-sm bg-white/40 border-white/20 shadow-lg">
+      <Card className="border-white/20 bg-white/40 shadow-lg backdrop-blur-sm">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="Search categories..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white/50 border-white/20 backdrop-blur-sm"
+                onChange={e => setSearchQuery(e.target.value)}
+                className="border-white/20 bg-white/50 pl-10 backdrop-blur-sm"
               />
             </div>
             <div className="flex gap-2">
@@ -152,7 +253,7 @@ export default function CategoriesPage() {
       {/* Categories Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Income Categories */}
-        <Card className="backdrop-blur-sm bg-gradient-to-br from-green-50/60 to-green-100/30 border-green-200/20 shadow-lg">
+        <Card className="border-green-200/20 bg-gradient-to-br from-green-50/60 to-green-100/30 shadow-lg backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-700">
               💰 Income Categories
@@ -163,12 +264,14 @@ export default function CategoriesPage() {
           </CardHeader>
           <CardContent>
             {incomeCategories.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                  <Plus className="w-8 h-8 text-green-600" />
+              <div className="py-8 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                  <Plus className="h-8 w-8 text-green-600" />
                 </div>
-                <p className="text-gray-500 mb-2">
-                  {searchQuery ? 'No income categories match your search' : 'No income categories found'}
+                <p className="mb-2 text-gray-500">
+                  {searchQuery
+                    ? 'No income categories match your search'
+                    : 'No income categories found'}
                 </p>
                 <p className="text-sm text-gray-400">
                   Create your first income category to get started
@@ -176,7 +279,7 @@ export default function CategoriesPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {incomeCategories.map((category) => (
+                {incomeCategories.map(category => (
                   <EnhancedCategoryCard
                     key={category.id}
                     category={category}
@@ -190,7 +293,7 @@ export default function CategoriesPage() {
         </Card>
 
         {/* Expense Categories */}
-        <Card className="backdrop-blur-sm bg-gradient-to-br from-red-50/60 to-red-100/30 border-red-200/20 shadow-lg">
+        <Card className="border-red-200/20 bg-gradient-to-br from-red-50/60 to-red-100/30 shadow-lg backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
               💸 Expense Categories
@@ -201,12 +304,14 @@ export default function CategoriesPage() {
           </CardHeader>
           <CardContent>
             {expenseCategories.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                  <Plus className="w-8 h-8 text-red-600" />
+              <div className="py-8 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                  <Plus className="h-8 w-8 text-red-600" />
                 </div>
-                <p className="text-gray-500 mb-2">
-                  {searchQuery ? 'No expense categories match your search' : 'No expense categories found'}
+                <p className="mb-2 text-gray-500">
+                  {searchQuery
+                    ? 'No expense categories match your search'
+                    : 'No expense categories found'}
                 </p>
                 <p className="text-sm text-gray-400">
                   Create your first expense category to get started
@@ -214,7 +319,7 @@ export default function CategoriesPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {expenseCategories.map((category) => (
+                {expenseCategories.map(category => (
                   <EnhancedCategoryCard
                     key={category.id}
                     category={category}
@@ -237,15 +342,12 @@ export default function CategoriesPage() {
           <DialogHeader>
             <DialogTitle>Delete Category</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this category? This action cannot be undone.
-              Any transactions using this category will need to be reassigned.
+              Are you sure you want to delete this category? This action cannot be undone. Any
+              transactions using this category will need to be reassigned.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -261,7 +363,15 @@ export default function CategoriesPage() {
 
       {/* Create Category Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto backdrop-blur-lg bg-white/95 border-white/20">
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              Create New Category
+            </DialogTitle>
+            <DialogDescription>
+              Organize your transactions with custom categories and icons.
+            </DialogDescription>
+          </DialogHeader>
           {user && (
             <CategoryForm
               userId={user.id}
@@ -274,7 +384,15 @@ export default function CategoriesPage() {
 
       {/* Edit Category Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto backdrop-blur-lg bg-white/95 border-white/20">
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              Edit Category
+            </DialogTitle>
+            <DialogDescription>
+              Update your category details, icon, and color scheme.
+            </DialogDescription>
+          </DialogHeader>
           {user && categoryToEdit && (
             <CategoryForm
               userId={user.id}
@@ -299,20 +417,20 @@ function EnhancedCategoryCard({ category, onEdit, onDelete }: CategoryCardProps)
   const IconComponent = getIcon(category.icon)
 
   return (
-    <div className="group flex items-center justify-between p-4 border border-white/40 rounded-xl bg-white/30 backdrop-blur-sm hover:bg-white/50 hover:shadow-lg transition-all duration-200">
+    <div className="group flex items-center justify-between rounded-xl border border-white/40 bg-white/30 p-4 backdrop-blur-sm transition-all duration-200 hover:bg-white/50 hover:shadow-lg">
       <div className="flex items-center gap-3">
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/50 group-hover:scale-110 transition-transform duration-200"
+          className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg ring-2 ring-white/50 transition-transform duration-200 group-hover:scale-110"
           style={{ backgroundColor: category.color }}
         >
-          <IconComponent className="w-5 h-5 text-white" />
+          <IconComponent className="h-5 w-5 text-white" />
         </div>
         <div>
           <h4 className="font-semibold text-gray-900 group-hover:text-gray-800">{category.name}</h4>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge 
+          <div className="mt-1 flex items-center gap-2">
+            <Badge
               variant={category.type === 'income' ? 'secondary' : 'destructive'}
-              className="text-xs px-2 py-0.5"
+              className="px-2 py-0.5 text-xs"
             >
               {category.type === 'income' ? '💰' : '💸'} {category.type}
             </Badge>
@@ -326,18 +444,18 @@ function EnhancedCategoryCard({ category, onEdit, onDelete }: CategoryCardProps)
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/60"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="opacity-0 transition-opacity duration-200 hover:bg-white/60 group-hover:opacity-100"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="backdrop-blur-sm bg-white/95 border-white/20">
+        <DropdownMenuContent align="end" className="border-white/20 bg-white/95 backdrop-blur-sm">
           {onEdit && (
             <DropdownMenuItem onClick={() => onEdit(category)} className="hover:bg-white/60">
-              <Edit className="w-4 h-4 mr-2" />
+              <Edit className="mr-2 h-4 w-4" />
               Edit Category
             </DropdownMenuItem>
           )}
@@ -346,7 +464,7 @@ function EnhancedCategoryCard({ category, onEdit, onDelete }: CategoryCardProps)
               onClick={() => onDelete(category)}
               className="text-red-600 hover:bg-red-50/60"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete Category
             </DropdownMenuItem>
           )}

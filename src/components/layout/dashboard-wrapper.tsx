@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { navigationThemeColors } from '@/lib/utils/page-themes'
 
 interface DashboardWrapperProps {
   children: React.ReactNode
@@ -196,23 +197,27 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-2 px-4 py-6">
+          <nav className="flex-1 space-y-3 px-4 py-6">
             {navigation.map((item, index) => {
               const IconComponent = item.icon
+              const pageTheme =
+                navigationThemeColors[item.href as keyof typeof navigationThemeColors] ||
+                navigationThemeColors['/dashboard']
+
               return (
                 <Link
                   key={item.name}
                   href={item.disabled ? '#' : item.href}
                   className={cn(
-                    'group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
+                    'group relative flex items-center overflow-hidden rounded-2xl px-5 py-4 text-sm font-medium transition-all duration-300',
                     item.current
-                      ? 'scale-105 transform bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                      ? `scale-105 transform bg-gradient-to-r ${pageTheme.gradient} text-white shadow-2xl ${pageTheme.shadowColor} border border-white/10`
                       : item.disabled
-                        ? 'cursor-not-allowed text-gray-400 opacity-60'
-                        : 'text-gray-700 hover:scale-105 hover:bg-white/50 hover:text-blue-700 hover:shadow-md hover:backdrop-blur-sm'
+                        ? 'cursor-not-allowed text-gray-400 opacity-50'
+                        : 'border border-transparent text-gray-700 hover:scale-[1.02] hover:border-white/20 hover:bg-gradient-to-r hover:from-white/60 hover:to-white/40 hover:text-gray-800 hover:shadow-lg hover:backdrop-blur-sm'
                   )}
                   style={{
-                    animationDelay: `${index * 50}ms`,
+                    animationDelay: `${index * 75}ms`,
                   }}
                   onClick={e => {
                     if (item.disabled) {
@@ -223,24 +228,50 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
                     }
                   }}
                 >
+                  {/* Background glow for active item */}
+                  {item.current && (
+                    <div className="absolute -inset-1 bg-gradient-to-r from-white/10 via-white/5 to-white/10 blur-sm"></div>
+                  )}
+
                   <div
                     className={cn(
-                      'mr-3 flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200',
+                      'relative mr-4 flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300',
                       item.current
-                        ? 'bg-white/20 shadow-inner'
-                        : 'bg-gray-100 group-hover:bg-blue-50 group-hover:text-blue-600'
+                        ? 'border border-white/30 bg-white/25 shadow-lg shadow-black/20 backdrop-blur-sm'
+                        : 'border border-gray-200/50 bg-gray-100 group-hover:border-white/40 group-hover:bg-white/80 group-hover:shadow-md'
                     )}
                   >
-                    <IconComponent className="h-4 w-4" />
+                    <IconComponent
+                      className={cn(
+                        'h-5 w-5 transition-colors duration-300',
+                        item.current ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'
+                      )}
+                    />
                   </div>
-                  <span className="flex-1 truncate">{item.name}</span>
+
+                  <span className="relative flex-1 truncate font-medium">{item.name}</span>
+
                   {item.disabled && (
-                    <span className="ml-auto rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-600 shadow-sm">
+                    <span className="relative ml-auto rounded-full bg-gray-200/80 px-3 py-1 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-sm">
                       Soon
                     </span>
                   )}
+
                   {item.current && (
-                    <div className="ml-auto h-2 w-2 animate-pulse rounded-full bg-white"></div>
+                    <div className="relative ml-auto flex items-center space-x-1">
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-white/90 shadow-sm"></div>
+                      <div
+                        className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/60"
+                        style={{ animationDelay: '0.5s' }}
+                      ></div>
+                    </div>
+                  )}
+
+                  {/* Hover indicator */}
+                  {!item.current && !item.disabled && (
+                    <div className="absolute right-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <div className="h-1.5 w-1.5 rounded-full bg-gray-400"></div>
+                    </div>
                   )}
                 </Link>
               )

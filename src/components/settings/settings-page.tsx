@@ -13,7 +13,7 @@ import { PreferencesSettings } from './preferences-settings'
 import { NotificationSettings } from './notification-settings'
 import { SecuritySettings } from './security-settings'
 import { DataManagementSettings } from './data-management-settings'
-import { PageHeader } from '@/components/layout/page-header'
+import { PageHeader, PageHeaderAction } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { useSettings } from '@/hooks/use-settings'
 import type { SettingsCategory } from '@/types/settings'
@@ -71,14 +71,14 @@ export function SettingsPage({ initialSection = 'currency' }: SettingsPageProps)
     },
   ]
 
-  const currentSection = sections.find(section => section.id === activeSection)
+  // const currentSection = sections.find(section => section.id === activeSection)
 
   const renderSettingsContent = () => {
     if (isLoading) {
       return (
-        <div className="flex items-center justify-center min-h-96">
-          <div className="text-center space-y-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 mx-auto"></div>
+        <div className="flex min-h-96 items-center justify-center">
+          <div className="space-y-4 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
             <p className="text-gray-600">Loading settings...</p>
           </div>
         </div>
@@ -107,67 +107,65 @@ export function SettingsPage({ initialSection = 'currency' }: SettingsPageProps)
     <div className="space-y-8">
       {/* Header */}
       <PageHeader
-        title="Settings"
+        title="Settings ⚙️"
         subtitle="Manage your account preferences and application settings"
-        gradient="blue"
         actions={
           <div className="flex space-x-3">
-            <Button variant="outline" disabled>
+            <PageHeaderAction variant="secondary" disabled>
               Import Settings
-              <span className="text-xs ml-2">(Coming Soon)</span>
-            </Button>
-            <Button variant="outline" disabled>
+              <span className="ml-2 text-xs">(Soon)</span>
+            </PageHeaderAction>
+            <PageHeaderAction variant="secondary" disabled>
               Export Settings
-              <span className="text-xs ml-2">(Coming Soon)</span>
-            </Button>
+              <span className="ml-2 text-xs">(Soon)</span>
+            </PageHeaderAction>
           </div>
         }
-      >
-        {/* Settings Overview Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-          <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <span className="text-white text-lg">💰</span>
-              </div>
-              <div>
-                <div className="font-medium text-white">Current Currency</div>
-                <div className="text-sm text-white/80">
-                  {settings?.currency || 'USD'} - {settings?.currency === 'ILS' ? 'Israeli Shekel' : 'US Dollar'}
-                </div>
-              </div>
-            </div>
-          </div>
+      />
 
-          <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <span className="text-white text-lg">🌍</span>
-              </div>
-              <div>
-                <div className="font-medium text-white">Timezone</div>
-                <div className="text-sm text-white/80">
-                  {settings?.timezone?.replace('_', ' ').split('/').pop() || 'System Default'}
-                </div>
-              </div>
+      {/* Settings Overview Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-2xl border border-green-200/20 bg-gradient-to-br from-green-50/60 to-green-100/30 p-4 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl">
+          <div className="flex items-center space-x-3">
+            <div className="rounded-lg bg-green-100 p-2">
+              <span className="text-2xl">💰</span>
             </div>
-          </div>
-
-          <div className="bg-white/20 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <span className="text-white text-lg">👤</span>
-              </div>
-              <div>
-                <div className="font-medium text-white">Profile</div>
-                <div className="text-sm text-white/80">
-                  {profile?.full_name || 'Name not set'}
-                </div>
+            <div>
+              <div className="font-medium text-green-700">Current Currency</div>
+              <div className="text-sm text-green-600">
+                {settings?.currency || 'USD'} -{' '}
+                {settings?.currency === 'ILS' ? 'Israeli Shekel' : 'US Dollar'}
               </div>
             </div>
           </div>
         </div>
-      </PageHeader>
+
+        <div className="rounded-2xl border border-blue-200/20 bg-gradient-to-br from-blue-50/60 to-blue-100/30 p-4 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl">
+          <div className="flex items-center space-x-3">
+            <div className="rounded-lg bg-blue-100 p-2">
+              <span className="text-2xl">🌍</span>
+            </div>
+            <div>
+              <div className="font-medium text-blue-700">Timezone</div>
+              <div className="text-sm text-blue-600">
+                {settings?.timezone?.replace('_', ' ').split('/').pop() || 'System Default'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-purple-200/20 bg-gradient-to-br from-purple-50/60 to-purple-100/30 p-4 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl">
+          <div className="flex items-center space-x-3">
+            <div className="rounded-lg bg-purple-100 p-2">
+              <span className="text-2xl">👤</span>
+            </div>
+            <div>
+              <div className="font-medium text-purple-700">Profile</div>
+              <div className="text-sm text-purple-600">{profile?.full_name || 'Name not set'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Settings Layout */}
       <SettingsLayout
@@ -185,23 +183,24 @@ export function SettingsPage({ initialSection = 'currency' }: SettingsPageProps)
       {/* Settings Help Section */}
       <div className="rounded-2xl border border-gray-200/50 bg-white/60 p-6 shadow-xl backdrop-blur-sm">
         <div className="flex items-start space-x-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 text-xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-xl text-blue-600">
             💡
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Need Help with Settings?</h3>
-            <p className="text-gray-600 mb-4">
-              Our settings are designed to give you full control over your Moneytor experience. 
-              Each section helps you customize different aspects of the application to match your preferences.
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">Need Help with Settings?</h3>
+            <p className="mb-4 text-gray-600">
+              Our settings are designed to give you full control over your Moneytor experience. Each
+              section helps you customize different aspects of the application to match your
+              preferences.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Button variant="outline" disabled>
                 View Help Documentation
-                <span className="text-xs ml-2">(Coming Soon)</span>
+                <span className="ml-2 text-xs">(Coming Soon)</span>
               </Button>
               <Button variant="outline" disabled>
                 Contact Support
-                <span className="text-xs ml-2">(Coming Soon)</span>
+                <span className="ml-2 text-xs">(Coming Soon)</span>
               </Button>
             </div>
           </div>

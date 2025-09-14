@@ -1,7 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Edit, Trash2, Target, TrendingUp, TrendingDown, AlertTriangle, BarChart3, Trophy, Brain } from 'lucide-react'
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Target,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  BarChart3,
+  Trophy,
+  Brain,
+} from 'lucide-react'
 
 import { useBudgetsWithStats, useDeleteBudget } from '@/hooks/use-budgets'
 import { useUser } from '@/hooks/use-user'
@@ -13,6 +24,7 @@ import { BudgetIntelligence } from '@/components/budgets/budget-intelligence'
 import { BudgetPerformanceCharts } from '@/components/budgets/budget-performance-charts'
 import { BudgetTemplates } from '@/components/budgets/budget-templates'
 import { BudgetCelebrations } from '@/components/budgets/budget-celebrations'
+import { PageHeader, PageHeaderAction } from '@/components/layout/page-header'
 import { cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
@@ -47,9 +59,9 @@ export default function BudgetsPage() {
   const { user, isLoading: userLoading } = useUser()
   const [periodFilter, setPeriodFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  
+
   const { data: budgetsData, isLoading } = useBudgetsWithStats(user?.id || '', {
-    period: periodFilter !== 'all' ? periodFilter as any : undefined,
+    period: periodFilter !== 'all' ? (periodFilter as any) : undefined,
     overBudget: statusFilter === 'over' ? true : statusFilter === 'under' ? false : undefined,
   })
   // const { data: categoriesData } = useCategoriesByType(user?.id || '', 'expense')
@@ -63,7 +75,9 @@ export default function BudgetsPage() {
 
   const budgets = budgetsData?.data || []
   // const categories = categoriesData?.data || []
-  const activeBudgets = budgets.filter(budget => !budget.end_date || new Date(budget.end_date) > new Date())
+  const activeBudgets = budgets.filter(
+    budget => !budget.end_date || new Date(budget.end_date) > new Date()
+  )
   const overBudgetCount = budgets.filter(budget => budget.is_over_budget).length
   const { analytics } = useBudgetInsights(budgets)
 
@@ -100,7 +114,11 @@ export default function BudgetsPage() {
     setBudgetToEdit(null)
   }
 
-  const handleApplyTemplate = (template: { id: string; name: string; budgetAllocations: Array<{ categoryName: string; amount?: number }> }) => {
+  const handleApplyTemplate = (template: {
+    id: string
+    name: string
+    budgetAllocations: Array<{ categoryName: string; amount?: number }>
+  }) => {
     // This would create multiple budgets based on template
     console.log('Applying template:', template)
     // For now, just show a placeholder
@@ -108,15 +126,15 @@ export default function BudgetsPage() {
 
   if (userLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-gray-600">Please log in to view your budgets</p>
       </div>
     )
@@ -125,24 +143,24 @@ export default function BudgetsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Budgets</h1>
-          <p className="text-gray-600">Track and manage your spending limits with intelligent insights</p>
-        </div>
-        <Button onClick={() => setCreateDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Budget
-        </Button>
-      </div>
+      <PageHeader
+        title="Budget Management"
+        subtitle="Track and manage your spending limits with intelligent insights and analytics"
+        actions={
+          <PageHeaderAction onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Budget
+          </PageHeaderAction>
+        }
+      />
 
       {/* Enhanced Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <Target className="w-4 h-4 text-blue-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                <Target className="h-4 w-4 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Budgets</p>
@@ -155,8 +173,8 @@ export default function BudgetsPage() {
         <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-green-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                <TrendingUp className="h-4 w-4 text-green-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Active Budgets</p>
@@ -169,8 +187,8 @@ export default function BudgetsPage() {
         <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Over Budget</p>
@@ -183,8 +201,8 @@ export default function BudgetsPage() {
         <Card className="glass-card">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                <TrendingDown className="w-4 h-4 text-purple-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
+                <TrendingDown className="h-4 w-4 text-purple-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Savings</p>
@@ -225,7 +243,7 @@ export default function BudgetsPage() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Period:</span>
               <Select value={periodFilter} onValueChange={setPeriodFilter}>
@@ -261,19 +279,19 @@ export default function BudgetsPage() {
             {budgets.length === 0 ? (
               <Card className="glass-card">
                 <CardContent className="p-8 text-center">
-                  <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No budgets found</h3>
-                  <p className="text-gray-600 mb-4">
+                  <Target className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900">No budgets found</h3>
+                  <p className="mb-4 text-gray-600">
                     Create your first budget to start tracking your spending limits.
                   </p>
                   <Button onClick={() => setCreateDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Create Budget
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              budgets.map((budget) => (
+              budgets.map(budget => (
                 <BudgetCard
                   key={budget.id}
                   budget={budget}
@@ -297,9 +315,7 @@ export default function BudgetsPage() {
 
         {/* Templates Tab */}
         <TabsContent value="templates">
-          <BudgetTemplates 
-            onApplyTemplate={handleApplyTemplate}
-          />
+          <BudgetTemplates onApplyTemplate={handleApplyTemplate} />
         </TabsContent>
 
         {/* Achievements Tab */}
@@ -314,22 +330,15 @@ export default function BudgetsPage() {
           <DialogHeader>
             <DialogTitle>Delete Budget</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this budget? This action cannot be undone.
-              Your transaction history will remain unchanged.
+              Are you sure you want to delete this budget? This action cannot be undone. Your
+              transaction history will remain unchanged.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleteBudget.isPending}
-            >
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleteBudget.isPending}>
               {deleteBudget.isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
@@ -338,7 +347,15 @@ export default function BudgetsPage() {
 
       {/* Create Budget Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+              Create New Budget
+            </DialogTitle>
+            <DialogDescription>
+              Set spending limits to keep your finances on track.
+            </DialogDescription>
+          </DialogHeader>
           {user && (
             <BudgetForm
               userId={user.id}
@@ -351,7 +368,13 @@ export default function BudgetsPage() {
 
       {/* Edit Budget Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              Edit Budget
+            </DialogTitle>
+            <DialogDescription>Update your budget settings and spending limits.</DialogDescription>
+          </DialogHeader>
           {user && budgetToEdit && (
             <BudgetForm
               userId={user.id}
@@ -379,27 +402,27 @@ function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
   const isNearLimit = budget.spent_percentage >= 80 && !isOverBudget
 
   return (
-    <Card className={cn(
-      "transition-all duration-200 hover:shadow-md",
-      isOverBudget && "border-red-200 bg-red-50",
-      isNearLimit && "border-yellow-200 bg-yellow-50"
-    )}>
+    <Card
+      className={cn(
+        'transition-all duration-200 hover:shadow-md',
+        isOverBudget && 'border-red-200 bg-red-50',
+        isNearLimit && 'border-yellow-200 bg-yellow-50'
+      )}
+    >
       <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center rounded-full"
               style={{ backgroundColor: budget.category?.color || '#6b7280' }}
             >
-              <IconComponent className="w-5 h-5 text-white" />
+              <IconComponent className="h-5 w-5 text-white" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">
                 {budget.category?.name || 'Unknown Category'}
               </h3>
-              <p className="text-sm text-gray-500 capitalize">
-                {budget.period} budget
-              </p>
+              <p className="text-sm capitalize text-gray-500">{budget.period} budget</p>
             </div>
           </div>
 
@@ -414,26 +437,23 @@ function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
                 Near Limit
               </Badge>
             )}
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <Edit className="w-4 h-4" />
+                  <Edit className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {onEdit && (
                   <DropdownMenuItem onClick={() => onEdit(budget)}>
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="mr-2 h-4 w-4" />
                     Edit Budget
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
-                  <DropdownMenuItem
-                    onClick={() => onDelete(budget)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                  <DropdownMenuItem onClick={() => onDelete(budget)} className="text-red-600">
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete Budget
                   </DropdownMenuItem>
                 )}
@@ -449,20 +469,21 @@ function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
               <span className="text-gray-600">
                 ${budget.spent_amount.toFixed(2)} of ${budget.amount.toFixed(2)}
               </span>
-              <span className={cn(
-                "font-medium",
-                isOverBudget ? "text-red-600" : 
-                isNearLimit ? "text-yellow-600" : "text-gray-900"
-              )}>
+              <span
+                className={cn(
+                  'font-medium',
+                  isOverBudget ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : 'text-gray-900'
+                )}
+              >
                 {progressValue.toFixed(1)}%
               </span>
             </div>
             <Progress
               value={progressValue}
               className={cn(
-                "h-2",
-                isOverBudget && "[&>div]:bg-red-500",
-                isNearLimit && "[&>div]:bg-yellow-500"
+                'h-2',
+                isOverBudget && '[&>div]:bg-red-500',
+                isNearLimit && '[&>div]:bg-yellow-500'
               )}
             />
           </div>
@@ -471,12 +492,14 @@ function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-600">Remaining</p>
-              <p className={cn(
-                "font-medium",
-                budget.remaining_amount < 0 ? "text-red-600" : "text-green-600"
-              )}>
+              <p
+                className={cn(
+                  'font-medium',
+                  budget.remaining_amount < 0 ? 'text-red-600' : 'text-green-600'
+                )}
+              >
                 ${Math.abs(budget.remaining_amount).toFixed(2)}
-                {budget.remaining_amount < 0 ? " over" : " left"}
+                {budget.remaining_amount < 0 ? ' over' : ' left'}
               </p>
             </div>
             <div>
@@ -486,7 +509,7 @@ function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
           </div>
 
           {/* Period Info */}
-          <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
+          <div className="border-t border-gray-200 pt-2 text-xs text-gray-500">
             Started {new Date(budget.start_date).toLocaleDateString()}
             {budget.end_date && (
               <span> • Ends {new Date(budget.end_date).toLocaleDateString()}</span>

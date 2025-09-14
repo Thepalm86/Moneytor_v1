@@ -1,65 +1,65 @@
 'use client'
 
 import { ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { getPageTheme, type PageTheme } from '@/lib/utils/page-themes'
 
 interface PageHeaderProps {
   title: string
   subtitle?: string
   actions?: ReactNode
-  gradient?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'gray'
+  theme?: PageTheme
   className?: string
   children?: ReactNode
-}
-
-const gradients = {
-  blue: 'from-blue-600 via-blue-700 to-indigo-700',
-  green: 'from-green-600 via-emerald-700 to-teal-700',
-  purple: 'from-purple-600 via-violet-700 to-indigo-700',
-  orange: 'from-orange-600 via-amber-700 to-yellow-700',
-  red: 'from-red-600 via-rose-700 to-pink-700',
-  gray: 'from-gray-600 via-slate-700 to-gray-800',
-}
-
-const shadowColors = {
-  blue: 'shadow-blue-500/20',
-  green: 'shadow-green-500/20',
-  purple: 'shadow-purple-500/20',
-  orange: 'shadow-orange-500/20',
-  red: 'shadow-red-500/20',
-  gray: 'shadow-gray-500/20',
 }
 
 export function PageHeader({
   title,
   subtitle,
   actions,
-  gradient = 'blue',
+  theme,
   className,
   children,
 }: PageHeaderProps) {
+  const pathname = usePathname()
+  const currentTheme = theme || getPageTheme(pathname)
+
   return (
     <div
       className={cn(
-        'relative rounded-2xl p-6 shadow-xl',
-        `bg-gradient-to-r ${gradients[gradient]}`,
-        shadowColors[gradient],
+        'relative overflow-hidden rounded-3xl p-8 shadow-2xl transition-all duration-300',
+        `bg-gradient-to-r ${currentTheme.gradient}`,
+        currentTheme.shadowColor,
+        'hover:shadow-3xl hover:scale-[1.01]',
         className
       )}
     >
-      {/* Overlay for better text readability */}
+      {/* Enhanced background overlay with subtle pattern */}
+      <div className="absolute inset-0 bg-black/5"></div>
       <div
-        className={cn('absolute inset-0 rounded-2xl', `bg-gradient-to-r ${gradients[gradient]}/90`)}
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)`,
+          backgroundSize: '20px 20px',
+        }}
       ></div>
 
+      {/* Glow effects */}
+      <div className="absolute -inset-4 bg-gradient-to-r from-white/5 via-white/10 to-white/5 blur-xl"></div>
+
       {/* Content */}
-      <div className="relative">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <h1 className="mb-2 text-3xl font-bold leading-tight text-white">{title}</h1>
+      <div className="relative z-10">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1 space-y-3">
+            <h1 className="text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-lg">
+              {title}
+            </h1>
             {subtitle && (
-              <p className="text-base leading-relaxed text-white/80 opacity-90">{subtitle}</p>
+              <p className="max-w-2xl text-lg leading-relaxed text-white/90 drop-shadow-sm">
+                {subtitle}
+              </p>
             )}
           </div>
 
@@ -69,12 +69,28 @@ export function PageHeader({
         </div>
 
         {/* Additional content */}
-        {children && <div className="mt-6">{children}</div>}
+        {children && (
+          <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+            {children}
+          </div>
+        )}
       </div>
 
-      {/* Decorative arrow */}
-      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 transform">
-        <div className="h-8 w-8 rotate-45 rounded-lg bg-white/10 backdrop-blur-sm"></div>
+      {/* Premium decorative elements */}
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 transform">
+        <div className="flex space-x-2">
+          <div className="h-3 w-3 rotate-45 rounded-sm bg-white/20 backdrop-blur-sm"></div>
+          <div className="h-4 w-4 rotate-45 rounded-lg bg-white/30 shadow-lg backdrop-blur-sm"></div>
+          <div className="h-3 w-3 rotate-45 rounded-sm bg-white/20 backdrop-blur-sm"></div>
+        </div>
+      </div>
+
+      {/* Corner accents */}
+      <div className="absolute right-6 top-6">
+        <div className="h-8 w-8 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm"></div>
+      </div>
+      <div className="absolute bottom-6 left-6">
+        <div className="h-6 w-6 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm"></div>
       </div>
     </div>
   )
@@ -85,6 +101,7 @@ interface PageHeaderActionProps {
   onClick?: () => void
   variant?: 'primary' | 'secondary' | 'ghost'
   size?: 'sm' | 'lg' | 'default'
+  disabled?: boolean
 }
 
 export function PageHeaderAction({
@@ -92,23 +109,28 @@ export function PageHeaderAction({
   onClick,
   variant = 'primary',
   size = 'default',
+  disabled = false,
 }: PageHeaderActionProps) {
   const variants = {
-    primary: 'bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm shadow-lg',
-    secondary: 'bg-white/5 hover:bg-white/15 text-white border-white/10 backdrop-blur-sm',
-    ghost: 'bg-transparent hover:bg-white/10 text-white border-transparent',
+    primary:
+      'bg-white/15 hover:bg-white/25 text-white border-white/30 backdrop-blur-md shadow-xl hover:shadow-2xl border',
+    secondary: 'bg-white/8 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm border',
+    ghost: 'bg-transparent hover:bg-white/15 text-white border-transparent backdrop-blur-sm',
   }
 
   return (
     <Button
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         variants[variant],
-        'transition-all duration-200 hover:scale-105',
-        size === 'sm' && 'px-3 py-1.5 text-sm',
-        size === 'lg' && 'px-6 py-3 text-base'
+        'rounded-xl font-medium transition-all duration-300 hover:scale-105 active:scale-95',
+        'focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent',
+        disabled && 'cursor-not-allowed opacity-50 hover:scale-100',
+        size === 'sm' && 'h-9 px-4 py-2 text-sm',
+        size === 'lg' && 'h-14 px-8 py-4 text-lg',
+        size === 'default' && 'h-11 px-6 py-3'
       )}
-      size={size}
     >
       {children}
     </Button>

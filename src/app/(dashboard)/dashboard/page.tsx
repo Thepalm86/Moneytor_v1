@@ -16,7 +16,6 @@ export default function DashboardPage() {
   // Current month date range for stats
   const currentMonthRange = getDateRange('month')
 
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -39,7 +38,6 @@ export default function DashboardPage() {
       <PageHeader
         title="Financial Dashboard"
         subtitle="Welcome back! Here's your financial overview"
-        gradient="blue"
       />
 
       {/* Statistics Cards */}

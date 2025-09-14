@@ -1,16 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { 
-  Calendar, 
-  BarChart3, 
-  PieChart, 
-  TrendingUp, 
-  Activity, 
-  ArrowUpDown, 
-  Download,
-  Zap
-} from 'lucide-react'
+import { PieChart, TrendingUp, Activity, ArrowUpDown, Download, Zap } from 'lucide-react'
 import { format, subDays, subMonths } from 'date-fns'
 
 import { useUser } from '@/hooks/use-user'
@@ -23,8 +14,9 @@ import { InteractiveSpendingTrendsChart } from '@/components/charts/interactive-
 import {
   FinancialKPIDashboard,
   ComparisonTools,
-  ExportReportingSystem
+  ExportReportingSystem,
 } from '@/components/analytics'
+import { PageHeader } from '@/components/layout/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -87,7 +79,9 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-1">
             <p className="text-body-md font-medium text-foreground">Authentication Required</p>
-            <p className="text-body-sm text-muted-foreground">Please log in to view your financial analytics</p>
+            <p className="text-body-sm text-muted-foreground">
+              Please log in to view your financial analytics
+            </p>
           </div>
         </div>
       </div>
@@ -96,33 +90,31 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Financial Analytics</h1>
-          <p className="text-muted-foreground">
-            Advanced insights, KPIs, and interactive analysis of your financial data
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-sm">
-            {format(currentDateRange.from, 'MMM dd')} -{' '}
-            {format(currentDateRange.to, 'MMM dd, yyyy')}
-          </Badge>
-          <Select value={dateRange} onValueChange={(value: any) => setDateRange(value)}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="6m">Last 6 months</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      {/* Header */}
+      <PageHeader
+        title="Financial Analytics 📊"
+        subtitle="Advanced insights, KPIs, and interactive analysis of your financial data"
+        actions={
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="border-white/30 bg-white/20 text-sm text-white">
+              {format(currentDateRange.from, 'MMM dd')} -{' '}
+              {format(currentDateRange.to, 'MMM dd, yyyy')}
+            </Badge>
+            <Select value={dateRange} onValueChange={(value: any) => setDateRange(value)}>
+              <SelectTrigger className="w-[140px] border-white/30 bg-white/15 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="90d">Last 90 days</SelectItem>
+                <SelectItem value="6m">Last 6 months</SelectItem>
+                <SelectItem value="1y">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        }
+      />
 
       {/* Advanced Analytics Tabs */}
       <Tabs defaultValue="dashboard" className="w-full">
@@ -155,19 +147,13 @@ export default function AnalyticsPage() {
 
         {/* Financial KPI Dashboard */}
         <TabsContent value="dashboard" className="space-y-6">
-          <FinancialKPIDashboard 
-            userId={user.id} 
-            dateRange={currentDateRange} 
-          />
+          <FinancialKPIDashboard userId={user.id} dateRange={currentDateRange} />
         </TabsContent>
 
         {/* Interactive Charts */}
         <TabsContent value="interactive" className="space-y-6">
-          <InteractiveSpendingTrendsChart 
-            userId={user.id} 
-            dateRange={currentDateRange} 
-          />
-          
+          <InteractiveSpendingTrendsChart userId={user.id} dateRange={currentDateRange} />
+
           <div className="grid gap-6 lg:grid-cols-2">
             <CategoryBreakdownChart
               userId={user.id}
@@ -181,10 +167,7 @@ export default function AnalyticsPage() {
 
         {/* Period Comparison */}
         <TabsContent value="comparison" className="space-y-6">
-          <ComparisonTools 
-            userId={user.id} 
-            currentPeriod={currentDateRange} 
-          />
+          <ComparisonTools userId={user.id} currentPeriod={currentDateRange} />
         </TabsContent>
 
         {/* Enhanced Trends View */}
@@ -249,7 +232,8 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
                     <p className="text-xs text-amber-800 dark:text-amber-200">
-                      💡 Tip: Use different time ranges to identify seasonal patterns and long-term trends in your financial behavior.
+                      💡 Tip: Use different time ranges to identify seasonal patterns and long-term
+                      trends in your financial behavior.
                     </p>
                   </div>
                 </div>
@@ -294,22 +278,42 @@ export default function AnalyticsPage() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground">Understanding Your Categories</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Understanding Your Categories
+                  </h4>
                   <div className="space-y-2 text-sm">
-                    <p>• <strong>Expense Categories:</strong> Track where your money goes</p>
-                    <p>• <strong>Income Sources:</strong> Monitor revenue streams</p>
-                    <p>• <strong>Percentage View:</strong> Identify spending distribution</p>
-                    <p>• <strong>Hover Details:</strong> See exact amounts and percentages</p>
+                    <p>
+                      • <strong>Expense Categories:</strong> Track where your money goes
+                    </p>
+                    <p>
+                      • <strong>Income Sources:</strong> Monitor revenue streams
+                    </p>
+                    <p>
+                      • <strong>Percentage View:</strong> Identify spending distribution
+                    </p>
+                    <p>
+                      • <strong>Hover Details:</strong> See exact amounts and percentages
+                    </p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground">Optimization Strategies</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Optimization Strategies
+                  </h4>
                   <div className="space-y-2 text-sm">
-                    <p>• <strong>Largest Slices:</strong> Focus optimization efforts here</p>
-                    <p>• <strong>Small Categories:</strong> Consider merging similar ones</p>
-                    <p>• <strong>Income Diversity:</strong> Reduce dependency on single sources</p>
-                    <p>• <strong>Seasonal Patterns:</strong> Plan for category fluctuations</p>
+                    <p>
+                      • <strong>Largest Slices:</strong> Focus optimization efforts here
+                    </p>
+                    <p>
+                      • <strong>Small Categories:</strong> Consider merging similar ones
+                    </p>
+                    <p>
+                      • <strong>Income Diversity:</strong> Reduce dependency on single sources
+                    </p>
+                    <p>
+                      • <strong>Seasonal Patterns:</strong> Plan for category fluctuations
+                    </p>
                   </div>
                 </div>
               </div>
@@ -319,10 +323,7 @@ export default function AnalyticsPage() {
 
         {/* Export & Reporting */}
         <TabsContent value="export" className="space-y-6">
-          <ExportReportingSystem 
-            userId={user.id} 
-            dateRange={currentDateRange} 
-          />
+          <ExportReportingSystem userId={user.id} dateRange={currentDateRange} />
         </TabsContent>
       </Tabs>
     </div>

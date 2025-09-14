@@ -105,27 +105,35 @@ export function CategoryForm({ userId, initialData, onSuccess, onCancel }: Categ
   }
 
   return (
-    <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>{isEditing ? 'Edit Category' : 'Create New Category'}</CardTitle>
+    <Card className="mx-auto w-full max-w-2xl backdrop-blur-sm bg-white/90 border-white/20 shadow-xl">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+          {isEditing ? 'Edit Category' : 'Create New Category'}
+        </CardTitle>
+        <p className="text-sm text-gray-600">
+          {isEditing 
+            ? 'Update your category details and settings'
+            : 'Create a new category to organize your transactions'
+          }
+        </p>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Category Type Tabs */}
             <Tabs value={categoryType} onValueChange={handleTypeChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 bg-gray-100/50 backdrop-blur-sm">
                 <TabsTrigger
                   value="expense"
-                  className="text-red-600 data-[state=active]:text-red-600"
+                  className="text-red-600 data-[state=active]:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:shadow-lg transition-all duration-200"
                 >
-                  Expense Category
+                  💸 Expense Category
                 </TabsTrigger>
                 <TabsTrigger
                   value="income"
-                  className="text-green-600 data-[state=active]:text-green-600"
+                  className="text-green-600 data-[state=active]:text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:shadow-lg transition-all duration-200"
                 >
-                  Income Category
+                  💰 Income Category
                 </TabsTrigger>
               </TabsList>
 
@@ -139,23 +147,29 @@ export function CategoryForm({ userId, initialData, onSuccess, onCancel }: Categ
             </Tabs>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-6 border-t border-gray-200/50">
               <Button
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'flex-1',
+                  'flex-1 font-medium shadow-lg hover:shadow-xl transition-all duration-200',
                   categoryType === 'income'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-600 hover:bg-red-700'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
+                    : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
                 )}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Update Category' : 'Create Category'}
+                {isEditing ? '✏️ Update Category' : '✨ Create Category'}
               </Button>
 
               {onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onCancel} 
+                  disabled={isLoading}
+                  className="backdrop-blur-sm bg-white/50 border-white/20 hover:bg-white/70 transition-all duration-200"
+                >
                   Cancel
                 </Button>
               )}
@@ -219,16 +233,18 @@ function CategoryFormFields({ form, categoryType }: CategoryFormFieldsProps) {
       />
 
       {/* Preview */}
-      <div className="flex items-center gap-4 rounded-lg border bg-gray-50 p-4">
+      <div className="flex items-center gap-4 rounded-xl border bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm p-4 shadow-inner">
         <div
-          className="flex h-12 w-12 items-center justify-center rounded-full shadow-sm"
+          className="flex h-12 w-12 items-center justify-center rounded-full shadow-lg ring-2 ring-white/50 transition-transform hover:scale-105"
           style={{ backgroundColor: watchedColor }}
         >
           <IconComponent className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h4 className="font-medium text-gray-900">{form.watch('name') || 'Category Name'}</h4>
-          <p className="text-sm capitalize text-gray-500">{categoryType} Category</p>
+          <h4 className="font-semibold text-gray-900">{form.watch('name') || 'Category Name'}</h4>
+          <p className="text-sm capitalize text-gray-500 flex items-center gap-1">
+            {categoryType === 'income' ? '💰' : '💸'} {categoryType} Category
+          </p>
         </div>
       </div>
 
@@ -243,16 +259,16 @@ function CategoryFormFields({ form, categoryType }: CategoryFormFieldsProps) {
               Color
             </FormLabel>
             <FormControl>
-              <div className="grid grid-cols-6 gap-2">
+              <div className="grid grid-cols-6 gap-3">
                 {CATEGORY_COLORS.map(color => (
                   <button
                     key={color}
                     type="button"
                     className={cn(
-                      'h-8 w-8 rounded-full border-2 transition-all',
+                      'h-10 w-10 rounded-xl border-2 transition-all duration-200 hover:scale-110 hover:shadow-lg',
                       field.value === color
-                        ? 'border-gray-400 ring-2 ring-gray-300 ring-offset-1'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-white ring-4 ring-gray-300/50 shadow-lg scale-110'
+                        : 'border-gray-200/60 hover:border-white shadow-md'
                     )}
                     style={{ backgroundColor: color }}
                     onClick={() => field.onChange(color)}

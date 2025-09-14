@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { format, subDays, eachDayOfInterval, startOfDay } from 'date-fns'
 
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { useTransactions } from '@/hooks/use-transactions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -28,6 +28,8 @@ interface SpendingTrendsChartProps {
 }
 
 export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTrendsChartProps) {
+  const { formatCurrency, formatCurrencyForChart } = useCurrency()
+  
   // Default to last 30 days if no date range provided
   const defaultDateRange = useMemo(
     () => ({

@@ -1,16 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Edit, Trash2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Search } from 'lucide-react'
 
 import { useCategories, useDeleteCategory } from '@/hooks/use-categories'
 import { useUser } from '@/hooks/use-user'
 import { getIcon } from '@/lib/utils/icons'
 import { CategoryForm } from '@/components/forms/category-form'
+import { CategoriesPageHeader } from '@/components/categories/categories-page-header'
+import { CategoryUsageAnalytics } from '@/components/categories/category-usage-analytics'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -37,10 +40,20 @@ export default function CategoriesPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
 
   const categories = categoriesData?.data || []
-  const incomeCategories = categories.filter(cat => cat.type === 'income')
-  const expenseCategories = categories.filter(cat => cat.type === 'expense')
+  
+  // Filter categories based on search and type filter
+  const filteredCategories = categories.filter(category => {
+    const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesType = filterType === 'all' || category.type === filterType
+    return matchesSearch && matchesType
+  })
+  
+  const incomeCategories = filteredCategories.filter(cat => cat.type === 'income')
+  const expenseCategories = filteredCategories.filter(cat => cat.type === 'expense')
 
   const handleDeleteClick = (category: Category) => {
     setCategoryToDelete(category)
@@ -87,25 +100,62 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-600">Manage your income and expense categories</p>
-        </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Category
-        </Button>
-      </div>
+      {/* Enhanced Header */}
+      <CategoriesPageHeader 
+        userId={user?.id || ''} 
+        onAddCategory={() => setCreateDialogOpen(true)} 
+      />
+      
+      {/* Search and Filter */}
+      <Card className="backdrop-blur-sm bg-white/40 border-white/20 shadow-lg">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search categories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-white/50 border-white/20 backdrop-blur-sm"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('all')}
+                className="backdrop-blur-sm"
+              >
+                All ({categories.length})
+              </Button>
+              <Button
+                variant={filterType === 'income' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('income')}
+                className={`backdrop-blur-sm ${filterType === 'income' ? 'bg-green-600 hover:bg-green-700' : 'text-green-600 hover:bg-green-50'}`}
+              >
+                Income ({categories.filter(c => c.type === 'income').length})
+              </Button>
+              <Button
+                variant={filterType === 'expense' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('expense')}
+                className={`backdrop-blur-sm ${filterType === 'expense' ? 'bg-red-600 hover:bg-red-700' : 'text-red-600 hover:bg-red-50'}`}
+              >
+                Expense ({categories.filter(c => c.type === 'expense').length})
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Categories Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Income Categories */}
-        <Card>
+        <Card className="backdrop-blur-sm bg-gradient-to-br from-green-50/60 to-green-100/30 border-green-200/20 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-700">
-              Income Categories
+              💰 Income Categories
               <Badge variant="secondary" className="bg-green-100 text-green-800">
                 {incomeCategories.length}
               </Badge>
@@ -113,11 +163,21 @@ export default function CategoriesPage() {
           </CardHeader>
           <CardContent>
             {incomeCategories.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No income categories found</p>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                  <Plus className="w-8 h-8 text-green-600" />
+                </div>
+                <p className="text-gray-500 mb-2">
+                  {searchQuery ? 'No income categories match your search' : 'No income categories found'}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Create your first income category to get started
+                </p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {incomeCategories.map((category) => (
-                  <CategoryCard
+                  <EnhancedCategoryCard
                     key={category.id}
                     category={category}
                     onEdit={handleEditClick}
@@ -130,10 +190,10 @@ export default function CategoriesPage() {
         </Card>
 
         {/* Expense Categories */}
-        <Card>
+        <Card className="backdrop-blur-sm bg-gradient-to-br from-red-50/60 to-red-100/30 border-red-200/20 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
-              Expense Categories
+              💸 Expense Categories
               <Badge variant="secondary" className="bg-red-100 text-red-800">
                 {expenseCategories.length}
               </Badge>
@@ -141,11 +201,21 @@ export default function CategoriesPage() {
           </CardHeader>
           <CardContent>
             {expenseCategories.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No expense categories found</p>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                  <Plus className="w-8 h-8 text-red-600" />
+                </div>
+                <p className="text-gray-500 mb-2">
+                  {searchQuery ? 'No expense categories match your search' : 'No expense categories found'}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Create your first expense category to get started
+                </p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {expenseCategories.map((category) => (
-                  <CategoryCard
+                  <EnhancedCategoryCard
                     key={category.id}
                     category={category}
                     onEdit={handleEditClick}
@@ -158,38 +228,8 @@ export default function CategoriesPage() {
         </Card>
       </div>
 
-      {/* Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">📋 Category Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 leading-relaxed mb-4">
-            Categories help organize your transactions and provide better insights into your spending patterns. 
-            Create custom categories with personalized colors and icons to match your financial workflow.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-              <h4 className="font-semibold text-green-900 mb-1 text-sm">✅ Available Now</h4>
-              <ul className="text-xs text-green-800 space-y-1">
-                <li>• Create custom categories</li>
-                <li>• Edit category names, colors, and icons</li>
-                <li>• Delete unused categories</li>
-                <li>• Income and expense categorization</li>
-              </ul>
-            </div>
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-1 text-sm">🚧 Coming Soon</h4>
-              <ul className="text-xs text-blue-800 space-y-1">
-                <li>• Category-based budgeting</li>
-                <li>• Spending analysis by category</li>
-                <li>• Category performance metrics</li>
-                <li>• Advanced category rules</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Category Usage Analytics */}
+      <CategoryUsageAnalytics userId={user?.id || ''} />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -221,7 +261,7 @@ export default function CategoriesPage() {
 
       {/* Create Category Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto backdrop-blur-lg bg-white/95 border-white/20">
           {user && (
             <CategoryForm
               userId={user.id}
@@ -234,7 +274,7 @@ export default function CategoriesPage() {
 
       {/* Edit Category Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto backdrop-blur-lg bg-white/95 border-white/20">
           {user && categoryToEdit && (
             <CategoryForm
               userId={user.id}
@@ -255,35 +295,48 @@ interface CategoryCardProps {
   onDelete?: (category: Category) => void
 }
 
-function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
+function EnhancedCategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
   const IconComponent = getIcon(category.icon)
 
   return (
-    <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+    <div className="group flex items-center justify-between p-4 border border-white/40 rounded-xl bg-white/30 backdrop-blur-sm hover:bg-white/50 hover:shadow-lg transition-all duration-200">
       <div className="flex items-center gap-3">
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center"
+          className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/50 group-hover:scale-110 transition-transform duration-200"
           style={{ backgroundColor: category.color }}
         >
-          <IconComponent className="w-4 h-4 text-white" />
+          <IconComponent className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h4 className="font-medium text-gray-900">{category.name}</h4>
-          <p className="text-xs text-gray-500">
-            {category.type === 'income' ? 'Income' : 'Expense'} • Created {new Date(category.created_at).toLocaleDateString()}
-          </p>
+          <h4 className="font-semibold text-gray-900 group-hover:text-gray-800">{category.name}</h4>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge 
+              variant={category.type === 'income' ? 'secondary' : 'destructive'}
+              className="text-xs px-2 py-0.5"
+            >
+              {category.type === 'income' ? '💰' : '💸'} {category.type}
+            </Badge>
+            <span className="text-xs text-gray-500">•</span>
+            <span className="text-xs text-gray-500">
+              Created {new Date(category.created_at).toLocaleDateString()}
+            </span>
+          </div>
         </div>
       </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/60"
+          >
             <Edit className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="backdrop-blur-sm bg-white/95 border-white/20">
           {onEdit && (
-            <DropdownMenuItem onClick={() => onEdit(category)}>
+            <DropdownMenuItem onClick={() => onEdit(category)} className="hover:bg-white/60">
               <Edit className="w-4 h-4 mr-2" />
               Edit Category
             </DropdownMenuItem>
@@ -291,7 +344,7 @@ function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
           {onDelete && (
             <DropdownMenuItem
               onClick={() => onDelete(category)}
-              className="text-red-600"
+              className="text-red-600 hover:bg-red-50/60"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Category

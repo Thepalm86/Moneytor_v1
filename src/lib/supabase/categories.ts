@@ -165,6 +165,180 @@ export async function updateCategory(
   }
 }
 
+export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { from: Date; to: Date }): Promise<{ 
+  data: {
+    totalTransactions: number
+    mostUsedCategory: { category: Category; count: number; amount: number } | null
+    leastUsedCategory: { category: Category; count: number; amount: number } | null
+    unusedCategories: Category[]
+    categoryPerformance: Array<{ 
+      category: Category
+      transactionCount: number
+      totalAmount: number
+      averageAmount: number
+      lastUsed: string | null
+    }>
+    monthlyTrends: Array<{
+      month: string
+      categories: Array<{ categoryId: string; categoryName: string; count: number; amount: number }>
+    }>
+  }
+  error: string | null 
+}> {
+  try {
+    // Note: dateRange parameter reserved for future filtering functionality
+
+    // Get categories with transaction stats
+    const { data: categoriesData, error: categoriesError } = await supabase
+      .from('categories')
+      .select(`
+        *,
+        transactions!inner(
+          id,
+          amount,
+          date,
+          created_at
+        )
+      `)
+      .eq('user_id', userId)
+      .order('name')
+
+    if (categoriesError) {
+      console.error('Error fetching category analytics:', categoriesError)
+      return { data: null as any, error: categoriesError.message }
+    }
+
+    // Get all categories (including unused ones)
+    const { data: allCategories, error: allCategoriesError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('name')
+
+    if (allCategoriesError) {
+      console.error('Error fetching all categories:', allCategoriesError)
+      return { data: null as any, error: allCategoriesError.message }
+    }
+
+    const usedCategoryIds = new Set(categoriesData?.map(c => c.id) || [])
+    const unusedCategories = allCategories?.filter(c => !usedCategoryIds.has(c.id)) || []
+
+    // Process category performance
+    const categoryPerformance = categoriesData?.map(category => {
+      const transactions = category.transactions || []
+      const transactionCount = transactions.length
+      const totalAmount = transactions.reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount)), 0)
+      const averageAmount = transactionCount > 0 ? totalAmount / transactionCount : 0
+      
+      // Find last used date
+      const lastUsed = transactions.length > 0 
+        ? transactions.reduce((latest: any, t: any) => 
+            new Date(t.date) > new Date(latest.date) ? t : latest
+          ).date
+        : null
+
+      return {
+        category: {
+          id: category.id,
+          user_id: category.user_id,
+          name: category.name,
+          type: category.type,
+          color: category.color,
+          icon: category.icon,
+          created_at: category.created_at,
+        },
+        transactionCount,
+        totalAmount,
+        averageAmount,
+        lastUsed
+      }
+    }).sort((a, b) => b.transactionCount - a.transactionCount) || []
+
+    const totalTransactions = categoryPerformance.reduce((sum, cp) => sum + cp.transactionCount, 0)
+    const mostUsedCategory = categoryPerformance.length > 0 
+      ? { 
+          category: categoryPerformance[0].category, 
+          count: categoryPerformance[0].transactionCount,
+          amount: categoryPerformance[0].totalAmount
+        }
+      : null
+    const leastUsedCategory = categoryPerformance.length > 0 
+      ? {
+          category: categoryPerformance[categoryPerformance.length - 1].category,
+          count: categoryPerformance[categoryPerformance.length - 1].transactionCount,
+          amount: categoryPerformance[categoryPerformance.length - 1].totalAmount
+        }
+      : null
+
+    // Generate monthly trends (last 6 months)
+    const monthlyTrends = []
+    const now = new Date()
+    
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const monthStart = new Date(month.getFullYear(), month.getMonth(), 1)
+      const monthEnd = new Date(month.getFullYear(), month.getMonth() + 1, 0)
+
+      const { data: monthlyTransactions, error: monthlyError } = await supabase
+        .from('transactions')
+        .select(`
+          category_id,
+          amount,
+          categories!inner(name)
+        `)
+        .eq('user_id', userId)
+        .gte('date', monthStart.toISOString().split('T')[0])
+        .lte('date', monthEnd.toISOString().split('T')[0])
+
+      if (!monthlyError && monthlyTransactions) {
+        const categoryStats = new Map()
+        
+        monthlyTransactions.forEach((transaction: any) => {
+          const categoryId = transaction.category_id
+          const categoryName = transaction.categories.name
+          const amount = Math.abs(Number(transaction.amount))
+          
+          if (categoryStats.has(categoryId)) {
+            const existing = categoryStats.get(categoryId)
+            categoryStats.set(categoryId, {
+              ...existing,
+              count: existing.count + 1,
+              amount: existing.amount + amount
+            })
+          } else {
+            categoryStats.set(categoryId, {
+              categoryId,
+              categoryName,
+              count: 1,
+              amount
+            })
+          }
+        })
+
+        monthlyTrends.push({
+          month: month.toLocaleDateString('default', { month: 'short', year: 'numeric' }),
+          categories: Array.from(categoryStats.values())
+        })
+      }
+    }
+
+    return {
+      data: {
+        totalTransactions,
+        mostUsedCategory,
+        leastUsedCategory,
+        unusedCategories,
+        categoryPerformance,
+        monthlyTrends
+      },
+      error: null
+    }
+  } catch (err) {
+    console.error('Unexpected error fetching category analytics:', err)
+    return { data: null as any, error: 'Failed to fetch category analytics' }
+  }
+}
+
 export async function deleteCategory(id: string, userId: string): Promise<{ error: string | null }> {
   try {
     // First check if category has transactions

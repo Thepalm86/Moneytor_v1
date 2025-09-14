@@ -6,6 +6,7 @@ import {
   getCategories,
   getCategoriesByType,
   getCategoriesWithStats,
+  getCategoryUsageAnalytics,
   getCategory,
   createCategory,
   updateCategory,
@@ -116,6 +117,16 @@ export function useUpdateCategory() {
   })
 }
 
+export function useCategoryUsageAnalytics(userId: string, dateRange?: { from: Date; to: Date }) {
+  return useQuery({
+    queryKey: ['category-usage-analytics', userId, dateRange],
+    queryFn: () => getCategoryUsageAnalytics(userId, dateRange),
+    enabled: !!userId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: false,
+  })
+}
+
 export function useDeleteCategory() {
   const queryClient = useQueryClient()
 
@@ -135,6 +146,7 @@ export function useDeleteCategory() {
       // Invalidate and refetch queries
       queryClient.invalidateQueries({ queryKey: ['categories'] })
       queryClient.invalidateQueries({ queryKey: ['categories-with-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['category-usage-analytics'] })
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
     },
     onError: (error) => {

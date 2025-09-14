@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { DashboardWrapper } from '@/components/layout/dashboard-wrapper'
+import { CurrencyProvider } from '@/contexts/currency-context'
 
 export default async function DashboardLayout({
   children,
@@ -14,8 +15,10 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser()
 
   return (
-    <DashboardWrapper initialUser={user}>
-      {children}
-    </DashboardWrapper>
+    <CurrencyProvider>
+      <DashboardWrapper initialUser={user}>
+        {children}
+      </DashboardWrapper>
+    </CurrencyProvider>
   )
 }

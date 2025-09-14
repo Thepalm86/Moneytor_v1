@@ -10,17 +10,27 @@ import {
   DollarSign,
   AlertTriangle,
   Coins,
+  Trophy,
+  Sparkles,
+  Users,
+  Lightbulb,
+  BarChart3,
 } from 'lucide-react'
 import { format, formatDistanceToNow, isAfter } from 'date-fns'
 
 import { useGoalsWithProgress, useDeleteGoal, useContributeToGoal } from '@/hooks/use-goals'
+import { useTransactions } from '@/hooks/use-transactions'
 import { useUser } from '@/hooks/use-user'
 import { getIcon } from '@/lib/utils/icons'
 import { GoalForm } from '@/components/forms/goal-form'
+import { GoalAchievements } from '@/components/goals/goal-achievements'
+import { GoalVisualization } from '@/components/goals/goal-visualization'
+import { SmartSavingsEngine } from '@/components/goals/smart-savings-engine'
+import { GoalSocialFeatures } from '@/components/goals/goal-social-features'
 import { cn } from '@/lib/utils'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
@@ -45,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { GoalWithProgress } from '@/lib/validations/goal'
 
 export default function GoalsPage() {
@@ -57,6 +68,7 @@ export default function GoalsPage() {
     completed:
       completionFilter === 'completed' ? true : completionFilter === 'active' ? false : undefined,
   })
+  const { data: transactionsData } = useTransactions(user?.id || '')
   const deleteGoal = useDeleteGoal()
   const contributeToGoal = useContributeToGoal()
 
@@ -70,6 +82,7 @@ export default function GoalsPage() {
   const [contributionAmount, setContributionAmount] = useState('')
 
   const goals = goalsData?.data || []
+  const transactions = transactionsData?.data || []
   const activeGoals = goals.filter(goal => goal.status === 'active')
   const completedGoals = goals.filter(goal => goal.status === 'completed')
   const overdueGoals = goals.filter(
@@ -78,6 +91,11 @@ export default function GoalsPage() {
       goal.target_date &&
       isAfter(new Date(), new Date(goal.target_date))
   )
+
+  const handleShareGoal = (goal: GoalWithProgress, options: { privacy: string; includeProgress: boolean; includeAmount: boolean; customMessage?: string }) => {
+    // Handle goal sharing logic
+    console.log('Sharing goal:', goal, options)
+  }
 
   const handleDeleteClick = (goal: GoalWithProgress) => {
     setGoalToDelete(goal)
@@ -146,18 +164,21 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Enhanced Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Saving Goals</h1>
-          <p className="text-gray-600">Track your progress toward important financial milestones</p>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            Saving Goals 
+            <span className="text-2xl">🎯</span>
+          </h1>
+          <p className="text-gray-600">Transform your financial dreams into achievable milestones</p>
         </div>
         <Button
           onClick={() => setCreateDialogOpen(true)}
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add Goal
+          Create Goal
         </Button>
       </div>
 
@@ -253,66 +274,180 @@ export default function GoalsPage() {
         </div>
       </div>
 
-      {/* Goals List */}
-      <div className="space-y-4">
-        {goals.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Target className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-              <h3 className="mb-2 text-lg font-semibold text-gray-900">No goals found</h3>
-              <p className="mb-4 text-gray-600">
-                Create your first saving goal to start tracking your financial milestones.
-              </p>
-              <Button
-                onClick={() => setCreateDialogOpen(true)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Goal
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          goals.map(goal => (
-            <GoalCard
-              key={goal.id}
-              goal={goal}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-              onContribute={handleContributeClick}
-            />
-          ))
-        )}
-      </div>
+      {/* Enhanced Tabs with Gamification */}
+      <Tabs defaultValue="goals" className="w-full">
+        <TabsList className="grid w-full grid-cols-5 bg-white/50 backdrop-blur-sm">
+          <TabsTrigger value="goals" className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            My Goals
+          </TabsTrigger>
+          <TabsTrigger value="achievements" className="flex items-center gap-2">
+            <Trophy className="w-4 h-4" />
+            Achievements
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="smart-savings" className="flex items-center gap-2">
+            <Lightbulb className="w-4 h-4" />
+            Smart Savings
+          </TabsTrigger>
+          <TabsTrigger value="social" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Social
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">🎯 Saving Goals</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm leading-relaxed text-gray-600">
-            Set specific savings targets to stay motivated and track your progress. Whether it's an
-            emergency fund, vacation, or major purchase, goals help you stay focused and achieve
-            your financial dreams.
-          </p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-              <h4 className="mb-1 text-sm font-semibold text-green-900">✅ Available Now</h4>
-              <ul className="space-y-1 text-xs text-green-800">
-                <li>• Set target amounts and dates</li>
-                <li>• Track progress with visual indicators</li>
-                <li>• Add manual contributions</li>
-                <li>• Goal status management</li>
+        {/* Goals Tab */}
+        <TabsContent value="goals" className="space-y-4">
+          <div className="space-y-4">
+            {goals.length === 0 ? (
+              <Card className="border-0 bg-gradient-to-br from-blue-50 to-purple-100 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm" />
+                <CardContent className="relative p-8 text-center">
+                  <div className="mb-6">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <Target className="h-10 w-10 text-white" />
+                    </div>
+                    <h3 className="mb-2 text-xl font-bold text-gray-900">Start Your Savings Journey! 🚀</h3>
+                    <p className="mb-6 text-gray-600 max-w-md mx-auto">
+                      Every great achievement starts with a single step. Create your first goal and watch your dreams become reality!
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setCreateDialogOpen(true)}
+                    size="lg"
+                    className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Create Your First Goal
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              goals.map(goal => (
+                <GoalCard
+                  key={goal.id}
+                  goal={goal}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteClick}
+                  onContribute={handleContributeClick}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Achievements Tab */}
+        <TabsContent value="achievements">
+          <GoalAchievements goals={goals} />
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics">
+          {goals.length > 0 ? (
+            <div className="space-y-6">
+              {goals.map(goal => (
+                <GoalVisualization key={goal.id} goal={goal} />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">No Analytics Yet</h3>
+                <p className="text-gray-600">
+                  Create some goals to see detailed analytics and projections.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Smart Savings Tab */}
+        <TabsContent value="smart-savings">
+          <SmartSavingsEngine 
+            transactions={transactions} 
+            goals={goals} 
+          />
+        </TabsContent>
+
+        {/* Social Tab */}
+        <TabsContent value="social">
+          {goals.length > 0 ? (
+            <div className="space-y-6">
+              {goals.map(goal => (
+                <GoalSocialFeatures 
+                  key={goal.id} 
+                  goal={goal} 
+                  onShare={handleShareGoal}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Users className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">No Social Features Yet</h3>
+                <p className="text-gray-600">
+                  Create some goals to share your progress and connect with others.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Enhanced Features Card */}
+      <Card className="border-0 bg-gradient-to-br from-emerald-50 to-teal-100 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm" />
+        <CardContent className="relative p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Supercharge Your Savings 💫</h3>
+              <p className="text-sm text-gray-600">Powerful features to help you reach your financial goals faster</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-emerald-200/50 bg-white/50 backdrop-blur-sm p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+                <h4 className="text-sm font-semibold text-gray-900">🎖️ Achievements</h4>
+              </div>
+              <ul className="space-y-1 text-xs text-gray-700">
+                <li>• Unlock progress badges</li>
+                <li>• Track milestone celebrations</li>
+                <li>• Earning achievement points</li>
+                <li>• Compete with friends</li>
               </ul>
             </div>
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <h4 className="mb-1 text-sm font-semibold text-blue-900">🚧 Coming Soon</h4>
-              <ul className="space-y-1 text-xs text-blue-800">
-                <li>• Automatic savings from transactions</li>
-                <li>• Goal sharing and collaboration</li>
-                <li>• Smart savings recommendations</li>
-                <li>• Milestone celebrations</li>
+            <div className="rounded-xl border border-blue-200/50 bg-white/50 backdrop-blur-sm p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb className="w-5 h-5 text-blue-500" />
+                <h4 className="text-sm font-semibold text-gray-900">🧠 Smart AI</h4>
+              </div>
+              <ul className="space-y-1 text-xs text-gray-700">
+                <li>• Personalized recommendations</li>
+                <li>• Spending pattern analysis</li>
+                <li>• Auto-savings suggestions</li>
+                <li>• Goal completion predictions</li>
+              </ul>
+            </div>
+            <div className="rounded-xl border border-purple-200/50 bg-white/50 backdrop-blur-sm p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-5 h-5 text-purple-500" />
+                <h4 className="text-sm font-semibold text-gray-900">👥 Social</h4>
+              </div>
+              <ul className="space-y-1 text-xs text-gray-700">
+                <li>• Share goals with friends</li>
+                <li>• Accountability partners</li>
+                <li>• Community challenges</li>
+                <li>• Motivational support</li>
               </ul>
             </div>
           </div>

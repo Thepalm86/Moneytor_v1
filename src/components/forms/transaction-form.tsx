@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CalendarIcon, Loader2 } from 'lucide-react'
@@ -109,69 +109,138 @@ export function TransactionForm({
     form.setValue('categoryId', '') // Reset category when type changes
   }
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Cmd/Ctrl + Enter to submit form
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault()
+        form.handleSubmit(onSubmit)()
+      }
+      // Escape to cancel
+      if (event.key === 'Escape' && onCancel) {
+        event.preventDefault()
+        onCancel()
+      }
+      // Tab + I to switch to income
+      if (event.key === 'i' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        handleTypeChange('income')
+      }
+      // Tab + E to switch to expense  
+      if (event.key === 'e' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        handleTypeChange('expense')
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [form, onCancel, onSubmit, handleTypeChange])
+
   return (
-    <Card className="mx-auto w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle>{isEditing ? 'Edit Transaction' : 'Add New Transaction'}</CardTitle>
+    <Card className="mx-auto w-full max-w-2xl border-0 shadow-none bg-transparent">
+      <CardHeader className="text-center pb-6">
+        <CardTitle className={cn(
+          "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent mb-2",
+          transactionType === 'income' 
+            ? "from-emerald-600 to-teal-600" 
+            : "from-red-600 to-rose-600"
+        )}>
+          {isEditing ? 'Edit Transaction' : 'Add New Transaction'}
+        </CardTitle>
+        <p className="text-gray-600 text-sm">
+          {isEditing ? 'Update your transaction details' : 'Enter your transaction information below'}
+        </p>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Transaction Type Tabs */}
-            <Tabs value={transactionType} onValueChange={handleTypeChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger
-                  value="expense"
-                  className="text-red-600 data-[state=active]:text-red-600"
-                >
-                  Expense
-                </TabsTrigger>
-                <TabsTrigger
-                  value="income"
-                  className="text-green-600 data-[state=active]:text-green-600"
-                >
-                  Income
-                </TabsTrigger>
-              </TabsList>
+            <div className="bg-gray-100/60 backdrop-blur-sm rounded-xl p-1 mb-6">
+              <Tabs value={transactionType} onValueChange={handleTypeChange} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-transparent h-12">
+                  <TabsTrigger
+                    value="expense"
+                    className={cn(
+                      "text-red-600 font-semibold transition-all duration-300 rounded-lg",
+                      "data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:text-red-700",
+                      "hover:bg-white/40"
+                    )}
+                  >
+                    💸 Expense
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="income"
+                    className={cn(
+                      "text-green-600 font-semibold transition-all duration-300 rounded-lg",
+                      "data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:text-green-700",
+                      "hover:bg-white/40"
+                    )}
+                  >
+                    💰 Income
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="expense" className="mt-6 space-y-4">
-                <TransactionFormFields
-                  form={form}
-                  categories={categories}
-                  transactionType="expense"
-                />
-              </TabsContent>
+                <TabsContent value="expense" className="mt-6 space-y-4">
+                  <TransactionFormFields
+                    form={form}
+                    categories={categories}
+                    transactionType="expense"
+                  />
+                </TabsContent>
 
-              <TabsContent value="income" className="mt-6 space-y-4">
-                <TransactionFormFields
-                  form={form}
-                  categories={categories}
-                  transactionType="income"
-                />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="income" className="mt-6 space-y-4">
+                  <TransactionFormFields
+                    form={form}
+                    categories={categories}
+                    transactionType="income"
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-6">
               <Button
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'flex-1',
+                  'flex-1 h-12 text-base font-semibold transition-all duration-300 shadow-lg',
                   transactionType === 'income'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-600 hover:bg-red-700'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white'
+                    : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white',
+                  'hover:shadow-xl hover:scale-[1.02] disabled:hover:scale-100 disabled:opacity-50'
                 )}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Update Transaction' : 'Add Transaction'}
+                {isEditing ? '✏️ Update Transaction' : '✨ Add Transaction'}
               </Button>
 
               {onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onCancel} 
+                  disabled={isLoading}
+                  className="h-12 px-6 bg-white/60 backdrop-blur-sm border-gray-300 hover:bg-white/80 transition-all duration-300"
+                >
                   Cancel
                 </Button>
               )}
+            </div>
+
+            {/* Keyboard Shortcuts Hint */}
+            <div className="pt-4 border-t border-gray-200/60">
+              <div className="text-xs text-gray-500 text-center space-y-1">
+                <p className="font-medium">💡 Keyboard Shortcuts:</p>
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">⌘+Enter</kbd> Submit</span>
+                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">Esc</kbd> Cancel</span>
+                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">⌘+E</kbd> Expense</span>
+                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">⌘+I</kbd> Income</span>
+                </div>
+              </div>
             </div>
           </form>
         </Form>
@@ -188,17 +257,22 @@ interface TransactionFormFieldsProps {
 
 function TransactionFormFields({ form, categories, transactionType }: TransactionFormFieldsProps) {
   return (
-    <>
+    <div className="space-y-6">
       {/* Amount */}
       <FormField
         control={form.control}
         name="amount"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Amount</FormLabel>
+            <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
+              💲 Amount
+            </FormLabel>
             <FormControl>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500">
+                <span className={cn(
+                  "absolute left-3 top-1/2 -translate-y-1/2 transform font-semibold text-lg",
+                  transactionType === 'income' ? "text-green-600" : "text-red-600"
+                )}>
                   $
                 </span>
                 <Input
@@ -207,7 +281,13 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  className="pl-8"
+                  className={cn(
+                    "pl-8 h-12 text-lg font-semibold bg-white/60 backdrop-blur-sm border-gray-300",
+                    "focus:border-2 transition-all duration-300",
+                    transactionType === 'income' 
+                      ? "focus:border-green-500 focus:ring-green-100" 
+                      : "focus:border-red-500 focus:ring-red-100"
+                  )}
                 />
               </div>
             </FormControl>
@@ -222,7 +302,9 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
+              📝 Description
+            </FormLabel>
             <FormControl>
               <Input
                 {...field}
@@ -231,6 +313,7 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
                     ? 'e.g., Salary payment, Freelance work'
                     : 'e.g., Grocery shopping, Coffee'
                 }
+                className="h-12 bg-white/60 backdrop-blur-sm border-gray-300 focus:border-2 focus:border-blue-500 focus:ring-blue-100 transition-all duration-300"
               />
             </FormControl>
             <FormMessage />
@@ -244,26 +327,53 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
         name="categoryId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Category</FormLabel>
+            <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
+              🏷️ Category
+            </FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
+                <SelectTrigger className="h-12 bg-white/60 backdrop-blur-sm border-gray-300 focus:border-2 focus:border-purple-500 focus:ring-purple-100 transition-all duration-300">
+                  <SelectValue placeholder="Select a category">
+                    {field.value && (
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const selectedCategory = categories.find(cat => cat.id === field.value)
+                          if (!selectedCategory) return null
+                          const IconComponent = getIcon(selectedCategory.icon)
+                          return (
+                            <>
+                              <div
+                                className="flex h-5 w-5 items-center justify-center rounded-full"
+                                style={{ backgroundColor: selectedCategory.color }}
+                              >
+                                <IconComponent className="h-3 w-3 text-white" />
+                              </div>
+                              <span className="font-medium text-gray-900">{selectedCategory.name}</span>
+                            </>
+                          )
+                        })()}
+                      </div>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
+              <SelectContent className="bg-white/95 backdrop-blur-xl border border-gray-200 shadow-xl max-h-60 overflow-y-auto">
                 {categories.map(category => {
                   const IconComponent = getIcon(category.icon)
                   return (
-                    <SelectItem key={category.id} value={category.id}>
-                      <div className="flex items-center gap-2">
+                    <SelectItem 
+                      key={category.id} 
+                      value={category.id}
+                      className="hover:bg-gray-50/80 cursor-pointer p-3"
+                    >
+                      <div className="flex items-center gap-3">
                         <div
-                          className="flex h-4 w-4 items-center justify-center rounded-full"
+                          className="flex h-6 w-6 items-center justify-center rounded-full shadow-sm"
                           style={{ backgroundColor: category.color }}
                         >
-                          <IconComponent className="h-3 w-3 text-white" />
+                          <IconComponent className="h-4 w-4 text-white" />
                         </div>
-                        {category.name}
+                        <span className="font-medium">{category.name}</span>
                       </div>
                     </SelectItem>
                   )
@@ -281,14 +391,17 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
         name="date"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>Date</FormLabel>
+            <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
+              📅 Date
+            </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
                     variant="outline"
                     className={cn(
-                      'w-full pl-3 text-left font-normal',
+                      'w-full h-12 pl-3 text-left font-medium bg-white/60 backdrop-blur-sm border-gray-300',
+                      'hover:bg-white/80 focus:border-2 focus:border-blue-500 transition-all duration-300',
                       !field.value && 'text-muted-foreground'
                     )}
                   >
@@ -297,7 +410,7 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 bg-white/95 backdrop-blur-xl border border-gray-200 shadow-xl" align="start">
                 <Calendar
                   mode="single"
                   selected={field.value}
@@ -311,6 +424,6 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
           </FormItem>
         )}
       />
-    </>
+    </div>
   )
 }

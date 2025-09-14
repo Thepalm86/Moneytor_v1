@@ -151,7 +151,7 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
       href: '/settings',
       icon: Settings,
       current: pathname === '/settings',
-      disabled: true,
+      disabled: false,
     },
   ]
 

@@ -1,7 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, BarChart3, PieChart, TrendingUp } from 'lucide-react'
+import { 
+  Calendar, 
+  BarChart3, 
+  PieChart, 
+  TrendingUp, 
+  Activity, 
+  ArrowUpDown, 
+  Download,
+  Zap
+} from 'lucide-react'
 import { format, subDays, subMonths } from 'date-fns'
 
 import { useUser } from '@/hooks/use-user'
@@ -10,6 +19,12 @@ import {
   CategoryBreakdownChart,
   MonthlyOverviewChart,
 } from '@/components/charts'
+import { InteractiveSpendingTrendsChart } from '@/components/charts/interactive-spending-trends-chart'
+import {
+  FinancialKPIDashboard,
+  ComparisonTools,
+  ExportReportingSystem
+} from '@/components/analytics'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -50,7 +65,15 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
+        <div className="space-y-4 text-center">
+          <div className="relative">
+            <div className="border-primary-200 border-t-primary-600 mx-auto h-12 w-12 animate-spin rounded-full border-4"></div>
+            <div className="from-primary-400 to-primary-600 absolute inset-0 animate-pulse rounded-full bg-gradient-to-r opacity-20"></div>
+          </div>
+          <p className="text-body-sm font-medium text-muted-foreground">
+            Loading advanced analytics...
+          </p>
+        </div>
       </div>
     )
   }
@@ -58,19 +81,27 @@ export default function AnalyticsPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-600">Please log in to view analytics</p>
+        <div className="space-y-3 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-muted to-muted/50">
+            <Activity className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-body-md font-medium text-foreground">Authentication Required</p>
+            <p className="text-body-sm text-muted-foreground">Please log in to view your financial analytics</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Enhanced Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Financial Analytics</h1>
-          <p className="text-gray-600">
-            Comprehensive insights into your spending patterns and trends
+          <h1 className="text-3xl font-bold text-foreground">Financial Analytics</h1>
+          <p className="text-muted-foreground">
+            Advanced insights, KPIs, and interactive analysis of your financial data
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -93,12 +124,20 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Analytics Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Overview
+      {/* Advanced Analytics Tabs */}
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="interactive" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Interactive
+          </TabsTrigger>
+          <TabsTrigger value="comparison" className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4" />
+            Compare
           </TabsTrigger>
           <TabsTrigger value="trends" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -108,91 +147,27 @@ export default function AnalyticsPage() {
             <PieChart className="h-4 w-4" />
             Categories
           </TabsTrigger>
-          <TabsTrigger value="monthly" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Monthly
+          <TabsTrigger value="export" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6">
-            {/* Trends and Categories side by side */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              <SpendingTrendsChart userId={user.id} dateRange={currentDateRange} />
-              <CategoryBreakdownChart
-                userId={user.id}
-                type="expense"
-                dateRange={currentDateRange}
-              />
-            </div>
-
-            {/* Monthly overview full width */}
-            <MonthlyOverviewChart userId={user.id} monthsCount={6} />
-          </div>
+        {/* Financial KPI Dashboard */}
+        <TabsContent value="dashboard" className="space-y-6">
+          <FinancialKPIDashboard 
+            userId={user.id} 
+            dateRange={currentDateRange} 
+          />
         </TabsContent>
 
-        <TabsContent value="trends" className="space-y-6">
-          <SpendingTrendsChart userId={user.id} dateRange={currentDateRange} className="w-full" />
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Spending Insights</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <h4 className="mb-2 text-sm font-semibold text-blue-900">💡 Analysis Tips</h4>
-                    <ul className="space-y-1 text-xs text-blue-800">
-                      <li>• Look for unusual spikes in spending</li>
-                      <li>• Track if income is keeping up with expenses</li>
-                      <li>• Identify patterns in your financial behavior</li>
-                      <li>• Use cumulative trends to see overall progress</li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Date Range Analysis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="text-sm">
-                    <span className="font-medium">Period:</span>{' '}
-                    {format(currentDateRange.from, 'MMM dd, yyyy')} to{' '}
-                    {format(currentDateRange.to, 'MMM dd, yyyy')}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">Days:</span>{' '}
-                    {Math.ceil(
-                      (currentDateRange.to.getTime() - currentDateRange.from.getTime()) /
-                        (1000 * 60 * 60 * 24)
-                    )}{' '}
-                    days
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    Adjust the date range using the selector above to analyze different time
-                    periods.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="categories" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-1">
-            <CategoryBreakdownChart
-              userId={user.id}
-              type="all"
-              dateRange={currentDateRange}
-              className="w-full"
-            />
-          </div>
-
+        {/* Interactive Charts */}
+        <TabsContent value="interactive" className="space-y-6">
+          <InteractiveSpendingTrendsChart 
+            userId={user.id} 
+            dateRange={currentDateRange} 
+          />
+          
           <div className="grid gap-6 lg:grid-cols-2">
             <CategoryBreakdownChart
               userId={user.id}
@@ -200,53 +175,154 @@ export default function AnalyticsPage() {
               dateRange={currentDateRange}
               className="w-full"
             />
-            <CategoryBreakdownChart
-              userId={user.id}
-              type="income"
-              dateRange={currentDateRange}
-              className="w-full"
-            />
+            <MonthlyOverviewChart userId={user.id} monthsCount={6} className="w-full" />
           </div>
         </TabsContent>
 
-        <TabsContent value="monthly" className="space-y-6">
-          <MonthlyOverviewChart userId={user.id} monthsCount={12} className="w-full" />
+        {/* Period Comparison */}
+        <TabsContent value="comparison" className="space-y-6">
+          <ComparisonTools 
+            userId={user.id} 
+            currentPeriod={currentDateRange} 
+          />
+        </TabsContent>
+
+        {/* Enhanced Trends View */}
+        <TabsContent value="trends" className="space-y-6">
+          <SpendingTrendsChart userId={user.id} dateRange={currentDateRange} className="w-full" />
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <MonthlyOverviewChart userId={user.id} monthsCount={6} className="w-full" />
-
-            <Card>
+            <Card className="glass-card border-premium">
               <CardHeader>
-                <CardTitle>Monthly Analysis Tips</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Advanced Insights
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-                    <h4 className="mb-2 text-sm font-semibold text-green-900">
-                      📊 What to Look For
+                  <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+                    <h4 className="mb-2 text-sm font-semibold text-blue-900 dark:text-blue-100">
+                      📊 Trend Analysis
                     </h4>
-                    <ul className="space-y-1 text-xs text-green-800">
-                      <li>• Seasonal spending patterns</li>
-                      <li>• Monthly income consistency</li>
-                      <li>• Expense growth trends</li>
-                      <li>• Best and worst performing months</li>
-                      <li>• Average monthly net income</li>
+                    <ul className="space-y-1 text-xs text-blue-800 dark:text-blue-200">
+                      <li>• Identify spending patterns and anomalies</li>
+                      <li>• Track income stability and growth</li>
+                      <li>• Monitor financial velocity and momentum</li>
+                      <li>• Analyze cumulative wealth building</li>
                     </ul>
                   </div>
 
-                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
-                    <h4 className="mb-2 text-sm font-semibold text-orange-900">🎯 Action Items</h4>
-                    <ul className="space-y-1 text-xs text-orange-800">
-                      <li>• Set monthly budget targets</li>
-                      <li>• Plan for seasonal expenses</li>
-                      <li>• Identify months to save more</li>
-                      <li>• Review expense categories</li>
+                  <div className="rounded-lg border border-green-200 bg-green-50/50 p-4 dark:border-green-800 dark:bg-green-950/30">
+                    <h4 className="mb-2 text-sm font-semibold text-green-900 dark:text-green-100">
+                      🎯 Optimization Tips
+                    </h4>
+                    <ul className="space-y-1 text-xs text-green-800 dark:text-green-200">
+                      <li>• Use brush selection to zoom into specific periods</li>
+                      <li>• Click data points for detailed breakdowns</li>
+                      <li>• Compare different chart modes for insights</li>
+                      <li>• Export data for external analysis</li>
                     </ul>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="glass-card border-premium">
+              <CardHeader>
+                <CardTitle>Period Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="text-sm">
+                    <span className="font-medium">Analysis Period:</span>{' '}
+                    {format(currentDateRange.from, 'MMM dd, yyyy')} to{' '}
+                    {format(currentDateRange.to, 'MMM dd, yyyy')}
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Duration:</span>{' '}
+                    {Math.ceil(
+                      (currentDateRange.to.getTime() - currentDateRange.from.getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    )}{' '}
+                    days
+                  </div>
+                  <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
+                    <p className="text-xs text-amber-800 dark:text-amber-200">
+                      💡 Tip: Use different time ranges to identify seasonal patterns and long-term trends in your financial behavior.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        </TabsContent>
+
+        {/* Enhanced Categories View */}
+        <TabsContent value="categories" className="space-y-6">
+          <div className="grid gap-6">
+            <CategoryBreakdownChart
+              userId={user.id}
+              type="all"
+              dateRange={currentDateRange}
+              className="w-full"
+            />
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <CategoryBreakdownChart
+                userId={user.id}
+                type="expense"
+                dateRange={currentDateRange}
+                className="w-full"
+              />
+              <CategoryBreakdownChart
+                userId={user.id}
+                type="income"
+                dateRange={currentDateRange}
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          <Card className="glass-card border-premium">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                Category Analysis Guide
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm text-muted-foreground">Understanding Your Categories</h4>
+                  <div className="space-y-2 text-sm">
+                    <p>• <strong>Expense Categories:</strong> Track where your money goes</p>
+                    <p>• <strong>Income Sources:</strong> Monitor revenue streams</p>
+                    <p>• <strong>Percentage View:</strong> Identify spending distribution</p>
+                    <p>• <strong>Hover Details:</strong> See exact amounts and percentages</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm text-muted-foreground">Optimization Strategies</h4>
+                  <div className="space-y-2 text-sm">
+                    <p>• <strong>Largest Slices:</strong> Focus optimization efforts here</p>
+                    <p>• <strong>Small Categories:</strong> Consider merging similar ones</p>
+                    <p>• <strong>Income Diversity:</strong> Reduce dependency on single sources</p>
+                    <p>• <strong>Seasonal Patterns:</strong> Plan for category fluctuations</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Export & Reporting */}
+        <TabsContent value="export" className="space-y-6">
+          <ExportReportingSystem 
+            userId={user.id} 
+            dateRange={currentDateRange} 
+          />
         </TabsContent>
       </Tabs>
     </div>

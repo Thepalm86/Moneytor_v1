@@ -6,7 +6,7 @@ import { TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react'
 import { useTransactionStats } from '@/hooks/use-transactions'
 import { FinancialCard } from '@/components/ui/financial-card'
 import { AnimatedCounter } from '@/components/ui/animated-counter'
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 
 interface DashboardStatsProps {
   userId: string
@@ -18,6 +18,7 @@ interface DashboardStatsProps {
 
 export function DashboardStats({ userId, dateRange }: DashboardStatsProps) {
   const { data: statsData, isLoading } = useTransactionStats(userId, dateRange?.from, dateRange?.to)
+  const { formatCurrency } = useCurrency()
 
   const stats = statsData?.data
 

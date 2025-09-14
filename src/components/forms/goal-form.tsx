@@ -11,6 +11,7 @@ import { goalSchema, type GoalInput } from '@/lib/validations/goal'
 import { useCreateGoal, useUpdateGoal } from '@/hooks/use-goals'
 import { useCategories } from '@/hooks/use-categories'
 import { getIcon } from '@/lib/utils/icons'
+import { useGamification } from '@/contexts/gamification-context'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -60,6 +61,7 @@ export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormP
   const updateGoal = useUpdateGoal()
   const { data: categoriesData } = useCategories(userId)
   const categories = categoriesData?.data || []
+  const { triggerEvent, showCelebration } = useGamification()
 
   const isEditing = !!initialData?.id
   const isLoading = createGoal.isPending || updateGoal.isPending
@@ -84,6 +86,61 @@ export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormP
       })
 
       if (!result.error) {
+        // Check if goal was completed
+        if (data.status === 'completed' && initialData?.status !== 'completed') {
+          // Trigger goal completion event
+          await triggerEvent('goal_completed', {
+            goalId: initialData.id,
+            targetAmount: data.targetAmount,
+            currentAmount: data.currentAmount,
+            action: 'completed'
+          })
+
+          // Show major celebration for goal completion
+          showCelebration({
+            type: 'major',
+            title: 'Goal Completed! 🎉🏆',
+            message: `Congratulations! You've achieved your "${data.name}" goal!`,
+            color: '#ffd700',
+            duration: 6000,
+            showConfetti: true
+          })
+        } else if (data.currentAmount > (initialData?.currentAmount || 0)) {
+          // Trigger goal contribution event for amount increases
+          await triggerEvent('goal_contribution', {
+            goalId: initialData.id,
+            previousAmount: initialData?.currentAmount || 0,
+            newAmount: data.currentAmount,
+            contributionAmount: data.currentAmount - (initialData?.currentAmount || 0),
+            action: 'contribution'
+          })
+
+          // Show subtle celebration for contribution
+          showCelebration({
+            type: 'subtle',
+            title: 'Goal Progress Updated! 💪',
+            message: `Added $${(data.currentAmount - (initialData?.currentAmount || 0)).toFixed(2)} to your goal!`,
+            color: '#10b981',
+            duration: 3000
+          })
+        } else {
+          // Regular goal update
+          await triggerEvent('goal_updated', {
+            goalId: initialData.id,
+            targetAmount: data.targetAmount,
+            currentAmount: data.currentAmount,
+            action: 'update'
+          })
+
+          showCelebration({
+            type: 'subtle',
+            title: 'Goal Updated! ✨',
+            message: 'Your goal has been successfully updated.',
+            color: '#3b82f6',
+            duration: 2500
+          })
+        }
+
         onSuccess?.()
       }
     } else {
@@ -93,6 +150,25 @@ export function GoalForm({ userId, initialData, onSuccess, onCancel }: GoalFormP
       })
 
       if (!result.error) {
+        // Trigger gamification event for new goal creation
+        await triggerEvent('goal_created', {
+          targetAmount: data.targetAmount,
+          currentAmount: data.currentAmount,
+          categoryId: data.categoryId,
+          hasTargetDate: !!data.targetDate,
+          action: 'create'
+        })
+
+        // Show celebration for new goal creation
+        showCelebration({
+          type: 'medium',
+          title: 'Goal Created! 🚀✨',
+          message: `Your "${data.name}" goal is ready to launch! Time to start saving!`,
+          color: '#8b5cf6',
+          duration: 4000,
+          showConfetti: false
+        })
+
         form.reset()
         onSuccess?.()
       }

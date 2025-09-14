@@ -91,7 +91,7 @@ export function AdvancedTransactionFilters({
   onReset
 }: AdvancedTransactionFiltersProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true)
   const [searchQuery, setSearchQuery] = useState(filters.search || '')
   const [amountRange, setAmountRange] = useState([
     filters.amountFrom || 0,

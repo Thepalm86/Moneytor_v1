@@ -38,26 +38,40 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-8 border border-white/10 bg-white/95 p-10 shadow-2xl backdrop-blur-2xl duration-500 ease-out',
+        // Fixed positioning with proper viewport constraints
+        'fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%]',
+        // Responsive sizing with viewport limits
+        'w-full max-w-lg max-h-[85vh]',
+        // Scrolling support
+        'overflow-y-auto',
+        // Layout and spacing
+        'grid gap-6 border border-white/10 bg-white/95 p-8 shadow-2xl backdrop-blur-2xl',
+        // Smooth animations
+        'duration-300 ease-out',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-        'data-[state=closed]:zoom-out-90 data-[state=open]:zoom-in-105 data-[state=open]:zoom-out-100',
-        'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[45%]',
-        'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[45%]',
-        'sm:rounded-3xl',
+        'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-100',
+        'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]',
+        'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+        // Rounded corners
+        'rounded-2xl sm:rounded-3xl',
         // Premium enhancements
         'shadow-black/20 ring-1 ring-white/20',
         // Glassmorphism background
-        'before:absolute before:inset-0 before:-z-10 before:rounded-3xl before:bg-gradient-to-br before:from-white/20 before:to-white/10',
+        'before:absolute before:inset-0 before:-z-10 before:rounded-2xl sm:before:rounded-3xl before:bg-gradient-to-br before:from-white/20 before:to-white/10',
         // Glow effect
-        'after:absolute after:inset-0 after:-z-10 after:rounded-3xl after:bg-gradient-to-br after:from-transparent after:via-white/5 after:to-transparent after:blur-xl',
+        'after:absolute after:inset-0 after:-z-10 after:rounded-2xl sm:after:rounded-3xl after:bg-gradient-to-br after:from-transparent after:via-white/5 after:to-transparent after:blur-xl',
+        // Mobile responsive adjustments
+        'mx-4 sm:mx-0',
         className
       )}
       {...props}
     >
-      {children}
-      <DialogPrimitive.Close className="absolute right-6 top-6 rounded-xl border border-gray-200/50 p-2 opacity-80 ring-offset-background backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-gray-100/50 hover:opacity-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-400/30 focus:ring-offset-2 disabled:pointer-events-none">
-        <X className="h-5 w-5 text-gray-600" />
+      <div className="relative flex-1">
+        {children}
+      </div>
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-xl border border-gray-200/50 p-2 opacity-80 ring-offset-background backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-gray-100/50 hover:opacity-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-400/30 focus:ring-offset-2 disabled:pointer-events-none">
+        <X className="h-4 w-4 text-gray-600" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>

@@ -28,7 +28,7 @@ interface SpendingTrendsChartProps {
 }
 
 export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTrendsChartProps) {
-  const { formatCurrency, formatCurrencyForChart } = useCurrency()
+  const { formatCurrency } = useCurrency()
   
   // Default to last 30 days if no date range provided
   const defaultDateRange = useMemo(
@@ -130,7 +130,7 @@ export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTr
                 <div className="h-3 w-3 rounded-full bg-gradient-to-r from-success-400 to-success-600"></div>
                 <span className="font-medium text-success-700 dark:text-success-300">Income:</span>
               </div>
-              <span className="text-currency-sm font-semibold">{formatCurrency(data.income)}</span>
+              <span className="text-currency-sm font-semibold">{formatCurrency(data.income, { decimals: 0 })}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTr
                 <span className="font-medium text-error-700 dark:text-error-300">Expenses:</span>
               </div>
               <span className="text-currency-sm font-semibold">
-                {formatCurrency(data.expenses)}
+                {formatCurrency(data.expenses, { decimals: 0 })}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 border-t border-border/50 pt-2">
@@ -149,7 +149,7 @@ export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTr
               <span
                 className={`text-currency-sm font-bold ${data.net >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}
               >
-                {formatCurrency(data.net)}
+                {formatCurrency(data.net, { decimals: 0 })}
               </span>
             </div>
             <div className="border-t border-border/30 pt-2">
@@ -160,7 +160,7 @@ export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTr
                 <span
                   className={`text-currency-sm font-bold ${data.cumulativeNet >= 0 ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}
                 >
-                  {formatCurrency(data.cumulativeNet)}
+                  {formatCurrency(data.cumulativeNet, { decimals: 0 })}
                 </span>
               </div>
             </div>
@@ -232,6 +232,22 @@ export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTr
         </p>
       </CardHeader>
       <CardContent>
+        {/* Chart Legend */}
+        <div className="mb-4 flex flex-wrap justify-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-gradient-to-r from-success-600 to-success-400"></div>
+            <span className="font-medium text-success-700 dark:text-success-300">Cumulative Income</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-gradient-to-r from-error-600 to-error-400"></div>
+            <span className="font-medium text-error-700 dark:text-error-300">Cumulative Expenses</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-gradient-to-r from-primary-600 to-primary-400"></div>
+            <span className="font-medium text-primary-700 dark:text-primary-300">Cumulative Net</span>
+          </div>
+        </div>
+        
         <ResponsiveContainer width="100%" height={350}>
           <LineChart
             data={chartDataWithCumulative}
@@ -271,7 +287,7 @@ export function SpendingTrendsChart({ userId, dateRange, className }: SpendingTr
               tickLine={false}
               axisLine={false}
               tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickFormatter={value => formatCurrency(value)}
+              tickFormatter={value => formatCurrency(value, { decimals: 0 })}
               dx={-10}
             />
             <Tooltip content={<CustomTooltip />} />

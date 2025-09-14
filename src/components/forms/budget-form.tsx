@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CalendarIcon, Loader2, Target, Lightbulb, TrendingUp, Calculator } from 'lucide-react'
+import { CalendarIcon, Loader2, Target, Lightbulb, TrendingUp, Calculator, DollarSign, Edit } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { cn } from '@/lib/utils'
@@ -10,6 +10,7 @@ import { budgetSchema, type BudgetInput } from '@/lib/validations/budget'
 import { useCreateBudget, useUpdateBudget } from '@/hooks/use-budgets'
 import { useCategoriesByType } from '@/hooks/use-categories'
 import { getIcon } from '@/lib/utils/icons'
+import { useGamification } from '@/contexts/gamification-context'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,6 +57,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
   const updateBudget = useUpdateBudget()
   const { data: categoriesData } = useCategoriesByType(userId, 'expense')
   const categories = categoriesData?.data || []
+  const { triggerEvent, showCelebration } = useGamification()
 
   const isEditing = !!initialData?.id
   const isLoading = createBudget.isPending || updateBudget.isPending
@@ -69,6 +71,23 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
       })
 
       if (!result.error) {
+        // Trigger gamification event for budget update
+        await triggerEvent('budget_updated', {
+          amount: data.amount,
+          period: data.period,
+          categoryId: data.categoryId,
+          action: 'update'
+        })
+
+        // Show micro-celebration for budget update
+        showCelebration({
+          type: 'subtle',
+          title: 'Budget Updated!',
+          message: 'Your budget has been successfully updated.',
+          color: '#6366f1',
+          duration: 2500
+        })
+
         onSuccess?.()
       }
     } else {
@@ -78,6 +97,24 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
       })
 
       if (!result.error) {
+        // Trigger gamification event for new budget creation
+        await triggerEvent('budget_created', {
+          amount: data.amount,
+          period: data.period,
+          categoryId: data.categoryId,
+          action: 'create'
+        })
+
+        // Show celebration for new budget creation
+        showCelebration({
+          type: 'medium',
+          title: 'Budget Created!',
+          message: `Successfully created your ${data.period} budget of $${data.amount.toFixed(2)}!`,
+          color: '#10b981',
+          duration: 4000,
+          showConfetti: false
+        })
+
         form.reset()
         onSuccess?.()
       }
@@ -105,7 +142,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
               </Badge>
             </div>
             <p className="text-sm leading-relaxed text-blue-700">
-              💡 <strong>Pro Tip:</strong> Start with 80% of your average monthly spending in this
+              <Lightbulb className="w-4 h-4 mr-1 inline" /> <strong>Pro Tip:</strong> Start with 80% of your average monthly spending in this
               category. Our intelligent alerts will help you stay on track and adjust as needed.
             </p>
           </div>
@@ -139,7 +176,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-14 rounded-xl border-gray-200/60 bg-white/90 shadow-sm backdrop-blur-sm transition-all hover:border-purple-300 focus:border-purple-400 focus:ring-2 focus:ring-purple-100">
-                        <SelectValue placeholder="🎯 Choose an expense category to budget" />
+                        <SelectValue placeholder="Choose an expense category to budget" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="rounded-xl border-0 bg-white/95 shadow-2xl backdrop-blur-lg">
@@ -167,7 +204,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                   </Select>
                   <FormDescription className="rounded-lg border border-blue-200/30 bg-gradient-to-r from-blue-50/60 to-indigo-50/40 p-3 text-xs text-gray-600">
                     <div className="flex items-center gap-2">
-                      <span className="text-blue-600">💡</span>
+                      <Lightbulb className="w-4 h-4 text-blue-600" />
                       <span>
                         Only expense categories are available for budgeting. Track income separately
                         for better financial insights.
@@ -216,7 +253,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                   </FormControl>
                   <FormDescription className="rounded-lg border border-green-200/30 bg-gradient-to-r from-green-50/60 to-emerald-50/40 p-3 text-xs text-gray-600">
                     <div className="flex items-center gap-2">
-                      <span className="text-green-600">💰</span>
+                      <DollarSign className="w-4 h-4 text-green-600" />
                       <span>
                         Set the maximum amount you want to spend in this category. Start
                         conservative and adjust as needed.
@@ -243,7 +280,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-14 rounded-xl border-gray-200/60 bg-white/90 shadow-sm backdrop-blur-sm transition-all hover:border-orange-300 focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                        <SelectValue placeholder="📅 Choose budget reset frequency" />
+                        <SelectValue placeholder="Choose budget reset frequency" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="rounded-xl border-0 bg-white/95 shadow-2xl backdrop-blur-lg">
@@ -252,7 +289,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                         className="cursor-pointer rounded-lg py-3 hover:bg-orange-50/80 focus:bg-orange-50/80"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-lg">📅</span>
+                          <CalendarIcon className="w-4 h-4" />
                           <div>
                             <div className="font-medium text-gray-800">Weekly</div>
                             <div className="text-xs text-gray-500">Resets every week</div>
@@ -264,7 +301,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                         className="cursor-pointer rounded-lg py-3 hover:bg-orange-50/80 focus:bg-orange-50/80"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-lg">📅</span>
+                          <CalendarIcon className="w-4 h-4" />
                           <div>
                             <div className="font-medium text-gray-800">Monthly</div>
                             <div className="text-xs text-gray-500">
@@ -278,7 +315,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                         className="cursor-pointer rounded-lg py-3 hover:bg-orange-50/80 focus:bg-orange-50/80"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-lg">📅</span>
+                          <CalendarIcon className="w-4 h-4" />
                           <div>
                             <div className="font-medium text-gray-800">Yearly</div>
                             <div className="text-xs text-gray-500">Long-term planning</div>
@@ -579,7 +616,7 @@ export function BudgetForm({ userId, initialData, onSuccess, onCancel }: BudgetF
                 <>
                   <div className="flex items-center gap-3">
                     <div className="flex h-5 w-5 items-center justify-center rounded-lg bg-white/20">
-                      {isEditing ? '✏️' : '🎯'}
+                      {isEditing ? <Edit className="mr-2 h-4 w-4" /> : <Target className="mr-2 h-4 w-4" />}
                     </div>
                     <span>{isEditing ? 'Update Budget' : 'Create Budget'}</span>
                   </div>

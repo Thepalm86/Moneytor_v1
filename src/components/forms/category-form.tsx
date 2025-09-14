@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { categorySchema, type CategoryInput, type Category } from '@/lib/validations/category'
 import { useCreateCategory, useUpdateCategory } from '@/hooks/use-categories'
 import { getIcon, AVAILABLE_ICONS } from '@/lib/utils/icons'
+import { useGamification } from '@/contexts/gamification-context'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,6 +71,7 @@ export function CategoryForm({ userId, initialData, onSuccess, onCancel }: Categ
 
   const createCategory = useCreateCategory()
   const updateCategory = useUpdateCategory()
+  const { triggerEvent, showCelebration } = useGamification()
 
   const isEditing = !!initialData?.id
   const isLoading = createCategory.isPending || updateCategory.isPending
@@ -83,6 +85,25 @@ export function CategoryForm({ userId, initialData, onSuccess, onCancel }: Categ
       })
 
       if (!result.error) {
+        // Trigger gamification event for category update
+        await triggerEvent('category_updated', {
+          categoryId: initialData.id,
+          categoryName: data.name,
+          categoryType: data.type,
+          customizedColor: data.color !== '#6366f1',
+          customizedIcon: data.icon !== 'ShoppingCart',
+          action: 'update'
+        })
+
+        // Show micro-celebration for category update
+        showCelebration({
+          type: 'subtle',
+          title: 'Category Updated! 🏷️',
+          message: `Your "${data.name}" category has been successfully updated.`,
+          color: data.color,
+          duration: 2500
+        })
+
         onSuccess?.()
       }
     } else {
@@ -92,6 +113,25 @@ export function CategoryForm({ userId, initialData, onSuccess, onCancel }: Categ
       })
 
       if (!result.error) {
+        // Trigger gamification event for new category creation
+        await triggerEvent('category_created', {
+          categoryName: data.name,
+          categoryType: data.type,
+          customizedColor: data.color !== '#6366f1',
+          customizedIcon: data.icon !== 'ShoppingCart',
+          action: 'create'
+        })
+
+        // Show celebration for new category creation
+        showCelebration({
+          type: 'medium',
+          title: 'Category Created! 🎨✨',
+          message: `Your new "${data.name}" category is ready to organize your ${data.type}s!`,
+          color: data.color,
+          duration: 4000,
+          showConfetti: false
+        })
+
         form.reset()
         onSuccess?.()
       }

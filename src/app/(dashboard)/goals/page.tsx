@@ -175,7 +175,7 @@ export default function GoalsPage() {
     <div className="space-y-6">
       {/* Header */}
       <PageHeader
-        title="Saving Goals 🎯"
+        title="Saving Goals"
         subtitle="Transform your financial dreams into achievable milestones with smart tracking and insights"
         actions={
           <PageHeaderAction onClick={() => setCreateDialogOpen(true)}>

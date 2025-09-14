@@ -8,6 +8,7 @@ import {
   MonthlyOverviewChart,
 } from '@/components/charts'
 import { QuickActionCards } from '@/components/dashboard/quick-action-cards'
+import { GamificationShowcase } from '@/components/gamification'
 import { useUser } from '@/hooks/use-user'
 import { getDateRange } from '@/lib/utils/date'
 export default function DashboardPage() {
@@ -43,6 +44,11 @@ export default function DashboardPage() {
       {/* Statistics Cards */}
       <div className="mt-8">
         <DashboardStats userId={user.id} dateRange={currentMonthRange} />
+      </div>
+
+      {/* Gamification Showcase */}
+      <div className="mt-8">
+        <GamificationShowcase className="shadow-xl backdrop-blur-sm transition-all duration-300 hover:shadow-2xl" />
       </div>
 
       {/* Charts Section */}

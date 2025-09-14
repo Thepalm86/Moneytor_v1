@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CalendarIcon, Loader2 } from 'lucide-react'
+import { CalendarIcon, Loader2, DollarSign, FileText, Tag, TrendingDown, TrendingUp, Sparkles, Edit, Lightbulb, Command } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { cn } from '@/lib/utils'
@@ -11,6 +11,7 @@ import { transactionFormSchema, type TransactionFormData } from '@/lib/validatio
 import { useCreateTransaction, useUpdateTransaction } from '@/hooks/use-transactions'
 import { useCategoriesByType } from '@/hooks/use-categories'
 import { getIcon } from '@/lib/utils/icons'
+import { useGamification } from '@/contexts/gamification-context'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,6 +67,7 @@ export function TransactionForm({
   const updateTransaction = useUpdateTransaction()
   const { data: categoriesData } = useCategoriesByType(userId, transactionType)
   const categories = categoriesData?.data || []
+  const { triggerEvent, showCelebration } = useGamification()
 
   const isEditing = !!initialData?.id
   const isLoading = createTransaction.isPending || updateTransaction.isPending
@@ -87,6 +89,23 @@ export function TransactionForm({
       })
 
       if (!result.error) {
+        // Trigger gamification event for transaction update
+        await triggerEvent('transaction_logged', {
+          amount: transactionInput.amount,
+          type: transactionInput.type,
+          categoryId: transactionInput.categoryId,
+          action: 'update'
+        })
+
+        // Show micro-celebration for edit
+        showCelebration({
+          type: 'subtle',
+          title: 'Transaction Updated!',
+          message: 'Your transaction has been successfully updated.',
+          color: '#3b82f6',
+          duration: 2000
+        })
+
         onSuccess?.()
       }
     } else {
@@ -96,6 +115,23 @@ export function TransactionForm({
       })
 
       if (!result.error) {
+        // Trigger gamification event for new transaction
+        await triggerEvent('transaction_logged', {
+          amount: transactionInput.amount,
+          type: transactionInput.type,
+          categoryId: transactionInput.categoryId,
+          action: 'create'
+        })
+
+        // Show micro-celebration for new transaction
+        showCelebration({
+          type: 'subtle',
+          title: transactionType === 'income' ? 'Income Added!' : 'Expense Logged!',
+          message: `Successfully tracked your ${transactionInput.type} of $${Math.round(transactionInput.amount)}`,
+          color: transactionType === 'income' ? '#10b981' : '#ef4444',
+          duration: 3000
+        })
+
         form.reset()
         onSuccess?.()
       }
@@ -168,7 +204,8 @@ export function TransactionForm({
                       "hover:bg-white/40"
                     )}
                   >
-                    💸 Expense
+                    <TrendingDown className="w-4 h-4 mr-2" />
+                    Expense
                   </TabsTrigger>
                   <TabsTrigger
                     value="income"
@@ -178,7 +215,8 @@ export function TransactionForm({
                       "hover:bg-white/40"
                     )}
                   >
-                    💰 Income
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Income
                   </TabsTrigger>
                 </TabsList>
 
@@ -214,7 +252,17 @@ export function TransactionForm({
                 )}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? '✏️ Update Transaction' : '✨ Add Transaction'}
+                {isEditing ? (
+                  <>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Update Transaction
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Add Transaction
+                  </>
+                )}
               </Button>
 
               {onCancel && (
@@ -233,12 +281,15 @@ export function TransactionForm({
             {/* Keyboard Shortcuts Hint */}
             <div className="pt-4 border-t border-gray-200/60">
               <div className="text-xs text-gray-500 text-center space-y-1">
-                <p className="font-medium">💡 Keyboard Shortcuts:</p>
+                <p className="font-medium flex items-center justify-center gap-2">
+                  <Lightbulb className="w-3 h-3" />
+                  Keyboard Shortcuts:
+                </p>
                 <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">⌘+Enter</kbd> Submit</span>
+                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs flex items-center gap-1"><Command className="w-2 h-2" />+Enter</kbd> Submit</span>
                   <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">Esc</kbd> Cancel</span>
-                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">⌘+E</kbd> Expense</span>
-                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs">⌘+I</kbd> Income</span>
+                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs flex items-center gap-1"><Command className="w-2 h-2" />+E</kbd> Expense</span>
+                  <span><kbd className="px-1 py-0.5 bg-gray-200/60 rounded text-xs flex items-center gap-1"><Command className="w-2 h-2" />+I</kbd> Income</span>
                 </div>
               </div>
             </div>
@@ -265,7 +316,8 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
-              💲 Amount
+              <DollarSign className="w-4 h-4" />
+              Amount
             </FormLabel>
             <FormControl>
               <div className="relative">
@@ -303,7 +355,8 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
-              📝 Description
+              <FileText className="w-4 h-4" />
+              Description
             </FormLabel>
             <FormControl>
               <Input
@@ -328,7 +381,8 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
-              🏷️ Category
+              <Tag className="w-4 h-4" />
+              Category
             </FormLabel>
             <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
@@ -392,7 +446,8 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
         render={({ field }) => (
           <FormItem className="flex flex-col">
             <FormLabel className="text-gray-700 font-semibold flex items-center gap-2">
-              📅 Date
+              <CalendarIcon className="w-4 h-4" />
+              Date
             </FormLabel>
             <Popover>
               <PopoverTrigger asChild>
@@ -410,7 +465,11 @@ function TransactionFormFields({ form, categories, transactionType }: Transactio
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-white/95 backdrop-blur-xl border border-gray-200 shadow-xl" align="start">
+              <PopoverContent
+                className="bg-white/98 w-auto rounded-2xl border border-blue-200/30 p-4 shadow-2xl backdrop-blur-xl"
+                align="start"
+                sideOffset={8}
+              >
                 <Calendar
                   mode="single"
                   selected={field.value}

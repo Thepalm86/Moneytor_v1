@@ -228,3 +228,20 @@ export function formatCurrencyForChart(
 
   return formatCurrency(amount, currencyCode, { decimals: 0 })
 }
+
+/**
+ * Format currency as whole numbers (no decimals) - for clean display
+ */
+export function formatCurrencyWhole(
+  amount: number,
+  currencyCode: string = 'USD'
+): string {
+  return formatCurrency(amount, currencyCode, { decimals: 0 })
+}
+
+/**
+ * Format number as whole number without currency symbol
+ */
+export function formatWholeNumber(amount: number): string {
+  return Math.round(amount).toLocaleString()
+}

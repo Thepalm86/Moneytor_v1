@@ -14,7 +14,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 
-import { formatCurrency } from '@/lib/utils/currency'
+import { useCurrency } from '@/contexts/currency-context'
 import { useTransactions } from '@/hooks/use-transactions'
 import { getIcon } from '@/lib/utils/icons'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -58,6 +58,7 @@ export function CategoryBreakdownChart({
   dateRange,
   className,
 }: CategoryBreakdownChartProps) {
+  const { formatCurrency } = useCurrency()
   const { data: transactionsData, isLoading } = useTransactions(userId, {
     type: type === 'all' ? undefined : type,
     dateFrom: dateRange?.from,
@@ -146,7 +147,7 @@ export function CategoryBreakdownChart({
           <div className="text-body-sm space-y-2">
             <div className="flex items-center justify-between gap-4">
               <span className="font-medium text-muted-foreground">Amount:</span>
-              <span className="text-currency-sm font-bold">{formatCurrency(data.amount)}</span>
+              <span className="text-currency-sm font-bold">{formatCurrency(data.amount, { decimals: 0 })}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span className="font-medium text-muted-foreground">Transactions:</span>
@@ -225,7 +226,7 @@ export function CategoryBreakdownChart({
             variant="outline"
             className="from-primary-50 to-primary-100 text-primary-700 border-primary-200 bg-gradient-to-r"
           >
-            Total: {formatCurrency(totalAmount)}
+            Total: {formatCurrency(totalAmount, { decimals: 0 })}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -354,7 +355,7 @@ export function CategoryBreakdownChart({
                         </div>
                         <div className="ml-2 text-right">
                           <div className="text-currency-sm font-semibold">
-                            {formatCurrency(item.amount)}
+                            {formatCurrency(item.amount, { decimals: 0 })}
                           </div>
                           <div className="text-caption text-muted-foreground">
                             {item.percentage.toFixed(1)}%
@@ -415,7 +416,7 @@ export function CategoryBreakdownChart({
                   tickLine={false}
                   axisLine={false}
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  tickFormatter={value => formatCurrency(value)}
+                  tickFormatter={value => formatCurrency(value, { decimals: 0 })}
                   dx={-10}
                 />
                 <Tooltip content={<CustomTooltip />} />

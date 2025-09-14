@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import { LoadingSpinner } from '@/components/layout/loading-spinner'
 import { SignOutButton } from '@/components/auth/sign-out-button'
+import { GamificationProvider } from '@/contexts/gamification-context'
+import { DashboardCelebrations } from '@/components/layout/dashboard-celebrations'
 import {
   LayoutDashboard,
   CreditCard,
@@ -316,7 +318,10 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
 
       {/* Main content */}
       <div className="lg:ml-64">
-        <div className="p-4 pt-20 lg:p-8 lg:pt-8">{children}</div>
+        <GamificationProvider>
+          <div className="p-4 pt-20 lg:p-8 lg:pt-8">{children}</div>
+          <DashboardCelebrations />
+        </GamificationProvider>
       </div>
     </div>
   )

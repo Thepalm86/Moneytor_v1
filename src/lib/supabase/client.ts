@@ -5,6 +5,13 @@ import type { Database } from '@/types/supabase'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+// Check if we're in browser environment and variables are missing
+if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
+  throw new Error(
+    'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your deployment environment.'
+  )
+}
+
 // For build time safety, provide fallback values that won't break the build
 const fallbackUrl = 'https://placeholder.supabase.co'
 const fallbackKey = 'placeholder-key'
@@ -13,19 +20,14 @@ const fallbackKey = 'placeholder-key'
 const url = supabaseUrl || fallbackUrl
 const key = supabaseAnonKey || fallbackKey
 
-// Check for missing environment variables at runtime (not build time)
-function checkEnvironmentVariables() {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    if (typeof window !== 'undefined') {
-      // Only throw error in browser environment
-      throw new Error('Missing Supabase environment variables')
-    }
-    // In Node.js/build environment, just warn
-    console.warn('Supabase environment variables not configured')
-  }
+// Warn during build if using fallbacks
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn(
+    '⚠️  Supabase environment variables not configured. Using fallback values for build. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY for production.'
+  )
 }
 
-// Create the client with fallback values
+// Create the client
 export const supabase = createClient<Database>(url, key, {
   auth: {
     autoRefreshToken: true,
@@ -36,5 +38,7 @@ export const supabase = createClient<Database>(url, key, {
 
 // Export a function to validate environment at runtime
 export function validateSupabaseConfig() {
-  checkEnvironmentVariables()
+  if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
+    throw new Error('Supabase is not configured. Please check your environment variables.')
+  }
 }

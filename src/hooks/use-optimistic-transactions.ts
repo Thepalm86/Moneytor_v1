@@ -8,10 +8,7 @@ import {
   deleteTransaction,
 } from '@/lib/supabase/transactions'
 import { useOptimisticUpdate } from '@/lib/utils/performance'
-import type { 
-  TransactionInput, 
-  Transaction 
-} from '@/lib/validations/transaction'
+import type { TransactionInput, Transaction } from '@/lib/validations/transaction'
 
 // Optimistic create transaction for mobile UX
 export function useOptimisticCreateTransaction() {
@@ -26,7 +23,7 @@ export function useOptimisticCreateTransaction() {
         amount: transaction.amount,
         description: transaction.description,
         type: transaction.type,
-        category_id: transaction.category_id,
+        category_id: transaction.categoryId,
         date: transaction.date,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -36,10 +33,10 @@ export function useOptimisticCreateTransaction() {
       // Optimistically update the cache
       queryClient.setQueryData(['transactions', userId], (oldData: any) => {
         if (!oldData?.data) return oldData
-        
+
         return {
           ...oldData,
-          data: [optimisticTransaction, ...oldData.data]
+          data: [optimisticTransaction, ...oldData.data],
         }
       })
 
@@ -58,7 +55,7 @@ export function useOptimisticCreateTransaction() {
             total_expenses: oldStats.data.total_expenses + (!isIncome ? amount : 0),
             net_worth: oldStats.data.net_worth + (isIncome ? amount : -amount),
             transaction_count: oldStats.data.transaction_count + 1,
-          }
+          },
         }
       })
 
@@ -70,7 +67,7 @@ export function useOptimisticCreateTransaction() {
         // Revert optimistic update on error
         queryClient.invalidateQueries({ queryKey: ['transactions'] })
         queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
-        
+
         toast.error('Failed to create transaction', {
           description: result.error,
         })
@@ -80,19 +77,17 @@ export function useOptimisticCreateTransaction() {
       // Replace optimistic transaction with real data
       queryClient.setQueryData(['transactions', variables.userId], (oldData: any) => {
         if (!oldData?.data) return oldData
-        
+
         return {
           ...oldData,
-          data: oldData.data.map((t: Transaction) => 
-            t.id.startsWith('temp-') ? result.data : t
-          )
+          data: oldData.data.map((t: Transaction) => (t.id.startsWith('temp-') ? result.data : t)),
         }
       })
 
       // Update all related queries with real data
       queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
       queryClient.invalidateQueries({ queryKey: ['categories'] })
-      
+
       toast.success('Transaction created successfully', {
         duration: 2000,
       })
@@ -101,7 +96,7 @@ export function useOptimisticCreateTransaction() {
       // Revert optimistic updates
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
       queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
-      
+
       console.error('Create transaction error:', error)
       toast.error('Failed to create transaction', {
         description: 'Please check your connection and try again',
@@ -116,27 +111,27 @@ export function useOptimisticUpdateTransaction() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ 
-      id, 
-      userId, 
-      updates 
-    }: { 
-      id: string; 
-      userId: string; 
-      updates: Partial<TransactionInput> 
+    mutationFn: ({
+      id,
+      userId,
+      updates,
+    }: {
+      id: string
+      userId: string
+      updates: Partial<TransactionInput>
     }) => {
       // Store original data for potential rollback
       const originalData = queryClient.getQueryData(['transactions', userId])
-      
+
       // Apply optimistic update
       queryClient.setQueryData(['transactions', userId], (oldData: any) => {
         if (!oldData?.data) return oldData
-        
+
         return {
           ...oldData,
-          data: oldData.data.map((t: Transaction) => 
+          data: oldData.data.map((t: Transaction) =>
             t.id === id ? { ...t, ...updates, updated_at: new Date().toISOString() } : t
-          )
+          ),
         }
       })
 
@@ -152,7 +147,7 @@ export function useOptimisticUpdateTransaction() {
         if (rollbackData) {
           queryClient.setQueryData(['transactions', variables.userId], rollbackData)
         }
-        
+
         toast.error('Failed to update transaction', {
           description: result.error,
         })
@@ -161,11 +156,11 @@ export function useOptimisticUpdateTransaction() {
 
       // Clean up rollback data
       queryClient.removeQueries({ queryKey: ['optimistic-rollback', variables.id] })
-      
+
       // Ensure we have the latest server data
       queryClient.invalidateQueries({ queryKey: ['transaction', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
-      
+
       toast.success('Transaction updated successfully', {
         duration: 2000,
       })
@@ -176,9 +171,9 @@ export function useOptimisticUpdateTransaction() {
       if (rollbackData) {
         queryClient.setQueryData(['transactions', variables.userId], rollbackData)
       }
-      
+
       queryClient.removeQueries({ queryKey: ['optimistic-rollback', variables.id] })
-      
+
       console.error('Update transaction error:', error)
       toast.error('Failed to update transaction', {
         description: 'Please check your connection and try again',
@@ -197,14 +192,14 @@ export function useOptimisticDeleteTransaction() {
       // Store original data for potential rollback
       const originalData = queryClient.getQueryData(['transactions', userId])
       const transactionToDelete = originalData?.data?.find((t: Transaction) => t.id === id)
-      
+
       // Optimistically remove from UI
       queryClient.setQueryData(['transactions', userId], (oldData: any) => {
         if (!oldData?.data) return oldData
-        
+
         return {
           ...oldData,
-          data: oldData.data.filter((t: Transaction) => t.id !== id)
+          data: oldData.data.filter((t: Transaction) => t.id !== id),
         }
       })
 
@@ -224,15 +219,15 @@ export function useOptimisticDeleteTransaction() {
               total_expenses: oldStats.data.total_expenses - (!isIncome ? amount : 0),
               net_worth: oldStats.data.net_worth - (isIncome ? amount : -amount),
               transaction_count: oldStats.data.transaction_count - 1,
-            }
+            },
           }
         })
       }
 
       // Store for rollback
-      queryClient.setQueryData(['optimistic-rollback', id], { 
-        originalData, 
-        deletedTransaction: transactionToDelete 
+      queryClient.setQueryData(['optimistic-rollback', id], {
+        originalData,
+        deletedTransaction: transactionToDelete,
       })
 
       return deleteTransaction(id, userId)
@@ -245,7 +240,7 @@ export function useOptimisticDeleteTransaction() {
           queryClient.setQueryData(['transactions', variables.userId], rollbackInfo.originalData)
           queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
         }
-        
+
         toast.error('Failed to delete transaction', {
           description: result.error,
         })
@@ -254,10 +249,10 @@ export function useOptimisticDeleteTransaction() {
 
       // Clean up rollback data
       queryClient.removeQueries({ queryKey: ['optimistic-rollback', variables.id] })
-      
+
       // Refresh related data
       queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
-      
+
       toast.success('Transaction deleted successfully', {
         duration: 2000,
         action: {
@@ -265,8 +260,8 @@ export function useOptimisticDeleteTransaction() {
           onClick: () => {
             // TODO: Implement undo functionality
             toast.info('Undo functionality coming soon')
-          }
-        }
+          },
+        },
       })
     },
     onError: (error, variables) => {
@@ -276,9 +271,9 @@ export function useOptimisticDeleteTransaction() {
         queryClient.setQueryData(['transactions', variables.userId], rollbackInfo.originalData)
         queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
       }
-      
+
       queryClient.removeQueries({ queryKey: ['optimistic-rollback', variables.id] })
-      
+
       console.error('Delete transaction error:', error)
       toast.error('Failed to delete transaction', {
         description: 'Please check your connection and try again',
@@ -296,14 +291,14 @@ export function useOptimisticBulkDelete() {
     mutationFn: async ({ ids, userId }: { ids: string[]; userId: string }) => {
       // Store original data
       const originalData = queryClient.getQueryData(['transactions', userId])
-      
+
       // Optimistically remove transactions
       queryClient.setQueryData(['transactions', userId], (oldData: any) => {
         if (!oldData?.data) return oldData
-        
+
         return {
           ...oldData,
-          data: oldData.data.filter((t: Transaction) => !ids.includes(t.id))
+          data: oldData.data.filter((t: Transaction) => !ids.includes(t.id)),
         }
       })
 
@@ -311,9 +306,7 @@ export function useOptimisticBulkDelete() {
       queryClient.setQueryData(['bulk-rollback', userId], originalData)
 
       // Execute bulk delete (implement in your backend)
-      const results = await Promise.allSettled(
-        ids.map(id => deleteTransaction(id, userId))
-      )
+      const results = await Promise.allSettled(ids.map(id => deleteTransaction(id, userId)))
 
       // Check if any failed
       const failures = results.filter(r => r.status === 'rejected')
@@ -326,10 +319,10 @@ export function useOptimisticBulkDelete() {
     onSuccess: (result, variables) => {
       // Clean up rollback data
       queryClient.removeQueries({ queryKey: ['bulk-rollback', variables.userId] })
-      
+
       // Refresh stats
       queryClient.invalidateQueries({ queryKey: ['transaction-stats'] })
-      
+
       toast.success(`Successfully deleted ${variables.ids.length} transactions`, {
         duration: 3000,
       })
@@ -340,9 +333,9 @@ export function useOptimisticBulkDelete() {
       if (rollbackData) {
         queryClient.setQueryData(['transactions', variables.userId], rollbackData)
       }
-      
+
       queryClient.removeQueries({ queryKey: ['bulk-rollback', variables.userId] })
-      
+
       console.error('Bulk delete error:', error)
       toast.error('Failed to delete transactions', {
         description: 'Some transactions could not be deleted. Please try again.',

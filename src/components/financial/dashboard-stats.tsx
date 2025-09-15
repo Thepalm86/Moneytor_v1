@@ -71,7 +71,7 @@ export function DashboardStats({ userId, dateRange }: DashboardStatsProps) {
         formatAsCurrency: false,
       },
     ]
-  }, [stats])
+  }, [stats, formatCurrency])
 
   if (isLoading) {
     return (

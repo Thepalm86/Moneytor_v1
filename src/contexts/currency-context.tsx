@@ -8,16 +8,16 @@
 import React, { createContext, useContext, useCallback, useMemo } from 'react'
 import { useUser } from '@/hooks/use-user'
 import { getUserProfileWithSettings, updateUserSettings } from '@/lib/supabase/settings'
-import { 
-  Currency, 
-  getCurrencyByCode, 
-  getDefaultCurrency, 
+import {
+  Currency,
+  getCurrencyByCode,
+  getDefaultCurrency,
   formatCurrency as formatCurrencyUtil,
   getCurrencySymbol,
   getCurrencyPosition,
   formatCurrencyWithColor,
   formatCurrencyForChart,
-  parseCurrency 
+  parseCurrency,
 } from '@/lib/utils/currency'
 import type { UserProfileWithSettings } from '@/types/settings'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
@@ -28,14 +28,17 @@ interface CurrencyContextType {
   currency: Currency
   userProfile: UserProfileWithSettings | null
   isLoading: boolean
-  
+
   // Currency operations
   setCurrency: (currencyCode: string) => Promise<void>
-  formatCurrency: (amount: number, options?: {
-    showSymbol?: boolean
-    decimals?: number
-    locale?: string
-  }) => string
+  formatCurrency: (
+    amount: number,
+    options?: {
+      showSymbol?: boolean
+      decimals?: number
+      locale?: string
+    }
+  ) => string
   formatCurrencyWithColor: (
     amount: number,
     type?: 'income' | 'expense' | 'neutral'
@@ -44,7 +47,7 @@ interface CurrencyContextType {
   parseCurrency: (value: string) => number
   getCurrencySymbol: () => string
   getCurrencyPosition: () => 'left' | 'right'
-  
+
   // Utility methods
   refreshProfile: () => Promise<void>
 }
@@ -53,9 +56,10 @@ const CurrencyContext = createContext<CurrencyContextType | null>(null)
 
 interface CurrencyProviderProps {
   children: React.ReactNode
+  initialCurrency?: string
 }
 
-export function CurrencyProvider({ children }: CurrencyProviderProps) {
+export function CurrencyProvider({ children, initialCurrency }: CurrencyProviderProps) {
   const { user } = useUser()
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -70,20 +74,20 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
     queryFn: () => getUserProfileWithSettings(user!.id),
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    select: (data) => data.data,
+    select: data => data.data,
   })
 
   // Mutation for updating currency
   const updateCurrencyMutation = useMutation({
     mutationFn: async (currencyCode: string) => {
       if (!user?.id) throw new Error('User not authenticated')
-      
+
       const result = await updateUserSettings(user.id, { currency: currencyCode })
       if (result.error) throw new Error(result.error)
-      
+
       return result.data
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.setQueryData(['user-profile', user?.id], data)
       toast({
         title: 'Currency updated',
@@ -99,7 +103,7 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
     },
   })
 
-  // Get current currency
+  // Get current currency - prefer loaded profile, fallback to initial server-side currency
   const currency = useMemo(() => {
     if (userProfile?.preferences?.currency) {
       return getCurrencyByCode(userProfile.preferences.currency) || getDefaultCurrency()
@@ -107,51 +111,63 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
     if (userProfile?.currency) {
       return getCurrencyByCode(userProfile.currency) || getDefaultCurrency()
     }
+    if (initialCurrency) {
+      return getCurrencyByCode(initialCurrency) || getDefaultCurrency()
+    }
     return getDefaultCurrency()
-  }, [userProfile])
+  }, [userProfile, initialCurrency])
 
   // Currency operations
-  const setCurrency = useCallback(async (currencyCode: string) => {
-    if (!getCurrencyByCode(currencyCode)) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid currency',
-        description: 'Please select a valid currency code.',
-      })
-      return
-    }
-    
-    await updateCurrencyMutation.mutateAsync(currencyCode)
-  }, [updateCurrencyMutation, toast])
+  const setCurrency = useCallback(
+    async (currencyCode: string) => {
+      if (!getCurrencyByCode(currencyCode)) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid currency',
+          description: 'Please select a valid currency code.',
+        })
+        return
+      }
 
-  const formatCurrency = useCallback((
-    amount: number,
-    options?: {
-      showSymbol?: boolean
-      decimals?: number
-      locale?: string
-    }
-  ) => {
-    return formatCurrencyUtil(amount, currency.code, options)
-  }, [currency.code])
+      await updateCurrencyMutation.mutateAsync(currencyCode)
+    },
+    [updateCurrencyMutation, toast]
+  )
 
-  const formatCurrencyWithColorWrapper = useCallback((
-    amount: number,
-    type: 'income' | 'expense' | 'neutral' = 'neutral'
-  ) => {
-    return formatCurrencyWithColor(amount, currency.code, type)
-  }, [currency.code])
+  const formatCurrency = useCallback(
+    (
+      amount: number,
+      options?: {
+        showSymbol?: boolean
+        decimals?: number
+        locale?: string
+      }
+    ) => {
+      return formatCurrencyUtil(amount, currency.code, options)
+    },
+    [currency.code]
+  )
 
-  const formatCurrencyForChartWrapper = useCallback((
-    amount: number,
-    compact: boolean = false
-  ) => {
-    return formatCurrencyForChart(amount, currency.code, compact)
-  }, [currency.code])
+  const formatCurrencyWithColorWrapper = useCallback(
+    (amount: number, type: 'income' | 'expense' | 'neutral' = 'neutral') => {
+      return formatCurrencyWithColor(amount, currency.code, type)
+    },
+    [currency.code]
+  )
 
-  const parseCurrencyWrapper = useCallback((value: string) => {
-    return parseCurrency(value, currency.code)
-  }, [currency.code])
+  const formatCurrencyForChartWrapper = useCallback(
+    (amount: number, compact: boolean = false) => {
+      return formatCurrencyForChart(amount, currency.code, compact)
+    },
+    [currency.code]
+  )
+
+  const parseCurrencyWrapper = useCallback(
+    (value: string) => {
+      return parseCurrency(value, currency.code)
+    },
+    [currency.code]
+  )
 
   const getCurrencySymbolWrapper = useCallback(() => {
     return getCurrencySymbol(currency.code)
@@ -169,37 +185,36 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
   const isLoading = isProfileLoading || updateCurrencyMutation.isPending
 
   // Context value
-  const contextValue: CurrencyContextType = useMemo(() => ({
-    currency,
-    userProfile: userProfile || null,
-    isLoading,
-    setCurrency,
-    formatCurrency,
-    formatCurrencyWithColor: formatCurrencyWithColorWrapper,
-    formatCurrencyForChart: formatCurrencyForChartWrapper,
-    parseCurrency: parseCurrencyWrapper,
-    getCurrencySymbol: getCurrencySymbolWrapper,
-    getCurrencyPosition: getCurrencyPositionWrapper,
-    refreshProfile,
-  }), [
-    currency,
-    userProfile,
-    isLoading,
-    setCurrency,
-    formatCurrency,
-    formatCurrencyWithColorWrapper,
-    formatCurrencyForChartWrapper,
-    parseCurrencyWrapper,
-    getCurrencySymbolWrapper,
-    getCurrencyPositionWrapper,
-    refreshProfile,
-  ])
-
-  return (
-    <CurrencyContext.Provider value={contextValue}>
-      {children}
-    </CurrencyContext.Provider>
+  const contextValue: CurrencyContextType = useMemo(
+    () => ({
+      currency,
+      userProfile: userProfile || null,
+      isLoading,
+      setCurrency,
+      formatCurrency,
+      formatCurrencyWithColor: formatCurrencyWithColorWrapper,
+      formatCurrencyForChart: formatCurrencyForChartWrapper,
+      parseCurrency: parseCurrencyWrapper,
+      getCurrencySymbol: getCurrencySymbolWrapper,
+      getCurrencyPosition: getCurrencyPositionWrapper,
+      refreshProfile,
+    }),
+    [
+      currency,
+      userProfile,
+      isLoading,
+      setCurrency,
+      formatCurrency,
+      formatCurrencyWithColorWrapper,
+      formatCurrencyForChartWrapper,
+      parseCurrencyWrapper,
+      getCurrencySymbolWrapper,
+      getCurrencyPositionWrapper,
+      refreshProfile,
+    ]
   )
+
+  return <CurrencyContext.Provider value={contextValue}>{children}</CurrencyContext.Provider>
 }
 
 /**
@@ -207,11 +222,11 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
  */
 export function useCurrency() {
   const context = useContext(CurrencyContext)
-  
+
   if (!context) {
     throw new Error('useCurrency must be used within a CurrencyProvider')
   }
-  
+
   return context
 }
 
@@ -232,8 +247,9 @@ export function withCurrency<P extends object>(Component: React.ComponentType<P>
  * Hook for currency formatting only (lightweight)
  */
 export function useCurrencyFormatter() {
-  const { formatCurrency, formatCurrencyWithColor, formatCurrencyForChart, parseCurrency } = useCurrency()
-  
+  const { formatCurrency, formatCurrencyWithColor, formatCurrencyForChart, parseCurrency } =
+    useCurrency()
+
   return {
     formatCurrency,
     formatCurrencyWithColor,
@@ -247,7 +263,7 @@ export function useCurrencyFormatter() {
  */
 export function useCurrencyInfo() {
   const { currency, getCurrencySymbol, getCurrencyPosition } = useCurrency()
-  
+
   return {
     currency,
     symbol: getCurrencySymbol(),

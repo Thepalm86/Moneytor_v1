@@ -10,7 +10,7 @@ import { CategoryForm } from '@/components/forms/category-form'
 import { PageHeader, PageHeaderAction } from '@/components/layout/page-header'
 import { CategoryUsageAnalytics } from '@/components/categories/category-usage-analytics'
 import { useCategoriesWithStats } from '@/hooks/use-categories'
-import { formatCurrency } from '@/lib/utils'
+import { useCurrency } from '@/contexts/currency-context'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,6 +38,7 @@ export default function CategoriesPage() {
   const { data: categoriesData, isLoading } = useCategories(user?.id || '')
   const { data: categoriesStatsData } = useCategoriesWithStats(user?.id || '')
   const deleteCategory = useDeleteCategory()
+  const { formatCurrency } = useCurrency()
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)

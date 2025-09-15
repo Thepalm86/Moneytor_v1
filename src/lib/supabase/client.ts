@@ -7,9 +7,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Check if we're in browser environment and variables are missing
 if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
-  throw new Error(
+  console.error(
     'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your deployment environment.'
   )
+  // Don't throw an error, let the app gracefully degrade
 }
 
 // For build time safety, provide fallback values that won't break the build
@@ -37,8 +38,20 @@ export const supabase = createClient<Database>(url, key, {
 })
 
 // Export a function to validate environment at runtime
-export function validateSupabaseConfig() {
+export function validateSupabaseConfig(): boolean {
   if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
-    throw new Error('Supabase is not configured. Please check your environment variables.')
+    console.warn('Supabase is not configured. Please check your environment variables.')
+    return false
   }
+  return true
+}
+
+// Export a function to check if Supabase is properly configured
+export function isSupabaseConfigured(): boolean {
+  return !!(
+    supabaseUrl &&
+    supabaseAnonKey &&
+    supabaseUrl !== 'https://placeholder.supabase.co' &&
+    supabaseAnonKey !== 'placeholder-key'
+  )
 }

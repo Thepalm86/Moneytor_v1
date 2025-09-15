@@ -14,13 +14,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast'
 
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
-import { supabase } from '@/lib/supabase/client'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+
+  // Check if Supabase is configured
+  const supabaseConfigured = isSupabaseConfigured()
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -34,6 +37,16 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      // Check if Supabase is properly configured
+      if (!isSupabaseConfigured()) {
+        toast({
+          variant: 'destructive',
+          title: 'Configuration Error',
+          description: 'Authentication service is not properly configured. Please contact support.',
+        })
+        return
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -74,6 +87,13 @@ export default function LoginPage() {
         <CardDescription className="text-gray-600">
           Sign in to your account to continue managing your finances
         </CardDescription>
+        {!supabaseConfigured && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-sm text-amber-800">
+              ⚠️ Authentication service is not properly configured. Please contact support.
+            </p>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent>
@@ -134,14 +154,16 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            disabled={isLoading}
-            className="h-12 w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
+            disabled={isLoading || !supabaseConfigured}
+            className="h-12 w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Signing in...
               </>
+            ) : !supabaseConfigured ? (
+              'Service Not Configured'
             ) : (
               'Sign In'
             )}

@@ -56,18 +56,18 @@ export async function getGoals(
     if (filters?.overdue !== undefined) {
       const now = new Date()
       filteredData = filteredData.filter(goal => {
-        if (!goal.target_date) return false
-        const targetDate = new Date(goal.target_date)
-        const isOverdue = isAfter(now, targetDate) && goal.status === 'active'
+        if (!(goal as any).target_date) return false
+        const targetDate = new Date((goal as any).target_date)
+        const isOverdue = isAfter(now, targetDate) && (goal as any).status === 'active'
         return filters.overdue ? isOverdue : !isOverdue
       })
     }
 
     // Transform snake_case to match our type definitions
     const transformedData = filteredData.map(goal => ({
-      ...goal,
+      ...(goal as any),
       // Ensure status field exists (fallback for old records)
-      status: goal.status || 'active',
+      status: (goal as any).status || 'active',
     }))
 
     return { data: transformedData, error: null }
@@ -183,8 +183,8 @@ export async function getGoal(
 
     // Ensure status field exists
     const transformedData = {
-      ...data,
-      status: data.status || 'active',
+      ...(data as any),
+      status: (data as any).status || 'active',
     }
 
     return { data: transformedData, error: null }
@@ -233,7 +233,7 @@ export async function createGoal(
       return { data: null, error: error.message }
     }
 
-    return { data: { ...data, status: data.status || 'active' }, error: null }
+    return { data: { ...(data as any), status: (data as any).status || 'active' }, error: null }
   } catch (err) {
     console.error('Unexpected error creating goal:', err)
     return { data: null, error: 'Failed to create goal' }
@@ -260,7 +260,7 @@ export async function updateGoal(
         : null
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('saving_goals')
       .update(updateData)
       .eq('id', id)

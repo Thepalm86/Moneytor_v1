@@ -24,7 +24,8 @@ export function useOptimisticCreateTransaction() {
         description: transaction.description,
         type: transaction.type,
         category_id: transaction.categoryId,
-        date: transaction.date,
+        date:
+          typeof transaction.date === 'string' ? transaction.date : transaction.date.toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         // Add any other required fields
@@ -191,7 +192,7 @@ export function useOptimisticDeleteTransaction() {
     mutationFn: ({ id, userId }: { id: string; userId: string }) => {
       // Store original data for potential rollback
       const originalData = queryClient.getQueryData(['transactions', userId])
-      const transactionToDelete = originalData?.data?.find((t: Transaction) => t.id === id)
+      const transactionToDelete = (originalData as any)?.data?.find((t: Transaction) => t.id === id)
 
       // Optimistically remove from UI
       queryClient.setQueryData(['transactions', userId], (oldData: any) => {

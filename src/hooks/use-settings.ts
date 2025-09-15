@@ -44,7 +44,7 @@ export function useSettings() {
     queryKey: ['user-profile-settings', user?.id],
     queryFn: () => getUserProfileWithSettings(user!.id),
     enabled: !!user?.id,
-    select: (data) => data.data,
+    select: data => data.data,
     staleTime: 2 * 60 * 1000, // 2 minutes
   })
 
@@ -52,13 +52,13 @@ export function useSettings() {
   const updateSettingsMutation = useMutation({
     mutationFn: async (updates: SettingsUpdatePayload) => {
       if (!user?.id) throw new Error('User not authenticated')
-      
+
       const result = await updateUserSettings(user.id, updates)
       if (result.error) throw new Error(result.error)
-      
+
       return result.data
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.setQueryData(['user-profile-settings', user?.id], data)
       toast({
         title: 'Settings updated',
@@ -78,10 +78,10 @@ export function useSettings() {
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: { fullName?: string; avatarUrl?: string }) => {
       if (!user?.id) throw new Error('User not authenticated')
-      
+
       const result = await updateUserProfile(user.id, updates)
       if (result.error) throw new Error(result.error)
-      
+
       return result.data
     },
     onSuccess: () => {
@@ -104,13 +104,13 @@ export function useSettings() {
   const resetSettingsMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
-      
+
       const result = await resetUserSettings(user.id)
       if (result.error) throw new Error(result.error)
-      
+
       return result.data
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.setQueryData(['user-profile-settings', user?.id], data)
       toast({
         title: 'Settings reset',
@@ -157,16 +157,16 @@ export function useDataExport() {
   const requestExportMutation = useMutation({
     mutationFn: async (request: DataExportRequest) => {
       if (!user?.id) throw new Error('User not authenticated')
-      
+
       const result = await requestDataExport(user.id, request)
       if (result.error) throw new Error(result.error)
-      
+
       return result.data
     },
     onSuccess: () => {
       toast({
         title: 'Export requested',
-        description: 'Your data export has been queued. You will be notified when it\'s ready.',
+        description: "Your data export has been queued. You will be notified when it's ready.",
       })
     },
     onError: (error: Error) => {
@@ -184,10 +184,10 @@ export function useDataExport() {
       queryKey: ['export-status', exportId],
       queryFn: () => getDataExportStatus(user!.id, exportId!),
       enabled: !!user?.id && !!exportId,
-      select: (data) => data.data,
-      refetchInterval: (data) => {
+      select: data => data.data,
+      refetchInterval: query => {
         // Poll every 5 seconds if export is pending or processing
-        const status = data?.data?.status
+        const status = (query as any)?.state?.data?.data?.status
         return status === 'pending' || status === 'processing' ? 5000 : false
       },
     })
@@ -210,10 +210,10 @@ export function useAccountDeletion() {
   const deleteAccountMutation = useMutation({
     mutationFn: async (confirmationToken: string) => {
       if (!user?.id) throw new Error('User not authenticated')
-      
+
       const result = await deleteUserAccount(user.id, confirmationToken)
       if (result.error) throw new Error(result.error)
-      
+
       return result
     },
     onSuccess: () => {
@@ -299,7 +299,7 @@ export function useBulkSettingsUpdate() {
       }
 
       await updateSettings(allUpdates)
-      
+
       toast({
         title: 'Settings saved',
         description: 'All your preferences have been updated successfully.',

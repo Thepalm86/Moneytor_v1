@@ -72,7 +72,7 @@ export async function getCategoriesWithStats(
     // Calculate stats for each category
     const categoriesWithStats =
       data?.map(category => {
-        const transactions = category.transactions || []
+        const transactions = (category as any).transactions || []
         const transactions_count = transactions.length
         const total_amount = transactions.reduce(
           (sum: number, t: { amount: number }) => sum + Number(t.amount),
@@ -80,13 +80,13 @@ export async function getCategoriesWithStats(
         )
 
         return {
-          id: category.id,
-          user_id: category.user_id,
-          name: category.name,
-          type: category.type,
-          color: category.color,
-          icon: category.icon,
-          created_at: category.created_at,
+          id: (category as any).id,
+          user_id: (category as any).user_id,
+          name: (category as any).name,
+          type: (category as any).type,
+          color: (category as any).color,
+          icon: (category as any).icon,
+          created_at: (category as any).created_at,
           transactions_count,
           total_amount,
         }
@@ -128,7 +128,7 @@ export async function createCategory(
   category: CategoryInput
 ): Promise<{ data: Category | null; error: string | null }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .insert({
         user_id: userId,
@@ -158,7 +158,7 @@ export async function updateCategory(
   updates: Partial<CategoryInput>
 ): Promise<{ data: Category | null; error: string | null }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .update(updates)
       .eq('id', id)
@@ -238,14 +238,15 @@ export async function getCategoryUsageAnalytics(
       return { data: null as any, error: allCategoriesError.message }
     }
 
-    const usedCategoryIds = new Set(categoriesData?.map(c => c.id) || [])
-    const unusedCategories = allCategories?.filter(c => !usedCategoryIds.has(c.id)) || []
+    const usedCategoryIds = new Set((categoriesData as any)?.map((c: any) => c.id) || [])
+    const unusedCategories =
+      (allCategories as any)?.filter((c: any) => !usedCategoryIds.has(c.id)) || []
 
     // Process category performance
     const categoryPerformance =
       categoriesData
         ?.map(category => {
-          const transactions = category.transactions || []
+          const transactions = (category as any).transactions || []
           const transactionCount = transactions.length
           const totalAmount = transactions.reduce(
             (sum: number, t: any) => sum + Math.abs(Number(t.amount)),
@@ -263,13 +264,13 @@ export async function getCategoryUsageAnalytics(
 
           return {
             category: {
-              id: category.id,
-              user_id: category.user_id,
-              name: category.name,
-              type: category.type,
-              color: category.color,
-              icon: category.icon,
-              created_at: category.created_at,
+              id: (category as any).id,
+              user_id: (category as any).user_id,
+              name: (category as any).name,
+              type: (category as any).type,
+              color: (category as any).color,
+              icon: (category as any).icon,
+              created_at: (category as any).created_at,
             },
             transactionCount,
             totalAmount,

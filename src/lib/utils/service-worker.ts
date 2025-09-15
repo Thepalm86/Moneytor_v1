@@ -49,7 +49,7 @@ export class ServiceWorkerManager {
       })
 
       // Listen for messages from service worker
-      navigator.serviceWorker.addEventListener('message', (event) => {
+      navigator.serviceWorker.addEventListener('message', event => {
         this.handleServiceWorkerMessage(event)
       })
 
@@ -111,22 +111,19 @@ export class ServiceWorkerManager {
       return { names: [], sizes: {} }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const messageChannel = new MessageChannel()
-      
-      messageChannel.port1.addEventListener('message', (event) => {
+
+      messageChannel.port1.addEventListener('message', event => {
         if (event.data.type === 'CACHE_NAMES') {
           resolve({
             names: event.data.payload,
-            sizes: {} // Would need additional implementation to get sizes
+            sizes: {}, // Would need additional implementation to get sizes
           })
         }
       })
 
-      this.registration!.active!.postMessage(
-        { type: 'GET_CACHE_NAMES' },
-        [messageChannel.port2]
-      )
+      this.registration!.active!.postMessage({ type: 'GET_CACHE_NAMES' }, [messageChannel.port2])
     })
   }
 
@@ -134,19 +131,18 @@ export class ServiceWorkerManager {
   async clearCache(cacheName: string): Promise<boolean> {
     if (!this.registration?.active) return false
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const messageChannel = new MessageChannel()
-      
-      messageChannel.port1.addEventListener('message', (event) => {
+
+      messageChannel.port1.addEventListener('message', event => {
         if (event.data.type === 'CACHE_CLEARED') {
           resolve(event.data.payload.success)
         }
       })
 
-      this.registration!.active!.postMessage(
-        { type: 'CLEAR_CACHE', payload: { cacheName } },
-        [messageChannel.port2]
-      )
+      this.registration!.active!.postMessage({ type: 'CLEAR_CACHE', payload: { cacheName } }, [
+        messageChannel.port2,
+      ])
     })
   }
 
@@ -158,7 +154,7 @@ export class ServiceWorkerManager {
     }
 
     try {
-      await this.registration.sync.register(tag)
+      await (this.registration as any).sync.register(tag)
       console.log(`Background sync registered: ${tag}`)
     } catch (error) {
       console.error('Background sync registration failed:', error)
@@ -191,7 +187,7 @@ export class ServiceWorkerManager {
 
   off(event: string, callback: Function) {
     if (!this.callbacks[event]) return
-    
+
     const index = this.callbacks[event].indexOf(callback)
     if (index > -1) {
       this.callbacks[event].splice(index, 1)
@@ -200,7 +196,7 @@ export class ServiceWorkerManager {
 
   private emit(event: string, data?: any) {
     if (!this.callbacks[event]) return
-    
+
     this.callbacks[event].forEach(callback => callback(data))
   }
 }
@@ -256,9 +252,12 @@ export function useServiceWorker() {
     swManager.activateUpdate()
   }, [swManager])
 
-  const requestBackgroundSync = React.useCallback((tag: string) => {
-    return swManager.requestBackgroundSync(tag)
-  }, [swManager])
+  const requestBackgroundSync = React.useCallback(
+    (tag: string) => {
+      return swManager.requestBackgroundSync(tag)
+    },
+    [swManager]
+  )
 
   return {
     isSupported,
@@ -274,10 +273,10 @@ export function useServiceWorker() {
 // Utility to check if app is running as PWA
 export function isPWA(): boolean {
   if (typeof window === 'undefined') return false
-  
+
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true ||
+    (window.navigator as any).standalone === true ||
     document.referrer.includes('android-app://')
   )
 }
@@ -316,10 +315,10 @@ export function useInstallPrompt() {
 
     const promptEvent = installPrompt as any
     promptEvent.prompt()
-    
+
     const result = await promptEvent.userChoice
     setInstallPrompt(null)
-    
+
     return result.outcome === 'accepted'
   }, [installPrompt])
 
@@ -329,4 +328,3 @@ export function useInstallPrompt() {
     showInstallPrompt,
   }
 }
-

@@ -1,5 +1,11 @@
 import { supabase } from '@/lib/supabase/client'
-import type { Transaction, TransactionInput, TransactionFilters, TransactionSortBy, TransactionSortOrder } from '@/lib/validations/transaction'
+import type {
+  Transaction,
+  TransactionInput,
+  TransactionFilters,
+  TransactionSortBy,
+  TransactionSortOrder,
+} from '@/lib/validations/transaction'
 
 export async function getTransactions(
   userId: string,
@@ -12,7 +18,8 @@ export async function getTransactions(
   try {
     let query = supabase
       .from('transactions')
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -21,7 +28,9 @@ export async function getTransactions(
           color,
           icon
         )
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .eq('user_id', userId)
 
     // Apply filters
@@ -72,11 +81,15 @@ export async function getTransactions(
   }
 }
 
-export async function getTransaction(id: string, userId: string): Promise<{ data: Transaction | null; error: string | null }> {
+export async function getTransaction(
+  id: string,
+  userId: string
+): Promise<{ data: Transaction | null; error: string | null }> {
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -85,7 +98,8 @@ export async function getTransaction(id: string, userId: string): Promise<{ data
           color,
           icon
         )
-      `)
+      `
+      )
       .eq('id', id)
       .eq('user_id', userId)
       .single()
@@ -107,7 +121,7 @@ export async function createTransaction(
   transaction: TransactionInput
 ): Promise<{ data: Transaction | null; error: string | null }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .insert({
         user_id: userId,
@@ -117,7 +131,8 @@ export async function createTransaction(
         date: transaction.date.toISOString().split('T')[0],
         type: transaction.type,
       })
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -126,7 +141,8 @@ export async function createTransaction(
           color,
           icon
         )
-      `)
+      `
+      )
       .single()
 
     if (error) {
@@ -155,12 +171,13 @@ export async function updateTransaction(
     if (updates.date !== undefined) updateData.date = updates.date.toISOString().split('T')[0]
     if (updates.type !== undefined) updateData.type = updates.type
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
-      .select(`
+      .select(
+        `
         *,
         category:categories (
           id,
@@ -169,7 +186,8 @@ export async function updateTransaction(
           color,
           icon
         )
-      `)
+      `
+      )
       .single()
 
     if (error) {
@@ -184,7 +202,10 @@ export async function updateTransaction(
   }
 }
 
-export async function deleteTransaction(id: string, userId: string): Promise<{ error: string | null }> {
+export async function deleteTransaction(
+  id: string,
+  userId: string
+): Promise<{ error: string | null }> {
   try {
     const { error } = await supabase
       .from('transactions')
@@ -204,7 +225,11 @@ export async function deleteTransaction(id: string, userId: string): Promise<{ e
   }
 }
 
-export async function getTransactionStats(userId: string, dateFrom?: Date, dateTo?: Date): Promise<{
+export async function getTransactionStats(
+  userId: string,
+  dateFrom?: Date,
+  dateTo?: Date
+): Promise<{
   data: {
     totalIncome: number
     totalExpenses: number
@@ -214,10 +239,7 @@ export async function getTransactionStats(userId: string, dateFrom?: Date, dateT
   error: string | null
 }> {
   try {
-    let query = supabase
-      .from('transactions')
-      .select('amount, type')
-      .eq('user_id', userId)
+    let query = supabase.from('transactions').select('amount, type').eq('user_id', userId)
 
     if (dateFrom) {
       query = query.gte('date', dateFrom.toISOString().split('T')[0])
@@ -236,10 +258,10 @@ export async function getTransactionStats(userId: string, dateFrom?: Date, dateT
     const stats = data.reduce(
       (acc, transaction) => {
         acc.transactionCount++
-        if (transaction.type === 'income') {
-          acc.totalIncome += Number(transaction.amount)
+        if ((transaction as any).type === 'income') {
+          acc.totalIncome += Number((transaction as any).amount)
         } else {
-          acc.totalExpenses += Number(transaction.amount)
+          acc.totalExpenses += Number((transaction as any).amount)
         }
         return acc
       },

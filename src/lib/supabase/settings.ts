@@ -4,13 +4,13 @@
  */
 
 import { supabase } from './client'
-import type { 
-  UserSettings, 
-  UserPreferences, 
+import type {
+  UserSettings,
+  UserPreferences,
   SettingsUpdatePayload,
   DataExportRequest,
   DataExportResult,
-  UserProfileWithSettings 
+  UserProfileWithSettings,
 } from '@/types/settings'
 import type { UserProfile } from '@/types/supabase'
 import { getDefaultCurrency } from '@/lib/utils/currency'
@@ -20,20 +20,20 @@ import { getDefaultCurrency } from '@/lib/utils/currency'
  */
 export function getDefaultSettings(): UserSettings {
   const defaultCurrency = getDefaultCurrency()
-  
+
   return {
     // Currency & Regional
     currency: defaultCurrency.code,
     dateFormat: 'MM/DD/YYYY',
     numberFormat: 'US',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
-    
+
     // App Preferences
     theme: 'system',
     defaultTransactionType: 'expense',
     dashboardLayout: 'comfortable',
     startOfWeek: 'monday',
-    
+
     // Notifications
     budgetAlerts: true,
     goalMilestones: true,
@@ -41,14 +41,14 @@ export function getDefaultSettings(): UserSettings {
     pushNotifications: true,
     weeklyReports: false,
     monthlyReports: true,
-    
+
     // Privacy & Security
     dataRetentionDays: 2555, // 7 years
     analyticsConsent: false,
     marketingConsent: false,
     twoFactorEnabled: false,
     sessionTimeout: 480, // 8 hours
-    
+
     // Advanced
     autoCategorizationEnabled: true,
     duplicateDetectionEnabled: true,
@@ -75,7 +75,7 @@ export async function getUserProfileWithSettings(
       if (profileError.code === 'PGRST116') {
         // Profile doesn't exist, create it
         const defaultSettings = getDefaultSettings()
-        const { data: newProfile, error: createError } = await supabase
+        const { data: newProfile, error: createError } = await (supabase as any)
           .from('user_profiles')
           .insert({
             id: userId,
@@ -95,18 +95,18 @@ export async function getUserProfileWithSettings(
           console.warn('Failed to create default preferences:', prefsError)
         }
 
-        return { 
-          data: { 
-            ...newProfile, 
+        return {
+          data: {
+            ...newProfile,
             preferences: {
               ...defaultSettings,
               id: userId,
               userId,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-            }
-          }, 
-          error: null 
+            },
+          },
+          error: null,
         }
       }
       return { data: null, error: profileError.message }
@@ -116,17 +116,17 @@ export async function getUserProfileWithSettings(
     // For now, we'll store preferences in user_profiles or derive from profile
     const preferences: UserPreferences = {
       ...getDefaultSettings(),
-      id: profile.id,
-      userId: profile.id,
-      currency: profile.currency || getDefaultSettings().currency,
-      timezone: profile.timezone || getDefaultSettings().timezone,
-      createdAt: profile.created_at,
-      updatedAt: profile.updated_at,
+      id: (profile as any).id,
+      userId: (profile as any).id,
+      currency: (profile as any).currency || getDefaultSettings().currency,
+      timezone: (profile as any).timezone || getDefaultSettings().timezone,
+      createdAt: (profile as any).created_at,
+      updatedAt: (profile as any).updated_at,
     }
 
     return {
       data: {
-        ...profile,
+        ...(profile as any),
         preferences,
       },
       error: null,
@@ -141,13 +141,13 @@ export async function getUserProfileWithSettings(
  * Create user preferences (for future use when we add a preferences table)
  */
 async function createUserPreferences(
-  userId: string, 
+  userId: string,
   settings: UserSettings
 ): Promise<{ error: string | null }> {
   // For now, we'll store basic preferences in the user_profiles table
   // In the future, this could create a separate user_preferences record
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('user_profiles')
       .update({
         currency: settings.currency,
@@ -177,19 +177,19 @@ export async function updateUserSettings(
   try {
     // Update the user_profiles table with relevant settings
     const profileUpdates: Partial<UserProfile> = {}
-    
+
     if (updates.currency !== undefined) {
       profileUpdates.currency = updates.currency
     }
-    
+
     if (updates.timezone !== undefined) {
       profileUpdates.timezone = updates.timezone
     }
 
     if (Object.keys(profileUpdates).length > 0) {
       profileUpdates.updated_at = new Date().toISOString()
-      
-      const { error: updateError } = await supabase
+
+      const { error: updateError } = await (supabase as any)
         .from('user_profiles')
         .update(profileUpdates)
         .eq('id', userId)
@@ -230,7 +230,7 @@ export async function updateUserProfile(
       profileUpdates.avatar_url = updates.avatarUrl
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('user_profiles')
       .update(profileUpdates)
       .eq('id', userId)
@@ -273,12 +273,9 @@ export async function deleteUserAccount(
 
     // Delete in order due to foreign key constraints
     const tables = ['transactions', 'budgets', 'saving_goals', 'categories', 'user_profiles']
-    
+
     for (const table of tables) {
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('user_id', userId)
+      const { error } = await supabase.from(table).delete().eq('user_id', userId)
 
       if (error && table === 'user_profiles') {
         // For user_profiles, use 'id' instead of 'user_id'
@@ -286,7 +283,7 @@ export async function deleteUserAccount(
           .from('user_profiles')
           .delete()
           .eq('id', userId)
-        
+
         if (profileError) {
           console.error(`Error deleting from ${table}:`, profileError)
           return { error: `Failed to delete ${table}: ${profileError.message}` }
@@ -376,10 +373,13 @@ export function getTimezoneOptions(): Array<{ value: string; label: string; offs
 
   return timezones.map(tz => {
     const now = new Date()
-    const offset = new Intl.DateTimeFormat('en', {
-      timeZone: tz,
-      timeZoneName: 'short'
-    }).formatToParts(now).find(part => part.type === 'timeZoneName')?.value || ''
+    const offset =
+      new Intl.DateTimeFormat('en', {
+        timeZone: tz,
+        timeZoneName: 'short',
+      })
+        .formatToParts(now)
+        .find(part => part.type === 'timeZoneName')?.value || ''
 
     return {
       value: tz,

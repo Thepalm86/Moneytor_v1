@@ -258,9 +258,9 @@ export async function updateBudget(
       updateData.end_date = updates.endDate.toISOString().split('T')[0]
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('budgets')
-      .update(updateData as any)
+      .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
       .select(

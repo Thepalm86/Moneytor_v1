@@ -19,7 +19,7 @@ export function withLazyLoading<T extends object>(
   return function WrappedComponent(props: T) {
     return (
       <Suspense fallback={fallback}>
-        <LazyComponent {...props} />
+        <LazyComponent {...(props as any)} />
       </Suspense>
     )
   }
@@ -235,7 +235,7 @@ export function LazyImage({
       <Image
         {...props}
         src={imageSrc}
-        alt={alt}
+        alt={alt || ''}
         className={className}
         onLoad={() => setIsLoaded(true)}
         width={0}
@@ -257,7 +257,7 @@ export function useOptimisticUpdate<T>(
   const applyOptimistic = React.useCallback(
     (id: string, update: Partial<T>) => {
       setState(prevState => updateFn(prevState, update))
-      setPendingUpdates(prev => new Set([...prev, id]))
+      setPendingUpdates(prev => new Set(Array.from(prev).concat([id])))
     },
     [updateFn]
   )

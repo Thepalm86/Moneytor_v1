@@ -30,7 +30,7 @@ export const HAPTIC_PATTERNS = {
   subtle: [40],
   medium: [60, 30, 60],
   major: [80, 50, 80, 30, 100],
-  epic: [120, 80, 120, 80, 200, 100, 250]
+  epic: [120, 80, 120, 80, 200, 100, 250],
 } as const
 
 // Musical note frequencies for celebration sounds
@@ -38,7 +38,7 @@ const CELEBRATION_FREQUENCIES = {
   subtle: [523.25], // C5
   medium: [523.25, 659.25], // C5, E5
   major: [523.25, 659.25, 783.99], // C5, E5, G5
-  epic: [523.25, 659.25, 783.99, 1046.50] // C5, E5, G5, C6
+  epic: [523.25, 659.25, 783.99, 1046.5], // C5, E5, G5, C6
 } as const
 
 /**
@@ -50,7 +50,10 @@ export function playHapticFeedback(type: CelebrationType): void {
   }
 
   try {
-    navigator.vibrate(HAPTIC_PATTERNS[type])
+    const pattern = (HAPTIC_PATTERNS as any)[type]
+    if (pattern) {
+      navigator.vibrate(pattern)
+    }
   } catch (error) {
     console.warn('Haptic feedback not supported:', error)
   }
@@ -66,29 +69,30 @@ export function playAudioFeedback(type: CelebrationType): void {
 
   try {
     const audioContext = new window.AudioContext()
-    const frequencies = CELEBRATION_FREQUENCIES[type]
-    const baseVolume = type === 'epic' ? 0.12 : type === 'major' ? 0.10 : 0.08
-    
-    frequencies.forEach((frequency, index) => {
+    const frequencies = (CELEBRATION_FREQUENCIES as any)[type]
+    if (!frequencies) return
+    const baseVolume = type === 'epic' ? 0.12 : type === 'major' ? 0.1 : 0.08
+
+    frequencies.forEach((frequency: number, index: number) => {
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
-      
+
       // Create a more pleasant sound with multiple harmonics
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
-      
+
       oscillator.frequency.value = frequency
       oscillator.type = 'sine'
-      
+
       // Smooth envelope for pleasant sound
       const startTime = audioContext.currentTime + index * 0.15
       const attackTime = 0.02
       const decayTime = 0.4
-      
+
       gainNode.gain.setValueAtTime(0, startTime)
       gainNode.gain.linearRampToValueAtTime(baseVolume, startTime + attackTime)
       gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + decayTime)
-      
+
       oscillator.start(startTime)
       oscillator.stop(startTime + decayTime)
     })
@@ -117,7 +121,7 @@ export function initializeCelebrationPreferences(): void {
   try {
     const storedAudioPref = localStorage.getItem('celebration-audio-enabled')
     const storedHapticsPref = localStorage.getItem('celebration-haptics-enabled')
-    
+
     audioEnabled = storedAudioPref ? JSON.parse(storedAudioPref) : false
     hapticsEnabled = storedHapticsPref ? JSON.parse(storedHapticsPref) : true
   } catch (error) {

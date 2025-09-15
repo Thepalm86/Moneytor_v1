@@ -4,14 +4,14 @@
 // ==================================================
 
 import { supabase } from './client'
-import type { 
-  UserAchievement, 
-  UserStat, 
-  GameEvent, 
-  AchievementId, 
-  StatType, 
+import type {
+  UserAchievement,
+  UserStat,
+  GameEvent,
+  AchievementId,
+  StatType,
   GameEventType,
-  GamificationApiResponse 
+  GamificationApiResponse,
 } from '@/types/gamification'
 
 // ==================================================
@@ -47,13 +47,12 @@ export async function checkAndAwardAchievement(
   metadata: Record<string, any> = {}
 ): Promise<GamificationApiResponse<boolean>> {
   try {
-    const { data, error } = await supabase
-      .rpc('check_achievement', {
-        p_user_id: userId,
-        p_achievement_id: achievementId,
-        p_achievement_type: achievementType,
-        p_metadata: metadata
-      })
+    const { data, error } = await (supabase as any).rpc('check_achievement', {
+      p_user_id: userId,
+      p_achievement_id: achievementId,
+      p_achievement_type: achievementType,
+      p_metadata: metadata,
+    })
 
     if (error) {
       console.error('Error checking achievement:', error)
@@ -95,9 +94,7 @@ export async function getRecentAchievements(
 // STATISTICS & STREAKS OPERATIONS
 // ==================================================
 
-export async function getUserStats(
-  userId: string
-): Promise<GamificationApiResponse<UserStat[]>> {
+export async function getUserStats(userId: string): Promise<GamificationApiResponse<UserStat[]>> {
   try {
     const { data, error } = await supabase
       .from('user_stats')
@@ -123,12 +120,11 @@ export async function updateUserStreak(
   increment: number = 1
 ): Promise<GamificationApiResponse<void>> {
   try {
-    const { error } = await supabase
-      .rpc('update_user_streak', {
-        p_user_id: userId,
-        p_stat_type: statType,
-        p_increment_by: increment
-      })
+    const { error } = await (supabase as any).rpc('update_user_streak', {
+      p_user_id: userId,
+      p_stat_type: statType,
+      p_increment_by: increment,
+    })
 
     if (error) {
       console.error('Error updating user streak:', error)
@@ -157,13 +153,13 @@ export async function getStreakStats(
       return { data: null, error: error.message }
     }
 
-    const streakStats: Record<StatType, { current: number; best: number }> = {}
-    
+    const streakStats: Record<StatType, { current: number; best: number }> = {} as any
+
     if (data) {
       data.forEach((stat: any) => {
         streakStats[stat.stat_type as StatType] = {
           current: stat.streak_count || 0,
-          best: stat.best_streak || 0
+          best: stat.best_streak || 0,
         }
       })
     }
@@ -185,12 +181,11 @@ export async function logGameEvent(
   triggerData: Record<string, any> = {}
 ): Promise<GamificationApiResponse<void>> {
   try {
-    const { error } = await supabase
-      .rpc('log_gamification_event', {
-        p_user_id: userId,
-        p_event_type: eventType,
-        p_trigger_data: triggerData
-      })
+    const { error } = await (supabase as any).rpc('log_gamification_event', {
+      p_user_id: userId,
+      p_event_type: eventType,
+      p_trigger_data: triggerData,
+    })
 
     if (error) {
       console.error('Error logging game event:', error)
@@ -232,34 +227,40 @@ export async function getRecentGameEvents(
 // AGGREGATED STATISTICS
 // ==================================================
 
-export async function getUserGamificationSummary(
-  userId: string
-): Promise<GamificationApiResponse<{
-  achievements: UserAchievement[]
-  stats: UserStat[]
-  recentEvents: GameEvent[]
-  totalPoints: number
-  level: number
-  streaks: Record<StatType, { current: number; best: number }>
-}>> {
+export async function getUserGamificationSummary(userId: string): Promise<
+  GamificationApiResponse<{
+    achievements: UserAchievement[]
+    stats: UserStat[]
+    recentEvents: GameEvent[]
+    totalPoints: number
+    level: number
+    streaks: Record<StatType, { current: number; best: number }>
+  }>
+> {
   try {
     // Fetch all data in parallel
     const [achievementsResult, statsResult, eventsResult, streaksResult] = await Promise.all([
       getUserAchievements(userId),
       getUserStats(userId),
       getRecentGameEvents(userId, 5),
-      getStreakStats(userId)
+      getStreakStats(userId),
     ])
 
-    if (achievementsResult.error || statsResult.error || eventsResult.error || streaksResult.error) {
-      const error = achievementsResult.error || statsResult.error || eventsResult.error || streaksResult.error
+    if (
+      achievementsResult.error ||
+      statsResult.error ||
+      eventsResult.error ||
+      streaksResult.error
+    ) {
+      const error =
+        achievementsResult.error || statsResult.error || eventsResult.error || streaksResult.error
       return { data: null, error }
     }
 
     const achievements = achievementsResult.data || []
     const stats = statsResult.data || []
     const recentEvents = eventsResult.data || []
-    const streaks = streaksResult.data || {}
+    const streaks = streaksResult.data || ({} as any)
 
     // Calculate total points and level
     const totalPoints = achievements.reduce((sum, achievement) => {
@@ -277,9 +278,9 @@ export async function getUserGamificationSummary(
         recentEvents,
         totalPoints,
         level,
-        streaks
+        streaks,
       },
-      error: null
+      error: null,
     }
   } catch (err) {
     console.error('Error in getUserGamificationSummary:', err)
@@ -308,23 +309,21 @@ export async function initializeUserGamification(
       { stat_type: 'categories_created', stat_value: 0 },
       { stat_type: 'categories_customized', stat_value: 0 },
       { stat_type: 'categories_used_monthly', stat_value: 0 },
-      { stat_type: 'savings_contributions', stat_value: 0 }
+      { stat_type: 'savings_contributions', stat_value: 0 },
     ]
 
-    const { error } = await supabase
-      .from('user_stats')
-      .upsert(
-        initialStats.map(stat => ({
-          user_id: userId,
-          stat_type: stat.stat_type,
-          stat_value: stat.stat_value,
-          streak_count: 0,
-          best_streak: 0,
-          last_updated: new Date().toISOString(),
-          metadata: {}
-        })),
-        { onConflict: 'user_id,stat_type' }
-      )
+    const { error } = await (supabase as any).from('user_stats').upsert(
+      initialStats.map(stat => ({
+        user_id: userId,
+        stat_type: stat.stat_type,
+        stat_value: stat.stat_value,
+        streak_count: 0,
+        best_streak: 0,
+        last_updated: new Date().toISOString(),
+        metadata: {},
+      })),
+      { onConflict: 'user_id,stat_type' }
+    )
 
     if (error) {
       console.error('Error initializing user gamification:', error)

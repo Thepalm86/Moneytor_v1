@@ -109,7 +109,7 @@ export async function getFinancialKPIs(
       return { data: null, error: transactionsError.message }
     }
 
-    const currentTransactions = transactions || []
+    const currentTransactions = (transactions || []) as any[]
 
     // Get previous period for comparison (same length as current period)
     const periodLength = dateRange.to.getTime() - dateRange.from.getTime()
@@ -140,11 +140,11 @@ export async function getFinancialKPIs(
 
     const currentNet = currentIncome - currentExpenses
 
-    const previousIncome = (previousTransactions || [])
+    const previousIncome = ((previousTransactions || []) as any[])
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
-    const previousExpenses = (previousTransactions || [])
+    const previousExpenses = ((previousTransactions || []) as any[])
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
@@ -231,17 +231,18 @@ export async function getFinancialKPIs(
 
     const topSpendingCategory =
       Object.keys(categorySpending).length > 0
-        ? Object.values(categorySpending).reduce((max, category) =>
-            category.amount > max.amount ? category : max
+        ? Object.values(categorySpending).reduce(
+            (max: any, category: any) => (category.amount > max.amount ? category : max),
+            Object.values(categorySpending)[0]
           )
         : null
 
     const topSpendingCategoryData = topSpendingCategory
       ? {
-          name: topSpendingCategory.name,
-          amount: topSpendingCategory.amount,
+          name: (topSpendingCategory as any).name,
+          amount: (topSpendingCategory as any).amount,
           percentage:
-            currentExpenses > 0 ? (topSpendingCategory.amount / currentExpenses) * 100 : 0,
+            currentExpenses > 0 ? ((topSpendingCategory as any).amount / currentExpenses) * 100 : 0,
         }
       : null
 
@@ -322,11 +323,11 @@ export async function getPeriodComparison(
     }
 
     // Calculate current period metrics
-    const currentIncome = (currentData || [])
+    const currentIncome = ((currentData || []) as any[])
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
-    const currentExpenses = (currentData || [])
+    const currentExpenses = ((currentData || []) as any[])
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
@@ -334,11 +335,11 @@ export async function getPeriodComparison(
     const currentCount = (currentData || []).length
 
     // Calculate previous period metrics
-    const previousIncome = (previousData || [])
+    const previousIncome = ((previousData || []) as any[])
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
-    const previousExpenses = (previousData || [])
+    const previousExpenses = ((previousData || []) as any[])
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
@@ -407,7 +408,7 @@ export async function getSpendingTrends(
     // Group transactions by date
     const dailyData: Record<string, { income: number; expenses: number }> = {}
 
-    ;(transactions || []).forEach(transaction => {
+    ;((transactions || []) as any[]).forEach(transaction => {
       const date = transaction.date
       if (!dailyData[date]) {
         dailyData[date] = { income: 0, expenses: 0 }
@@ -534,7 +535,7 @@ export async function getCategoryInsights(
       }
     > = {}
 
-    ;(transactions || []).forEach(transaction => {
+    ;((transactions || []) as any[]).forEach(transaction => {
       if (!transaction.category) return
 
       const categoryId = transaction.category.id
@@ -554,7 +555,7 @@ export async function getCategoryInsights(
 
     // Process previous period data for trend calculation
     const previousCategoryData: Record<string, number> = {}
-    ;(previousTransactions || []).forEach(transaction => {
+    ;((previousTransactions || []) as any[]).forEach(transaction => {
       if (!transaction.category) return
       const categoryId = transaction.category.id
       previousCategoryData[categoryId] =

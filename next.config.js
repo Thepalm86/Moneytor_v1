@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    staticPageGenerationTimeout: 120,
+  },
   images: {
     remotePatterns: [
       {

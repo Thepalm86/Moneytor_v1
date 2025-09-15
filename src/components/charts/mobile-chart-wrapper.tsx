@@ -18,7 +18,7 @@ import {
 interface MobileChartWrapperProps {
   title: string
   subtitle?: string
-  children: React.ReactNode
+  children: React.ReactElement
   height?: number
   expandable?: boolean
   downloadable?: boolean
@@ -29,7 +29,7 @@ interface MobileChartWrapperProps {
   error?: string
 }
 
-export function MobileChartWrapper({
+const MobileChartWrapperComponent = React.memo(function MobileChartWrapper({
   title,
   subtitle,
   children,
@@ -47,19 +47,19 @@ export function MobileChartWrapper({
   const ChartContent = () => (
     <div className="relative">
       {loading ? (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center space-y-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="flex h-full items-center justify-center">
+          <div className="space-y-2 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
             <p className="text-sm text-gray-500">Loading chart...</p>
           </div>
         </div>
       ) : error ? (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center space-y-2">
+        <div className="flex h-full items-center justify-center">
+          <div className="space-y-2 text-center">
             <p className="text-sm text-red-600">{error}</p>
             {onRefresh && (
               <Button variant="outline" size="sm" onClick={onRefresh}>
-                <RotateCcw className="h-4 w-4 mr-2" />
+                <RotateCcw className="mr-2 h-4 w-4" />
                 Retry
               </Button>
             )}
@@ -78,18 +78,12 @@ export function MobileChartWrapper({
       {/* Header */}
       <div className="flex items-start justify-between p-4 pb-0">
         <div className="min-w-0 flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">
-            {title}
-          </h3>
-          {subtitle && (
-            <p className="text-sm text-gray-500 mt-1 truncate">
-              {subtitle}
-            </p>
-          )}
+          <h3 className="truncate text-lg font-semibold text-gray-900">{title}</h3>
+          {subtitle && <p className="mt-1 truncate text-sm text-gray-500">{subtitle}</p>}
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 ml-4">
+        <div className="ml-4 flex items-center gap-1">
           {onRefresh && (
             <Button
               variant="ghost"
@@ -101,30 +95,21 @@ export function MobileChartWrapper({
               <RotateCcw className={cn('h-4 w-4', loading && 'animate-spin')} />
             </Button>
           )}
-          
+
           {downloadable && onDownload && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDownload}
-              className="h-8 w-8 p-0"
-            >
+            <Button variant="ghost" size="sm" onClick={onDownload} className="h-8 w-8 p-0">
               <Download className="h-4 w-4" />
             </Button>
           )}
-          
+
           {expandable && (
             <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
               <DialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                >
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <Maximize2 className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-full max-h-full h-full w-full p-0">
+              <DialogContent className="h-full max-h-full w-full max-w-full p-0">
                 <DialogHeader className="p-4 pb-2">
                   <div className="flex items-center justify-between">
                     <DialogTitle>{title}</DialogTitle>
@@ -155,13 +140,15 @@ export function MobileChartWrapper({
       </div>
     </MobileCard>
   )
-}
+})
+
+export { MobileChartWrapperComponent as MobileChartWrapper }
 
 // Mobile chart configuration helpers
 export const mobileChartConfig = {
   // Responsive margin for mobile
   margin: { top: 10, right: 10, left: 0, bottom: 10 },
-  
+
   // Touch-friendly tick formatting
   tickConfig: {
     fontSize: 12,
@@ -172,7 +159,7 @@ export const mobileChartConfig = {
   // Mobile-optimized colors
   colors: {
     primary: '#3B82F6',
-    secondary: '#10B981', 
+    secondary: '#10B981',
     accent: '#F59E0B',
     danger: '#EF4444',
     muted: '#6B7280',
@@ -182,15 +169,24 @@ export const mobileChartConfig = {
   animation: {
     animationDuration: 300,
     animationBegin: 0,
-  }
+  },
+}
+
+// Define chart data types
+interface ChartPayloadItem {
+  value: number | string
+  name: string
+  color?: string
+  dataKey?: string
+  payload?: Record<string, unknown>
 }
 
 // Custom tooltip for mobile charts
 interface MobileChartTooltipProps {
   active?: boolean
-  payload?: any[]
+  payload?: ChartPayloadItem[]
   label?: string
-  formatter?: (value: any, name: string) => [string, string]
+  formatter?: (value: number | string, name: string) => [string, string]
   labelFormatter?: (label: string) => string
 }
 
@@ -199,31 +195,26 @@ export function MobileChartTooltip({
   payload,
   label,
   formatter,
-  labelFormatter
+  labelFormatter,
 }: MobileChartTooltipProps) {
   if (!active || !payload || !payload.length) {
     return null
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs">
+    <div className="max-w-xs rounded-lg border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur-sm">
       {label && (
-        <p className="text-sm font-semibold text-gray-900 mb-2">
+        <p className="mb-2 text-sm font-semibold text-gray-900">
           {labelFormatter ? labelFormatter(label) : label}
         </p>
       )}
-      
+
       <div className="space-y-1">
         {payload.map((entry, index) => (
           <div key={index} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-sm text-gray-600">
-                {entry.name}
-              </span>
+              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-sm text-gray-600">{entry.name}</span>
             </div>
             <span className="text-sm font-medium text-gray-900">
               {formatter ? formatter(entry.value, entry.name)[0] : entry.value}
@@ -249,13 +240,10 @@ export function MobileChartLegend({ payload = [], className }: MobileChartLegend
   if (!payload.length) return null
 
   return (
-    <div className={cn('flex flex-wrap items-center gap-4 mt-4', className)}>
+    <div className={cn('mt-4 flex flex-wrap items-center gap-4', className)}>
       {payload.map((entry, index) => (
         <div key={index} className="flex items-center gap-2">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
+          <div className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-sm text-gray-600">{entry.value}</span>
         </div>
       ))}

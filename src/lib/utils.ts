@@ -48,7 +48,7 @@ export function generateUUID(): string {
 /**
  * Debounce function to limit rapid function calls
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -62,7 +62,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Check if a value is empty (null, undefined, empty string, or empty array)
  */
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true
   if (typeof value === 'string') return value.trim().length === 0
   if (Array.isArray(value)) return value.length === 0
@@ -84,7 +84,7 @@ export function calculatePercentageChange(oldValue: number, newValue: number): n
 export function getRelativeTime(date: Date): string {
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-  
+
   const intervals = [
     { label: 'year', seconds: 31536000 },
     { label: 'month', seconds: 2592000 },
@@ -93,13 +93,13 @@ export function getRelativeTime(date: Date): string {
     { label: 'hour', seconds: 3600 },
     { label: 'minute', seconds: 60 },
   ]
-  
+
   for (const interval of intervals) {
     const count = Math.floor(diffInSeconds / interval.seconds)
     if (count >= 1) {
       return `${count} ${interval.label}${count > 1 ? 's' : ''} ago`
     }
   }
-  
+
   return 'just now'
 }

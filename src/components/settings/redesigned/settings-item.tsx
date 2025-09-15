@@ -11,12 +11,12 @@ import { Check, X, Info, AlertTriangle, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
@@ -33,14 +33,14 @@ interface BaseSettingsItemProps {
   success?: string
 }
 
-interface ToggleSettingsItemProps extends BaseSettingsItemProps {
+export interface ToggleSettingsItemProps extends BaseSettingsItemProps {
   type: 'toggle'
   value: boolean
   onChange: (value: boolean) => void
   instantSave?: boolean
 }
 
-interface SelectSettingsItemProps extends BaseSettingsItemProps {
+export interface SelectSettingsItemProps extends BaseSettingsItemProps {
   type: 'select'
   value: string
   onChange: (value: string) => void
@@ -49,7 +49,7 @@ interface SelectSettingsItemProps extends BaseSettingsItemProps {
   instantSave?: boolean
 }
 
-interface InputSettingsItemProps extends BaseSettingsItemProps {
+export interface InputSettingsItemProps extends BaseSettingsItemProps {
   type: 'input'
   value: string
   onChange: (value: string) => void
@@ -59,7 +59,7 @@ interface InputSettingsItemProps extends BaseSettingsItemProps {
   instantSave?: boolean
 }
 
-interface ActionSettingsItemProps extends BaseSettingsItemProps {
+export interface ActionSettingsItemProps extends BaseSettingsItemProps {
   type: 'action'
   buttonText: string
   buttonVariant?: 'default' | 'outline' | 'destructive'
@@ -67,17 +67,17 @@ interface ActionSettingsItemProps extends BaseSettingsItemProps {
   loading?: boolean
 }
 
-interface DisplaySettingsItemProps extends BaseSettingsItemProps {
+export interface DisplaySettingsItemProps extends BaseSettingsItemProps {
   type: 'display'
   value: ReactNode
   badge?: string
   actions?: ReactNode
 }
 
-type SettingsItemProps = 
-  | ToggleSettingsItemProps 
-  | SelectSettingsItemProps 
-  | InputSettingsItemProps 
+type SettingsItemProps =
+  | ToggleSettingsItemProps
+  | SelectSettingsItemProps
+  | InputSettingsItemProps
   | ActionSettingsItemProps
   | DisplaySettingsItemProps
 
@@ -90,7 +90,7 @@ export function SettingsItem(props: SettingsItemProps) {
   // Track changes for non-instant save items
   useEffect(() => {
     if (props.type === 'action' || props.type === 'display') return
-    
+
     const hasChanges = localValue !== props.value
     setHasUnsavedChanges(hasChanges && !props.instantSave)
   }, [localValue, props])
@@ -99,15 +99,15 @@ export function SettingsItem(props: SettingsItemProps) {
     if (props.type === 'action' || props.type === 'display') return
 
     setLocalValue(newValue)
-    
+
     if (props.instantSave) {
-      props.onChange(newValue as any)
+      ;(props.onChange as any)(newValue)
     }
   }
 
   const handleSave = () => {
     if (props.type === 'action' || props.type === 'display') return
-    props.onChange(localValue)
+    ;(props.onChange as any)(localValue)
     setHasUnsavedChanges(false)
   }
 
@@ -121,7 +121,7 @@ export function SettingsItem(props: SettingsItemProps) {
     <div className={cn('space-y-3 sm:space-y-4', props.className)}>
       {/* Label and Description */}
       <div className="space-y-1">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Label
             className={cn(
               'text-sm font-medium',
@@ -130,21 +130,23 @@ export function SettingsItem(props: SettingsItemProps) {
             )}
           >
             {props.label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
+            {props.required && <span className="ml-1 text-red-500">*</span>}
           </Label>
-          
+
           {props.type === 'display' && props.badge && (
-            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 self-start">
+            <span className="inline-flex items-center self-start rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
               {props.badge}
             </span>
           )}
         </div>
-        
+
         {props.description && (
-          <p className={cn(
-            'text-sm text-gray-600 leading-relaxed',
-            props.disabled && 'text-gray-400'
-          )}>
+          <p
+            className={cn(
+              'text-sm leading-relaxed text-gray-600',
+              props.disabled && 'text-gray-400'
+            )}
+          >
             {props.description}
           </p>
         )}
@@ -161,10 +163,7 @@ export function SettingsItem(props: SettingsItemProps) {
               disabled={props.disabled}
               className="data-[state=checked]:bg-blue-600"
             />
-            <span className={cn(
-              'text-sm',
-              props.disabled ? 'text-gray-400' : 'text-gray-700'
-            )}>
+            <span className={cn('text-sm', props.disabled ? 'text-gray-400' : 'text-gray-700')}>
               {(props.instantSave ? props.value : localValue) ? 'Enabled' : 'Disabled'}
             </span>
           </div>
@@ -177,19 +176,23 @@ export function SettingsItem(props: SettingsItemProps) {
             onValueChange={handleChange}
             disabled={props.disabled}
           >
-            <SelectTrigger className={cn(
-              'w-full sm:max-w-xs',
-              props.error && 'border-red-300 focus:border-red-500 focus:ring-red-500'
-            )}>
+            <SelectTrigger
+              className={cn(
+                'w-full sm:max-w-xs',
+                props.error && 'border-red-300 focus:border-red-500 focus:ring-red-500'
+              )}
+            >
               <SelectValue placeholder={props.placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {props.options.map((option) => (
+              {props.options.map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   <div className="space-y-1">
-                    <div className="font-medium text-sm">{option.label}</div>
+                    <div className="text-sm font-medium">{option.label}</div>
                     {option.description && (
-                      <div className="text-xs text-gray-500 leading-relaxed">{option.description}</div>
+                      <div className="text-xs leading-relaxed text-gray-500">
+                        {option.description}
+                      </div>
                     )}
                   </div>
                 </SelectItem>
@@ -203,7 +206,7 @@ export function SettingsItem(props: SettingsItemProps) {
           <Input
             type={props.inputType || 'text'}
             value={props.instantSave ? props.value : localValue}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={e => handleChange(e.target.value)}
             placeholder={props.placeholder}
             maxLength={props.maxLength}
             disabled={props.disabled}
@@ -216,7 +219,7 @@ export function SettingsItem(props: SettingsItemProps) {
 
         {/* Action */}
         {props.type === 'action' && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
               variant={props.buttonVariant || 'outline'}
               onClick={props.onAction}
@@ -224,7 +227,7 @@ export function SettingsItem(props: SettingsItemProps) {
               className="w-full sm:w-auto sm:max-w-xs"
             >
               {props.loading && (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
               )}
               {props.buttonText}
             </Button>
@@ -233,10 +236,10 @@ export function SettingsItem(props: SettingsItemProps) {
                 href={props.helpLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-700 flex items-center space-x-1 self-start sm:self-center"
+                className="flex items-center space-x-1 self-start text-sm text-blue-600 hover:text-blue-700 sm:self-center"
               >
                 <span>Learn more</span>
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="h-3 w-3" />
               </a>
             )}
           </div>
@@ -245,22 +248,18 @@ export function SettingsItem(props: SettingsItemProps) {
         {/* Display */}
         {props.type === 'display' && (
           <div className="flex items-center justify-between">
-            <div className="font-mono text-sm bg-gray-50 px-3 py-2 rounded-md border">
+            <div className="rounded-md border bg-gray-50 px-3 py-2 font-mono text-sm">
               {props.value}
             </div>
-            {props.actions && (
-              <div className="flex items-center space-x-2">
-                {props.actions}
-              </div>
-            )}
+            {props.actions && <div className="flex items-center space-x-2">{props.actions}</div>}
           </div>
         )}
 
         {/* Unsaved Changes Actions */}
         {hasUnsavedChanges && (
-          <div className="flex items-center space-x-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
-            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <span className="text-sm text-amber-700 flex-1">You have unsaved changes</span>
+          <div className="flex items-center space-x-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-600" />
+            <span className="flex-1 text-sm text-amber-700">You have unsaved changes</span>
             <div className="flex space-x-2">
               <Button
                 variant="ghost"
@@ -268,16 +267,16 @@ export function SettingsItem(props: SettingsItemProps) {
                 onClick={handleReset}
                 className="h-7 text-xs text-amber-700 hover:bg-amber-100"
               >
-                <X className="w-3 h-3 mr-1" />
+                <X className="mr-1 h-3 w-3" />
                 Cancel
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSave}
-                className="h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-100"
+                className="h-7 border-amber-300 text-xs text-amber-700 hover:bg-amber-100"
               >
-                <Check className="w-3 h-3 mr-1" />
+                <Check className="mr-1 h-3 w-3" />
                 Save
               </Button>
             </div>
@@ -288,17 +287,17 @@ export function SettingsItem(props: SettingsItemProps) {
       {/* Help Text */}
       {props.helpText && (
         <div className="flex items-start space-x-2 text-xs text-gray-500">
-          <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+          <Info className="mt-0.5 h-3 w-3 flex-shrink-0" />
           <span>{props.helpText}</span>
           {props.helpLink && (
             <a
               href={props.helpLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-700 inline-flex items-center space-x-1"
+              className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-700"
             >
               <span>Learn more</span>
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
@@ -307,14 +306,14 @@ export function SettingsItem(props: SettingsItemProps) {
       {/* Status Messages */}
       {props.error && (
         <div className="flex items-center space-x-2 text-sm text-red-600">
-          <X className="w-4 h-4 flex-shrink-0" />
+          <X className="h-4 w-4 flex-shrink-0" />
           <span>{props.error}</span>
         </div>
       )}
 
       {props.success && (
         <div className="flex items-center space-x-2 text-sm text-green-600">
-          <Check className="w-4 h-4 flex-shrink-0" />
+          <Check className="h-4 w-4 flex-shrink-0" />
           <span>{props.success}</span>
         </div>
       )}

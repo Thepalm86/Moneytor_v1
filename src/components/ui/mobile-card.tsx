@@ -4,46 +4,44 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
-import { Card, CardProps } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 
-const mobileCardVariants = cva(
-  'transition-all duration-200 ease-in-out touch-manipulation',
-  {
-    variants: {
-      variant: {
-        default: 'bg-card text-card-foreground border shadow-sm',
-        elevated: 'bg-card text-card-foreground border-0 shadow-lg hover:shadow-xl',
-        glass: 'bg-white/60 text-card-foreground border-0 backdrop-blur-xl shadow-lg',
-        flat: 'bg-card text-card-foreground border-0 shadow-none',
-        interactive: 'bg-card text-card-foreground border shadow-sm hover:shadow-md cursor-pointer active:scale-[0.98]',
-      },
-      size: {
-        sm: 'p-4 rounded-xl md:p-3 md:rounded-lg',
-        default: 'p-6 rounded-2xl md:p-4 md:rounded-xl',
-        lg: 'p-8 rounded-2xl md:p-6 md:rounded-xl',
-      },
-      spacing: {
-        none: 'space-y-0',
-        sm: 'space-y-3 md:space-y-2',
-        default: 'space-y-4 md:space-y-3', 
-        lg: 'space-y-6 md:space-y-4',
-      },
-      touchOptimized: {
-        true: 'min-h-[44px] focus-within:ring-2 focus-within:ring-primary/20',
-        false: '',
-      }
+const mobileCardVariants = cva('transition-all duration-200 ease-in-out touch-manipulation', {
+  variants: {
+    variant: {
+      default: 'bg-card text-card-foreground border shadow-sm',
+      elevated: 'bg-card text-card-foreground border-0 shadow-lg hover:shadow-xl',
+      glass: 'bg-white/60 text-card-foreground border-0 backdrop-blur-xl shadow-lg',
+      flat: 'bg-card text-card-foreground border-0 shadow-none',
+      interactive:
+        'bg-card text-card-foreground border shadow-sm hover:shadow-md cursor-pointer active:scale-[0.98]',
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-      spacing: 'default',
-      touchOptimized: true,
+    size: {
+      sm: 'p-4 rounded-xl md:p-3 md:rounded-lg',
+      default: 'p-6 rounded-2xl md:p-4 md:rounded-xl',
+      lg: 'p-8 rounded-2xl md:p-6 md:rounded-xl',
     },
-  }
-)
+    spacing: {
+      none: 'space-y-0',
+      sm: 'space-y-3 md:space-y-2',
+      default: 'space-y-4 md:space-y-3',
+      lg: 'space-y-6 md:space-y-4',
+    },
+    touchOptimized: {
+      true: 'min-h-[44px] focus-within:ring-2 focus-within:ring-primary/20',
+      false: '',
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'default',
+    spacing: 'default',
+    touchOptimized: true,
+  },
+})
 
-interface MobileCardProps 
-  extends CardProps,
+interface MobileCardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof mobileCardVariants> {
   touchOptimized?: boolean
 }
@@ -53,10 +51,7 @@ const MobileCard = React.forwardRef<HTMLDivElement, MobileCardProps>(
     return (
       <Card
         ref={ref}
-        className={cn(
-          mobileCardVariants({ variant, size, spacing, touchOptimized }),
-          className
-        )}
+        className={cn(mobileCardVariants({ variant, size, spacing, touchOptimized }), className)}
         {...props}
       >
         {children}
@@ -81,25 +76,22 @@ const MobileGrid = React.forwardRef<HTMLDivElement, MobileGridProps>(
       lg: 'gap-6 md:gap-4',
     }
 
-    const colClasses = responsive ? {
-      1: 'grid-cols-1',
-      2: 'grid-cols-1 sm:grid-cols-2',
-      3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-    } : {
-      1: 'grid-cols-1',
-      2: 'grid-cols-2',
-      3: 'grid-cols-3',
-    }
+    const colClasses = responsive
+      ? {
+          1: 'grid-cols-1',
+          2: 'grid-cols-1 sm:grid-cols-2',
+          3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+        }
+      : {
+          1: 'grid-cols-1',
+          2: 'grid-cols-2',
+          3: 'grid-cols-3',
+        }
 
     return (
       <div
         ref={ref}
-        className={cn(
-          'grid',
-          colClasses[cols],
-          gapClasses[gap],
-          className
-        )}
+        className={cn('grid', colClasses[cols], gapClasses[gap], className)}
         {...props}
       >
         {children}
@@ -126,11 +118,7 @@ const MobileList = React.forwardRef<HTMLDivElement, MobileListProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          spacingClasses[spacing],
-          dividers && 'divide-y divide-border',
-          className
-        )}
+        className={cn(spacingClasses[spacing], dividers && 'divide-y divide-border', className)}
         {...props}
       >
         {children}
@@ -157,30 +145,16 @@ const MobileSection = React.forwardRef<HTMLElement, MobileSectionProps>(
     }
 
     return (
-      <section
-        ref={ref}
-        className={cn(spacingClasses[spacing], className)}
-        {...props}
-      >
+      <section ref={ref} className={cn(spacingClasses[spacing], className)} {...props}>
         {(title || description || action) && (
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              {title && (
-                <h2 className="text-xl font-bold text-foreground md:text-lg">
-                  {title}
-                </h2>
-              )}
+              {title && <h2 className="text-xl font-bold text-foreground md:text-lg">{title}</h2>}
               {description && (
-                <p className="text-base text-muted-foreground md:text-sm">
-                  {description}
-                </p>
+                <p className="text-base text-muted-foreground md:text-sm">{description}</p>
               )}
             </div>
-            {action && (
-              <div className="ml-4 shrink-0">
-                {action}
-              </div>
-            )}
+            {action && <div className="ml-4 shrink-0">{action}</div>}
           </div>
         )}
         {children}
@@ -190,17 +164,6 @@ const MobileSection = React.forwardRef<HTMLElement, MobileSectionProps>(
 )
 MobileSection.displayName = 'MobileSection'
 
-export { 
-  MobileCard, 
-  MobileGrid, 
-  MobileList, 
-  MobileSection,
-  mobileCardVariants,
-}
+export { MobileCard, MobileGrid, MobileList, MobileSection, mobileCardVariants }
 
-export type { 
-  MobileCardProps, 
-  MobileGridProps, 
-  MobileListProps, 
-  MobileSectionProps 
-}
+export type { MobileCardProps, MobileGridProps, MobileListProps, MobileSectionProps }

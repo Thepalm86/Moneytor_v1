@@ -70,81 +70,36 @@ export function SettingsSearch({
 }: SettingsSearchProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
-  // Intelligent search algorithm
-  const searchResults = useMemo(() => {
-    if (!query.trim() && selectedCategories.length === 0) {
-      return items
-    }
-
-    let filtered = items
-
-    // Filter by categories first
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(item => 
-        selectedCategories.includes(item.category)
-      )
-    }
-
-    // Search by query
-    if (query.trim()) {
-      const searchTerm = query.toLowerCase().trim()
-      
-      filtered = filtered
-        .map(item => {
-          let score = 0
-          
-          // Exact title match (highest priority)
-          if (item.title.toLowerCase().includes(searchTerm)) {
-            score += 100
-          }
-          
-          // Description match
-          if (item.description?.toLowerCase().includes(searchTerm)) {
-            score += 50
-          }
-          
-          // Keywords match
-          const keywordMatches = item.keywords.filter(keyword =>
-            keyword.toLowerCase().includes(searchTerm)
-          ).length
-          score += keywordMatches * 30
-          
-          // Priority boost
-          if (item.priority === 'high') score += 20
-          else if (item.priority === 'medium') score += 10
-          
-          return { ...item, searchScore: score }
-        })
-        .filter(item => item.searchScore > 0)
-        .sort((a, b) => (b.searchScore || 0) - (a.searchScore || 0))
-    }
-
-    return filtered
-  }, [query, selectedCategories, items])
+  // Search is handled by parent component - this is just for UI display
+  const hasActiveFilters = useMemo(() => {
+    return searchQuery.trim().length > 0 || categories.length > 0
+  }, [searchQuery, categories])
 
   // Handle search query change
-  const handleSearchChange = useCallback((newQuery: string) => {
-    setQuery(newQuery)
-    onSearch(searchResults, newQuery)
-  }, [searchResults, onSearch])
+  const handleSearchChange = useCallback(
+    (newQuery: string) => {
+      onSearchChange(newQuery)
+    },
+    [onSearchChange]
+  )
 
   // Handle category filter change
-  const handleCategoryToggle = useCallback((category: SettingsCategory) => {
-    const newCategories = selectedCategories.includes(category)
-      ? selectedCategories.filter(c => c !== category)
-      : [...selectedCategories, category]
-    
-    setSelectedCategories(newCategories)
-    onFilter(newCategories)
-  }, [selectedCategories, onFilter])
+  const handleCategoryToggle = useCallback(
+    (category: string) => {
+      const newCategories = categories.includes(category)
+        ? categories.filter(c => c !== category)
+        : [...categories, category]
+
+      onCategoriesChange(newCategories)
+    },
+    [categories, onCategoriesChange]
+  )
 
   // Clear all filters
   const handleClearFilters = useCallback(() => {
-    setQuery('')
-    setSelectedCategories([])
-    onSearch(items, '')
-    onFilter([])
-  }, [items, onSearch, onFilter])
+    onSearchChange('')
+    onCategoriesChange([])
+  }, [onSearchChange, onCategoriesChange])
 
   // Get popular search suggestions
   const searchSuggestions = useMemo(() => {
@@ -158,11 +113,13 @@ export function SettingsSearch({
       'theme',
       'alerts',
     ]
-    
-    return suggestions.filter(suggestion =>
-      !query || suggestion.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 5)
-  }, [query])
+
+    return suggestions
+      .filter(
+        suggestion => !searchQuery || suggestion.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .slice(0, 5)
+  }, [searchQuery])
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -172,16 +129,16 @@ export function SettingsSearch({
         <Input
           type="text"
           placeholder={placeholder}
-          value={query}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-10 pr-12 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+          value={searchQuery}
+          onChange={e => handleSearchChange(e.target.value)}
+          className="h-11 border-gray-200 pl-10 pr-12 focus:border-blue-500 focus:ring-blue-500/20"
         />
-        
-        {query && (
+
+        {searchQuery && (
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 p-0 hover:bg-gray-100"
+            className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2 p-0 hover:bg-gray-100"
             onClick={() => handleSearchChange('')}
           >
             <X className="h-4 w-4" />
@@ -190,7 +147,7 @@ export function SettingsSearch({
       </div>
 
       {/* Filters and Results Summary */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Category Filters */}
         <div className="flex items-center space-x-2">
           <DropdownMenu open={isFilterOpen} onOpenChange={setIsFilterOpen}>
@@ -198,16 +155,16 @@ export function SettingsSearch({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 px-3 border-gray-200 hover:bg-gray-50"
+                className="h-8 border-gray-200 px-3 hover:bg-gray-50"
               >
-                <Filter className="h-3 w-3 mr-2" />
+                <Filter className="mr-2 h-3 w-3" />
                 Filters
-                {selectedCategories.length > 0 && (
+                {categories.length > 0 && (
                   <Badge variant="secondary" className="ml-2 h-4 px-1.5 text-xs">
-                    {selectedCategories.length}
+                    {categories.length}
                   </Badge>
                 )}
-                <ChevronDown className="h-3 w-3 ml-2" />
+                <ChevronDown className="ml-2 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -216,19 +173,19 @@ export function SettingsSearch({
               {Object.entries(categoryLabels).map(([key, label]) => (
                 <DropdownMenuCheckboxItem
                   key={key}
-                  checked={selectedCategories.includes(key as SettingsCategory)}
-                  onCheckedChange={() => handleCategoryToggle(key as SettingsCategory)}
+                  checked={categories.includes(key)}
+                  onCheckedChange={() => handleCategoryToggle(key)}
                 >
                   {label}
                 </DropdownMenuCheckboxItem>
               ))}
-              {selectedCategories.length > 0 && (
+              {categories.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start h-8 px-2 text-xs"
+                    className="h-8 w-full justify-start px-2 text-xs"
                     onClick={handleClearFilters}
                   >
                     Clear All Filters
@@ -239,15 +196,15 @@ export function SettingsSearch({
           </DropdownMenu>
 
           {/* Active Category Filters */}
-          {selectedCategories.map((category) => (
+          {categories.map(category => (
             <Badge
               key={category}
               variant="secondary"
-              className={cn('text-xs cursor-pointer', categoryColors[category])}
+              className={cn('cursor-pointer text-xs', categoryColors[category as SettingsCategory])}
               onClick={() => handleCategoryToggle(category)}
             >
-              {categoryLabels[category]}
-              <X className="h-3 w-3 ml-1" />
+              {categoryLabels[category as SettingsCategory]}
+              <X className="ml-1 h-3 w-3" />
             </Badge>
           ))}
         </div>
@@ -260,22 +217,24 @@ export function SettingsSearch({
               {searchQuery && ` for "${searchQuery}"`}
             </span>
           ) : (
-            <span>{availableCategories.reduce((total, cat) => total + cat.count, 0)} total settings</span>
+            <span>
+              {availableCategories.reduce((total, cat) => total + cat.count, 0)} total settings
+            </span>
           )}
         </div>
       </div>
 
       {/* Search Suggestions */}
-      {query.length > 0 && query.length < 3 && (
+      {searchQuery.length > 0 && searchQuery.length < 3 && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500">Popular searches:</div>
           <div className="flex flex-wrap gap-2">
-            {searchSuggestions.map((suggestion) => (
+            {searchSuggestions.map(suggestion => (
               <Button
                 key={suggestion}
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs bg-gray-50 hover:bg-gray-100"
+                className="h-7 bg-gray-50 px-2 text-xs hover:bg-gray-100"
                 onClick={() => handleSearchChange(suggestion)}
               >
                 {suggestion}
@@ -286,20 +245,15 @@ export function SettingsSearch({
       )}
 
       {/* No Results */}
-      {(query || selectedCategories.length > 0) && searchResults.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <Search className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+      {(searchQuery || categories.length > 0) && (
+        <div className="py-8 text-center text-gray-500">
+          <Search className="mx-auto mb-3 h-8 w-8 text-gray-300" />
           <div className="text-sm">
             No settings found
-            {query && ` for "${query}"`}
-            {selectedCategories.length > 0 && ' in selected categories'}
+            {searchQuery && ` for "${searchQuery}"`}
+            {categories.length > 0 && ' in selected categories'}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-2 text-xs"
-            onClick={handleClearFilters}
-          >
+          <Button variant="ghost" size="sm" className="mt-2 text-xs" onClick={handleClearFilters}>
             Clear filters and try again
           </Button>
         </div>

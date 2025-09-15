@@ -6,7 +6,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion as _motion } from 'framer-motion'
 import { Trophy, Flame, Star, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,13 +24,18 @@ interface GamificationShowcaseProps {
   showFullView?: boolean
 }
 
-export function GamificationShowcase({ 
-  className, 
-  showFullView = false 
+export function GamificationShowcase({
+  className,
+  showFullView = false,
 }: GamificationShowcaseProps) {
   const { pendingCelebrations, dismissCelebration } = useGamification()
-  const { achievements, earnedCount, totalCount, recentAchievements } = useAchievements()
-  const { currentStreaks, getHighestStreak } = useStreaks()
+  const {
+    achievements: _achievements,
+    earnedCount,
+    totalCount,
+    recentAchievements,
+  } = useAchievements()
+  const { currentStreaks: _currentStreaks, getHighestStreak } = useStreaks()
 
   const completionPercentage = totalCount > 0 ? (earnedCount / totalCount) * 100 : 0
   const highestStreak = getHighestStreak()
@@ -42,19 +47,18 @@ export function GamificationShowcase({
   return (
     <>
       {/* Celebration Manager */}
-      <CelebrationManager
-        celebrations={pendingCelebrations}
-        onDismiss={dismissCelebration}
-      />
+      <CelebrationManager celebrations={pendingCelebrations} onDismiss={dismissCelebration} />
 
       {/* Compact Dashboard Widget */}
-      <Card className={cn(
-        'relative overflow-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-purple-200/50',
-        className
-      )}>
+      <Card
+        className={cn(
+          'relative overflow-hidden border-purple-200/50 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50',
+          className
+        )}
+      >
         {/* Decorative background */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-purple-100/20" />
-        
+
         <CardHeader className="relative pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -72,29 +76,18 @@ export function GamificationShowcase({
         <CardContent className="relative space-y-4">
           {/* Progress Ring */}
           <div className="flex items-center space-x-4">
-            <ProgressRing
-              progress={completionPercentage}
-              size="sm"
-              color="gradient"
-              showValue
-            />
-            
+            <ProgressRing progress={completionPercentage} size="sm" color="gradient" showValue />
+
             <div className="flex-1 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
-                  Achievement Progress
-                </span>
-                <span className="text-xs text-gray-500">
-                  {Math.round(completionPercentage)}%
-                </span>
+                <span className="text-sm font-medium text-gray-700">Achievement Progress</span>
+                <span className="text-xs text-gray-500">{Math.round(completionPercentage)}%</span>
               </div>
-              
+
               {highestStreak > 0 && (
                 <div className="flex items-center space-x-1">
                   <Flame className="h-3 w-3 text-orange-500" />
-                  <span className="text-xs text-gray-600">
-                    {highestStreak} day streak
-                  </span>
+                  <span className="text-xs text-gray-600">{highestStreak} day streak</span>
                 </div>
               )}
             </div>
@@ -105,7 +98,7 @@ export function GamificationShowcase({
             <div>
               <h4 className="mb-2 text-sm font-medium text-gray-700">Recent Achievements</h4>
               <div className="flex space-x-2 overflow-x-auto pb-2">
-                {recentAchievements.slice(0, 3).map((achievement) => (
+                {recentAchievements.slice(0, 3).map(achievement => (
                   <div key={achievement.id} className="flex-shrink-0">
                     <AchievementBadge
                       achievement={achievement}
@@ -121,8 +114,8 @@ export function GamificationShowcase({
           )}
 
           {/* View All Button */}
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             className="w-full justify-between text-purple-700 hover:bg-purple-100/50"
           >
@@ -146,14 +139,14 @@ function GamificationFullView({ className }: { className?: string }) {
   const streakData = Object.entries(currentStreaks).map(([type, current]) => ({
     type: type as any,
     current,
-    best: bestStreaks[type as keyof typeof bestStreaks] || 0
+    best: bestStreaks[type as keyof typeof bestStreaks] || 0,
   }))
 
   const achievementsByType = {
     milestone: achievements.filter(a => a.achievement_type === 'milestone'),
-    streak: achievements.filter(a => a.achievement_type === 'streak'), 
+    streak: achievements.filter(a => a.achievement_type === 'streak'),
     learning: achievements.filter(a => a.achievement_type === 'learning'),
-    premium: achievements.filter(a => a.achievement_type === 'premium')
+    premium: achievements.filter(a => a.achievement_type === 'premium'),
   }
 
   return (
@@ -220,9 +213,7 @@ function GamificationFullView({ className }: { className?: string }) {
       {/* Streaks Section */}
       {streakData.length > 0 && (
         <div>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">
-            Current Streaks
-          </h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">Current Streaks</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {streakData.map(streak => (
               <StreakCounter
@@ -254,15 +245,7 @@ interface StatCardProps {
   className?: string
 }
 
-function StatCard({ 
-  title, 
-  value, 
-  total, 
-  suffix = '', 
-  icon, 
-  color, 
-  className 
-}: StatCardProps) {
+function StatCard({ title, value, total, suffix = '', icon, color, className }: StatCardProps) {
   return (
     <Card className={cn('relative overflow-hidden', className)}>
       <CardContent className="p-4">
@@ -275,10 +258,12 @@ function StatCard({
               {suffix}
             </p>
           </div>
-          <div className={cn(
-            'flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg',
-            color
-          )}>
+          <div
+            className={cn(
+              'flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg',
+              color
+            )}
+          >
             {icon}
           </div>
         </div>

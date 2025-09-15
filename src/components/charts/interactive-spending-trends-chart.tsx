@@ -13,7 +13,7 @@ import {
   Brush,
   Area,
   ComposedChart,
-  Bar
+  Bar,
 } from 'recharts'
 import { format, subDays, eachDayOfInterval, startOfDay } from 'date-fns'
 import { Download, RotateCcw, TrendingUp, Calendar, BarChart3 } from 'lucide-react'
@@ -22,11 +22,17 @@ import { useTransactions } from '@/hooks/use-transactions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { MobileChartWrapper, MobileChartTooltip, mobileChartConfig } from './mobile-chart-wrapper'
 import { useProgressiveLoading, PerformanceMonitor } from '@/lib/utils/performance'
-import { ChartSkeleton, MobileChartSkeleton, ProgressiveSkeleton } from '@/components/ui/enhanced-skeleton'
+import { ChartSkeleton, ProgressiveSkeleton } from '@/components/ui/enhanced-skeleton'
 
 interface InteractiveSpendingTrendsChartProps {
   userId: string
@@ -54,27 +60,19 @@ interface ChartDataPoint {
 type ChartMode = 'daily' | 'cumulative' | 'comparison'
 type ZoomLevel = 'all' | '30d' | '7d'
 
-export function InteractiveSpendingTrendsChart({
-  userId, 
+const InteractiveSpendingTrendsChartComponent = React.memo(function InteractiveSpendingTrendsChart({
+  userId,
   dateRange,
-  className 
+  className,
 }: InteractiveSpendingTrendsChartProps) {
   const { formatCurrency } = useCurrency()
   const [chartMode, setChartMode] = useState<ChartMode>('daily')
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('all')
   const [selectedDataPoint, setSelectedDataPoint] = useState<ChartDataPoint | null>(null)
   const [brushDomain, setBrushDomain] = useState<[number, number] | null>(null)
-  
+
   // Progressive loading for better mobile experience
   const progressiveStage = useProgressiveLoading(3, 300)
-  
-  // Performance monitoring
-  React.useEffect(() => {
-    PerformanceMonitor.startTiming('chart-render')
-    return () => {
-      PerformanceMonitor.endTiming('chart-render')
-    }
-  }, [chartData])
 
   // Default to last 30 days if no date range provided
   const defaultDateRange = useMemo(
@@ -118,7 +116,7 @@ export function InteractiveSpendingTrendsChart({
         } else {
           acc[dateKey].expenses += Number(transaction.amount)
         }
-        
+
         acc[dateKey].transactions.push(transaction)
 
         return acc
@@ -139,9 +137,10 @@ export function InteractiveSpendingTrendsChart({
         expenses: dayData.expenses,
         net: dayData.income - dayData.expenses,
         transactionCount: dayData.transactions.length,
-        averageTransaction: dayData.transactions.length > 0 
-          ? (dayData.income + dayData.expenses) / dayData.transactions.length 
-          : 0,
+        averageTransaction:
+          dayData.transactions.length > 0
+            ? (dayData.income + dayData.expenses) / dayData.transactions.length
+            : 0,
         cumulativeIncome: 0, // Will be calculated next
         cumulativeExpenses: 0,
         cumulativeNet: 0,
@@ -164,6 +163,57 @@ export function InteractiveSpendingTrendsChart({
       }
     })
   }, [transactionsData?.data, finalDateRange])
+
+  // CSV download function
+  const downloadCSV = useCallback(() => {
+    if (!chartData || chartData.length === 0) return
+
+    const headers = [
+      'Date',
+      'Income',
+      'Expenses',
+      'Net',
+      'Cumulative Income',
+      'Cumulative Expenses',
+      'Cumulative Net',
+    ]
+    const csvContent = [
+      headers.join(','),
+      ...chartData.map(row =>
+        [
+          row.dateLabel,
+          row.income.toString(),
+          row.expenses.toString(),
+          row.net.toString(),
+          row.cumulativeIncome.toString(),
+          row.cumulativeExpenses.toString(),
+          row.cumulativeNet.toString(),
+        ].join(',')
+      ),
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute(
+      'download',
+      `spending-trends-${format(finalDateRange.from, 'yyyy-MM-dd')}-to-${format(finalDateRange.to, 'yyyy-MM-dd')}.csv`
+    )
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, [chartData, finalDateRange])
+
+  // Performance monitoring
+  React.useEffect(() => {
+    PerformanceMonitor.startTiming('chart-render')
+    return () => {
+      PerformanceMonitor.endTiming('chart-render')
+    }
+  }, [chartData])
 
   // Filter data based on zoom level and brush selection
   const displayData = useMemo(() => {
@@ -188,11 +238,14 @@ export function InteractiveSpendingTrendsChart({
     return filteredData
   }, [chartData, zoomLevel, brushDomain])
 
-  const handleDataPointClick = useCallback((data: unknown) => {
-    if (data && data.activePayload && data.activePayload[0]) {
-      setSelectedDataPoint(data.activePayload[0].payload)
-    }
-  }, [])
+  const handleDataPointClick = useCallback(
+    (data: { activePayload?: Array<{ payload: ChartDataPoint }> }) => {
+      if (data && data.activePayload && data.activePayload[0]) {
+        setSelectedDataPoint(data.activePayload[0].payload)
+      }
+    },
+    []
+  )
 
   const handleBrushChange = useCallback((domain: { startIndex?: number; endIndex?: number }) => {
     if (domain && domain.startIndex !== undefined && domain.endIndex !== undefined) {
@@ -215,12 +268,12 @@ export function InteractiveSpendingTrendsChart({
       cumulativeIncome: point.cumulativeIncome,
       cumulativeExpenses: point.cumulativeExpenses,
       cumulativeNet: point.cumulativeNet,
-      transactionCount: point.transactionCount
+      transactionCount: point.transactionCount,
     }))
 
     const csvContent = [
       Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
+      ...csvData.map(row => Object.values(row).join(',')),
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -234,19 +287,29 @@ export function InteractiveSpendingTrendsChart({
     URL.revokeObjectURL(url)
   }, [displayData])
 
-  const InteractiveTooltip = ({ active, payload, label }: { active?: boolean; payload?: { payload: ChartDataPoint }[]; label?: string }) => {
+  const InteractiveTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean
+    payload?: { payload: ChartDataPoint }[]
+    label?: string
+  }) => {
     if (active && payload && payload.length && label) {
       const data = payload[0].payload as ChartDataPoint
 
       return (
-        <div className="glass-card border-premium max-w-sm animate-fade-in p-4 cursor-pointer"
-             onClick={() => setSelectedDataPoint(data)}>
+        <div
+          className="glass-card border-premium max-w-sm animate-fade-in cursor-pointer p-4"
+          onClick={() => setSelectedDataPoint(data)}
+        >
           <div className="space-y-3">
             <h4 className="text-display-sm font-semibold text-foreground">
               {format(data.date, 'EEEE, MMM dd, yyyy')}
             </h4>
-            
-            <div className="grid grid-cols-2 gap-3 text-body-sm">
+
+            <div className="text-body-sm grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -264,10 +327,14 @@ export function InteractiveSpendingTrendsChart({
                 </div>
                 <div className="flex items-center justify-between border-t border-border/50 pt-2">
                   <span className="text-primary-700 dark:text-primary-300 font-medium">Net:</span>
-                  <span className={cn(
-                    "font-bold",
-                    data.net >= 0 ? "text-success-600 dark:text-success-400" : "text-error-600 dark:text-error-400"
-                  )}>
+                  <span
+                    className={cn(
+                      'font-bold',
+                      data.net >= 0
+                        ? 'text-success-600 dark:text-success-400'
+                        : 'text-error-600 dark:text-error-400'
+                    )}
+                  >
                     {formatCurrency(data.net)}
                   </span>
                 </div>
@@ -284,17 +351,19 @@ export function InteractiveSpendingTrendsChart({
                 </div>
                 <div className="flex items-center justify-between border-t border-border/50 pt-2">
                   <span className="text-muted-foreground">Cumulative:</span>
-                  <span className={cn(
-                    "font-medium",
-                    data.cumulativeNet >= 0 ? "text-success-600" : "text-error-600"
-                  )}>
+                  <span
+                    className={cn(
+                      'font-medium',
+                      data.cumulativeNet >= 0 ? 'text-success-600' : 'text-error-600'
+                    )}
+                  >
                     {formatCurrency(data.cumulativeNet)}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="text-xs text-muted-foreground border-t border-border/30 pt-2">
+            <div className="border-t border-border/30 pt-2 text-xs text-muted-foreground">
               Click to view detailed breakdown for this day
             </div>
           </div>
@@ -313,7 +382,7 @@ export function InteractiveSpendingTrendsChart({
         <div className="block lg:hidden">
           <ProgressiveSkeleton stage={progressiveStage} maxStages={3} />
         </div>
-        
+
         {/* Desktop progressive loading */}
         <div className="hidden lg:block">
           <ChartSkeleton className={className} />
@@ -350,12 +419,20 @@ export function InteractiveSpendingTrendsChart({
   }
 
   // Mobile optimized tooltip
-  const MobileTooltipContent = ({ active, payload, label }: any) => (
+  const MobileTooltipContent = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean
+    payload?: Array<{ value: number; name: string }>
+    label?: string
+  }) => (
     <MobileChartTooltip
       active={active}
       payload={payload}
       label={label}
-      formatter={(value: number, name: string) => [formatCurrency(value), name]}
+      formatter={(value: string | number, name: string) => [formatCurrency(Number(value)), name]}
       labelFormatter={(label: string) => format(new Date(label), 'MMM dd, yyyy')}
     />
   )
@@ -368,14 +445,15 @@ export function InteractiveSpendingTrendsChart({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-display-md">Interactive Spending Trends</CardTitle>
-              <p className="text-body-sm text-muted-foreground mt-1">
-                {format(finalDateRange.from, 'MMM dd, yyyy')} - {format(finalDateRange.to, 'MMM dd, yyyy')}
+              <p className="text-body-sm mt-1 text-muted-foreground">
+                {format(finalDateRange.from, 'MMM dd, yyyy')} -{' '}
+                {format(finalDateRange.to, 'MMM dd, yyyy')}
               </p>
             </div>
 
             <div className="flex items-center gap-2">
               <Select value={zoomLevel} onValueChange={(value: ZoomLevel) => setZoomLevel(value)}>
-                <SelectTrigger className="w-[120px] h-8">
+                <SelectTrigger className="h-8 w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -385,8 +463,8 @@ export function InteractiveSpendingTrendsChart({
                 </SelectContent>
               </Select>
 
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={resetZoom}
                 disabled={zoomLevel === 'all' && !brushDomain}
@@ -400,7 +478,10 @@ export function InteractiveSpendingTrendsChart({
             </div>
           </div>
 
-          <Tabs value={chartMode} onValueChange={(value: ChartMode) => setChartMode(value)}>
+          <Tabs
+            value={chartMode}
+            onValueChange={(value: string) => setChartMode(value as ChartMode)}
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="daily" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
@@ -425,15 +506,15 @@ export function InteractiveSpendingTrendsChart({
                 >
                   <defs>
                     <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--success-500))" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(var(--success-500))" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="hsl(var(--success-500))" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="hsl(var(--success-500))" stopOpacity={0.1} />
                     </linearGradient>
                     <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--error-500))" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(var(--error-500))" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="hsl(var(--error-500))" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="hsl(var(--error-500))" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
-                  
+
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                   <XAxis
                     dataKey="dateLabel"
@@ -452,15 +533,15 @@ export function InteractiveSpendingTrendsChart({
                     dx={-10}
                   />
                   <Tooltip content={<InteractiveTooltip />} />
-                  
-                  <Bar 
-                    dataKey="income" 
+
+                  <Bar
+                    dataKey="income"
                     fill="url(#incomeGradient)"
                     radius={[2, 2, 0, 0]}
                     name="Daily Income"
                   />
-                  <Bar 
-                    dataKey="expenses" 
+                  <Bar
+                    dataKey="expenses"
                     fill="url(#expenseGradient)"
                     radius={[2, 2, 0, 0]}
                     name="Daily Expenses"
@@ -474,9 +555,13 @@ export function InteractiveSpendingTrendsChart({
                     activeDot={{ r: 6, stroke: 'hsl(var(--primary-500))', strokeWidth: 2 }}
                     name="Daily Net"
                   />
-                  
-                  <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 2" />
-                  
+
+                  <ReferenceLine
+                    y={0}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="2 2"
+                  />
+
                   <Brush
                     dataKey="dateLabel"
                     height={30}
@@ -512,7 +597,7 @@ export function InteractiveSpendingTrendsChart({
                     dx={-10}
                   />
                   <Tooltip content={<InteractiveTooltip />} />
-                  
+
                   <Line
                     type="monotone"
                     dataKey="cumulativeIncome"
@@ -537,9 +622,13 @@ export function InteractiveSpendingTrendsChart({
                     dot={{ fill: 'hsl(var(--primary-500))', strokeWidth: 2, r: 5 }}
                     name="Cumulative Net"
                   />
-                  
-                  <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 2" />
-                  
+
+                  <ReferenceLine
+                    y={0}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="2 2"
+                  />
+
                   <Brush
                     dataKey="dateLabel"
                     height={30}
@@ -575,7 +664,7 @@ export function InteractiveSpendingTrendsChart({
                     dx={-10}
                   />
                   <Tooltip content={<InteractiveTooltip />} />
-                  
+
                   <Area
                     type="monotone"
                     dataKey="income"
@@ -594,7 +683,7 @@ export function InteractiveSpendingTrendsChart({
                     fillOpacity={0.6}
                     name="Expenses"
                   />
-                  
+
                   <Line
                     type="monotone"
                     dataKey="net"
@@ -603,9 +692,13 @@ export function InteractiveSpendingTrendsChart({
                     dot={{ fill: 'hsl(var(--primary-500))', strokeWidth: 2, r: 4 }}
                     name="Net Flow"
                   />
-                  
-                  <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 2" />
-                  
+
+                  <ReferenceLine
+                    y={0}
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeDasharray="2 2"
+                  />
+
                   <Brush
                     dataKey="dateLabel"
                     height={30}
@@ -623,35 +716,37 @@ export function InteractiveSpendingTrendsChart({
       {selectedDataPoint && (
         <Card className="glass-card border-premium">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="h-5 w-5" />
               Detailed Breakdown - {format(selectedDataPoint.date, 'EEEE, MMMM dd, yyyy')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center space-y-1">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="space-y-1 text-center">
                 <p className="text-sm text-muted-foreground">Income</p>
                 <p className="text-xl font-bold text-success-600">
                   {formatCurrency(selectedDataPoint.income)}
                 </p>
               </div>
-              <div className="text-center space-y-1">
+              <div className="space-y-1 text-center">
                 <p className="text-sm text-muted-foreground">Expenses</p>
                 <p className="text-xl font-bold text-error-600">
                   {formatCurrency(selectedDataPoint.expenses)}
                 </p>
               </div>
-              <div className="text-center space-y-1">
+              <div className="space-y-1 text-center">
                 <p className="text-sm text-muted-foreground">Net Flow</p>
-                <p className={cn(
-                  "text-xl font-bold",
-                  selectedDataPoint.net >= 0 ? "text-success-600" : "text-error-600"
-                )}>
+                <p
+                  className={cn(
+                    'text-xl font-bold',
+                    selectedDataPoint.net >= 0 ? 'text-success-600' : 'text-error-600'
+                  )}
+                >
                   {formatCurrency(selectedDataPoint.net)}
                 </p>
               </div>
-              <div className="text-center space-y-1">
+              <div className="space-y-1 text-center">
                 <p className="text-sm text-muted-foreground">Transactions</p>
                 <p className="text-xl font-bold text-foreground">
                   {selectedDataPoint.transactionCount}
@@ -676,22 +771,23 @@ export function InteractiveSpendingTrendsChart({
         onDownload={downloadCSV}
         loading={isLoading}
       >
-        <ComposedChart
-          data={displayData}
-          margin={mobileChartConfig.margin}
-        >
+        <ComposedChart data={displayData} margin={mobileChartConfig.margin}>
           <defs>
             <linearGradient id="mobileIncomeGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={mobileChartConfig.colors.secondary} stopOpacity={0.8}/>
-              <stop offset="95%" stopColor={mobileChartConfig.colors.secondary} stopOpacity={0.1}/>
+              <stop offset="5%" stopColor={mobileChartConfig.colors.secondary} stopOpacity={0.8} />
+              <stop offset="95%" stopColor={mobileChartConfig.colors.secondary} stopOpacity={0.1} />
             </linearGradient>
             <linearGradient id="mobileExpenseGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={mobileChartConfig.colors.danger} stopOpacity={0.8}/>
-              <stop offset="95%" stopColor={mobileChartConfig.colors.danger} stopOpacity={0.1}/>
+              <stop offset="5%" stopColor={mobileChartConfig.colors.danger} stopOpacity={0.8} />
+              <stop offset="95%" stopColor={mobileChartConfig.colors.danger} stopOpacity={0.1} />
             </linearGradient>
           </defs>
-          
-          <CartesianGrid strokeDasharray="3 3" stroke={mobileChartConfig.colors.muted} opacity={0.3} />
+
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={mobileChartConfig.colors.muted}
+            opacity={0.3}
+          />
           <XAxis
             dataKey="dateLabel"
             {...mobileChartConfig.tickConfig}
@@ -704,16 +800,16 @@ export function InteractiveSpendingTrendsChart({
             width={60}
           />
           <Tooltip content={<MobileTooltipContent />} />
-          
+
           {/* Mobile optimized bars and lines */}
-          <Bar 
-            dataKey="income" 
+          <Bar
+            dataKey="income"
             fill="url(#mobileIncomeGradient)"
             radius={[2, 2, 0, 0]}
             name="Income"
           />
-          <Bar 
-            dataKey="expenses" 
+          <Bar
+            dataKey="expenses"
             fill="url(#mobileExpenseGradient)"
             radius={[2, 2, 0, 0]}
             name="Expenses"
@@ -727,20 +823,20 @@ export function InteractiveSpendingTrendsChart({
             activeDot={{ r: 4, stroke: mobileChartConfig.colors.primary }}
             name="Net"
           />
-          
+
           <ReferenceLine y={0} stroke={mobileChartConfig.colors.muted} strokeDasharray="2 2" />
         </ComposedChart>
       </MobileChartWrapper>
 
       {/* Mobile chart mode selector */}
       <div className="flex justify-center">
-        <div className="bg-gray-100 rounded-lg p-1 flex">
-          {(['daily', 'cumulative', 'comparison'] as ChartMode[]).map((mode) => (
+        <div className="flex rounded-lg bg-gray-100 p-1">
+          {(['daily', 'cumulative', 'comparison'] as ChartMode[]).map(mode => (
             <button
               key={mode}
               onClick={() => setChartMode(mode)}
               className={cn(
-                'px-4 py-2 text-sm font-medium rounded-md transition-all',
+                'rounded-md px-4 py-2 text-sm font-medium transition-all',
                 chartMode === mode
                   ? 'bg-white text-blue-700 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
@@ -759,11 +855,12 @@ export function InteractiveSpendingTrendsChart({
           subtitle="Running totals over time"
           height={240}
         >
-          <LineChart
-            data={displayData}
-            margin={mobileChartConfig.margin}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke={mobileChartConfig.colors.muted} opacity={0.3} />
+          <LineChart data={displayData} margin={mobileChartConfig.margin}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={mobileChartConfig.colors.muted}
+              opacity={0.3}
+            />
             <XAxis
               dataKey="dateLabel"
               {...mobileChartConfig.tickConfig}
@@ -776,7 +873,7 @@ export function InteractiveSpendingTrendsChart({
               width={60}
             />
             <Tooltip content={<MobileTooltipContent />} />
-            
+
             <Line
               type="monotone"
               dataKey="cumulativeIncome"
@@ -814,11 +911,13 @@ export function InteractiveSpendingTrendsChart({
       <div className="block lg:hidden">
         <MobileChart />
       </div>
-      
+
       {/* Desktop version */}
       <div className="hidden lg:block">
         <DesktopChart />
       </div>
     </>
   )
-}
+})
+
+export { InteractiveSpendingTrendsChartComponent as InteractiveSpendingTrendsChart }

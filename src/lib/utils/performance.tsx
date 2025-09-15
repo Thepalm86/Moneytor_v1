@@ -2,7 +2,12 @@
 
 import React, { Suspense, lazy, ComponentType, ReactElement } from 'react'
 import dynamic from 'next/dynamic'
-import { DashboardSkeleton, ChartSkeleton, MobileChartSkeleton, MobileTransactionListSkeleton } from '@/components/ui/enhanced-skeleton'
+import Image from 'next/image'
+import {
+  DashboardSkeleton,
+  MobileChartSkeleton,
+  MobileTransactionListSkeleton,
+} from '@/components/ui/enhanced-skeleton'
 
 // Generic lazy loading wrapper with skeleton fallback
 export function withLazyLoading<T extends object>(
@@ -10,7 +15,7 @@ export function withLazyLoading<T extends object>(
   fallback: ReactElement = <DashboardSkeleton />
 ) {
   const LazyComponent = lazy(importFn)
-  
+
   return function WrappedComponent(props: T) {
     return (
       <Suspense fallback={fallback}>
@@ -42,7 +47,7 @@ export function withMobileLazyChart<T extends object>(
   return withLazyLoading(importFn, <MobileChartSkeleton />)
 }
 
-// Mobile-specific lazy loading for transaction lists  
+// Mobile-specific lazy loading for transaction lists
 export function withMobileLazyList<T extends object>(
   importFn: () => Promise<{ default: ComponentType<T> }>
 ) {
@@ -52,44 +57,45 @@ export function withMobileLazyList<T extends object>(
 // Progressive loading hook - loads content in stages
 export function useProgressiveLoading(stages: number = 3, delay: number = 200) {
   const [currentStage, setCurrentStage] = React.useState(1)
-  
+
   React.useEffect(() => {
     if (currentStage < stages) {
       const timer = setTimeout(() => {
         setCurrentStage(prev => prev + 1)
       }, delay)
-      
+
       return () => clearTimeout(timer)
     }
   }, [currentStage, stages, delay])
-  
+
   return currentStage
 }
 
 // Intersection Observer hook for lazy loading on scroll
-export function useIntersectionObserver(
-  options: IntersectionObserverInit = {}
-) {
+export function useIntersectionObserver(options: IntersectionObserverInit = {}) {
   const [isIntersecting, setIsIntersecting] = React.useState(false)
   const targetRef = React.useRef<HTMLDivElement>(null)
-  
+
   React.useEffect(() => {
     const target = targetRef.current
     if (!target) return
-    
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsIntersecting(entry.isIntersecting)
-    }, {
-      threshold: 0.1,
-      rootMargin: '50px',
-      ...options,
-    })
-    
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting)
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px',
+        ...options,
+      }
+    )
+
     observer.observe(target)
-    
+
     return () => observer.unobserve(target)
   }, [])
-  
+
   return [targetRef, isIntersecting] as const
 }
 
@@ -102,42 +108,42 @@ export function withResponsiveLoading<T extends object>(
   const ResponsiveComponent = React.memo(function ResponsiveComponent(props: T) {
     const [isMobile, setIsMobile] = React.useState(false)
     const [Component, setComponent] = React.useState<ComponentType<T> | null>(null)
-    
+
     React.useEffect(() => {
       const checkMobile = () => {
         setIsMobile(window.innerWidth < 1024) // lg breakpoint
       }
-      
+
       checkMobile()
       window.addEventListener('resize', checkMobile)
-      
+
       return () => window.removeEventListener('resize', checkMobile)
     }, [])
-    
+
     React.useEffect(() => {
       const loadComponent = async () => {
         try {
-          const { default: LoadedComponent } = isMobile 
-            ? await mobileImport() 
+          const { default: LoadedComponent } = isMobile
+            ? await mobileImport()
             : await desktopImport()
           setComponent(() => LoadedComponent)
         } catch (error) {
           console.error('Failed to load component:', error)
         }
       }
-      
+
       loadComponent()
     }, [isMobile])
-    
+
     if (!Component) {
       return fallback
     }
-    
+
     return <Component {...props} />
   })
-  
+
   ResponsiveComponent.displayName = 'ResponsiveComponent'
-  
+
   return ResponsiveComponent
 }
 
@@ -154,33 +160,33 @@ export function preloadComponent<T extends object>(
 // Performance monitoring utility
 export class PerformanceMonitor {
   private static metrics: Map<string, number> = new Map()
-  
+
   static startTiming(key: string) {
     this.metrics.set(`${key}_start`, performance.now())
   }
-  
+
   static endTiming(key: string): number {
     const startTime = this.metrics.get(`${key}_start`)
     if (!startTime) return 0
-    
+
     const endTime = performance.now()
     const duration = endTime - startTime
-    
+
     this.metrics.set(`${key}_duration`, duration)
     this.metrics.delete(`${key}_start`)
-    
+
     // Log slow operations in development
     if (process.env.NODE_ENV === 'development' && duration > 100) {
       console.warn(`Slow operation "${key}": ${duration.toFixed(2)}ms`)
     }
-    
+
     return duration
   }
-  
+
   static getMetric(key: string): number | undefined {
     return this.metrics.get(key)
   }
-  
+
   static getAllMetrics(): Record<string, number> {
     return Object.fromEntries(this.metrics.entries())
   }
@@ -194,12 +200,12 @@ export function withPerformanceMonitoring<T extends object>(
   return React.memo(function MonitoredComponent(props: T) {
     React.useEffect(() => {
       PerformanceMonitor.startTiming(`${componentName}_render`)
-      
+
       return () => {
         PerformanceMonitor.endTiming(`${componentName}_render`)
       }
     })
-    
+
     return <Component {...props} />
   })
 }
@@ -217,21 +223,23 @@ export function LazyImage({
   const [isLoaded, setIsLoaded] = React.useState(false)
   const [imageSrc, setImageSrc] = React.useState(placeholder)
   const [ref, isIntersecting] = useIntersectionObserver()
-  
+
   React.useEffect(() => {
     if (isIntersecting && !isLoaded) {
       setImageSrc(src!)
     }
   }, [isIntersecting, src, isLoaded])
-  
+
   return (
     <div ref={ref} className={className}>
-      <img
+      <Image
         {...props}
         src={imageSrc}
         alt={alt}
         className={className}
         onLoad={() => setIsLoaded(true)}
+        width={0}
+        height={0}
         loading="lazy"
       />
     </div>
@@ -245,24 +253,27 @@ export function useOptimisticUpdate<T>(
 ) {
   const [state, setState] = React.useState(initialState)
   const [pendingUpdates, setPendingUpdates] = React.useState<Set<string>>(new Set())
-  
-  const applyOptimistic = React.useCallback((id: string, update: Partial<T>) => {
-    setState(prevState => updateFn(prevState, update))
-    setPendingUpdates(prev => new Set([...prev, id]))
-  }, [updateFn])
-  
+
+  const applyOptimistic = React.useCallback(
+    (id: string, update: Partial<T>) => {
+      setState(prevState => updateFn(prevState, update))
+      setPendingUpdates(prev => new Set([...prev, id]))
+    },
+    [updateFn]
+  )
+
   const confirmUpdate = React.useCallback((id: string, confirmedState?: T) => {
     setPendingUpdates(prev => {
       const next = new Set(prev)
       next.delete(id)
       return next
     })
-    
+
     if (confirmedState) {
       setState(confirmedState)
     }
   }, [])
-  
+
   const revertUpdate = React.useCallback((id: string, revertedState: T) => {
     setPendingUpdates(prev => {
       const next = new Set(prev)
@@ -271,7 +282,7 @@ export function useOptimisticUpdate<T>(
     })
     setState(revertedState)
   }, [])
-  
+
   return {
     state,
     applyOptimistic,

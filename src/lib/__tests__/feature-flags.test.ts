@@ -3,6 +3,7 @@
  * Comprehensive test coverage for feature flag logic
  */
 
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest'
 import {
   useFeatureFlags,
   isSettingsRedesignEnabled,
@@ -24,7 +25,7 @@ const mockEnv = (env: Record<string, string>) => {
 
 describe('Feature Flag System', () => {
   beforeEach(() => {
-    jest.resetModules()
+    vi.resetModules()
   })
 
   describe('Development Environment', () => {
@@ -32,7 +33,7 @@ describe('Feature Flag System', () => {
 
     it('enables all flags in development environment', () => {
       const flags = useFeatureFlags('test-user-id')
-      
+
       expect(flags.SETTINGS_REDESIGN).toBe(true)
       expect(flags.SETTINGS_ADVANCED_SEARCH).toBe(true)
       expect(flags.SETTINGS_QUICK_ACTIONS).toBe(true)
@@ -50,7 +51,7 @@ describe('Feature Flag System', () => {
 
     it('enables all flags in preview environment', () => {
       const flags = useFeatureFlags('test-user-id')
-      
+
       expect(flags.SETTINGS_REDESIGN).toBe(true)
       expect(flags.SETTINGS_ADVANCED_SEARCH).toBe(true)
       expect(flags.SETTINGS_QUICK_ACTIONS).toBe(true)
@@ -58,76 +59,76 @@ describe('Feature Flag System', () => {
   })
 
   describe('Production Environment', () => {
-    mockEnv({ 
+    mockEnv({
       NODE_ENV: 'production',
       VERCEL_ENV: 'production',
       NEXT_PUBLIC_ENABLE_SETTINGS_REDESIGN: 'false',
-      NEXT_PUBLIC_SETTINGS_REDESIGN_ROLLOUT: '0'
+      NEXT_PUBLIC_SETTINGS_REDESIGN_ROLLOUT: '0',
     })
 
     it('disables flags when not enabled in production', () => {
       const flags = useFeatureFlags('test-user-id')
-      
+
       expect(flags.SETTINGS_REDESIGN).toBe(false)
       expect(flags.SETTINGS_ADVANCED_SEARCH).toBe(false)
       expect(flags.SETTINGS_QUICK_ACTIONS).toBe(false)
     })
 
-    it('respects environment variable overrides', () => {
+    it('respects environment variable overrides', async () => {
       process.env.NEXT_PUBLIC_ENABLE_SETTINGS_REDESIGN = 'true'
       process.env.NEXT_PUBLIC_SETTINGS_REDESIGN_ROLLOUT = '100'
-      
+
       // Need to re-import to get updated environment
-      jest.resetModules()
-      const { isSettingsRedesignEnabled } = require('../feature-flags')
-      
+      vi.resetModules()
+      const { isSettingsRedesignEnabled } = await import('../feature-flags')
+
       expect(isSettingsRedesignEnabled('test-user')).toBe(true)
     })
   })
 
   describe('Rollout Percentage Logic', () => {
-    mockEnv({ 
+    mockEnv({
       NODE_ENV: 'production',
       VERCEL_ENV: 'production',
       NEXT_PUBLIC_ENABLE_SETTINGS_REDESIGN: 'true',
-      NEXT_PUBLIC_SETTINGS_REDESIGN_ROLLOUT: '50'
+      NEXT_PUBLIC_SETTINGS_REDESIGN_ROLLOUT: '50',
     })
 
-    it('applies rollout percentage correctly', () => {
+    it('applies rollout percentage correctly', async () => {
       // Need to re-import to get updated environment
-      jest.resetModules()
-      const { isSettingsRedesignEnabled } = require('../feature-flags')
-      
+      vi.resetModules()
+      const { isSettingsRedesignEnabled } = await import('../feature-flags')
+
       // Test with different user IDs to check hash distribution
       const results = []
       for (let i = 0; i < 100; i++) {
         const userId = `user-${i}`
         results.push(isSettingsRedesignEnabled(userId))
       }
-      
+
       const enabledCount = results.filter(Boolean).length
       // Should be approximately 50% (allow some variance due to hash distribution)
       expect(enabledCount).toBeGreaterThan(30)
       expect(enabledCount).toBeLessThan(70)
     })
 
-    it('is deterministic for the same user', () => {
-      jest.resetModules()
-      const { isSettingsRedesignEnabled } = require('../feature-flags')
-      
+    it('is deterministic for the same user', async () => {
+      vi.resetModules()
+      const { isSettingsRedesignEnabled } = await import('../feature-flags')
+
       const userId = 'consistent-user'
       const result1 = isSettingsRedesignEnabled(userId)
       const result2 = isSettingsRedesignEnabled(userId)
       const result3 = isSettingsRedesignEnabled(userId)
-      
+
       expect(result1).toBe(result2)
       expect(result2).toBe(result3)
     })
 
-    it('handles anonymous users correctly', () => {
-      jest.resetModules()
-      const { isSettingsRedesignEnabled } = require('../feature-flags')
-      
+    it('handles anonymous users correctly', async () => {
+      vi.resetModules()
+      const { isSettingsRedesignEnabled } = await import('../feature-flags')
+
       // Anonymous users should not get partial rollout features
       expect(isSettingsRedesignEnabled()).toBe(false)
       expect(isSettingsRedesignEnabled(undefined)).toBe(false)
@@ -142,12 +143,12 @@ describe('Feature Flag System', () => {
         userGroups: ['beta-testers', 'internal'],
         description: 'Test flag with user groups',
       }
-      
+
       // This would need to be tested with a mocked configuration
       // For now, we test the basic group filtering logic
       const betaUser = ['beta-testers']
       const regularUser = ['regular']
-      
+
       // Test that group membership affects flag evaluation
       expect(betaUser.includes('beta-testers')).toBe(true)
       expect(regularUser.includes('beta-testers')).toBe(false)
@@ -158,7 +159,7 @@ describe('Feature Flag System', () => {
     it('provides individual flag checkers', () => {
       const userId = 'test-user'
       const userGroups = ['beta-testers']
-      
+
       expect(typeof isSettingsRedesignEnabled(userId, userGroups)).toBe('boolean')
       expect(typeof isAdvancedSearchEnabled(userId, userGroups)).toBe('boolean')
       expect(typeof isQuickActionsEnabled(userId, userGroups)).toBe('boolean')
@@ -166,12 +167,12 @@ describe('Feature Flag System', () => {
 
     it('returns all flag configurations', () => {
       const allFlags = getAllFlags()
-      
+
       expect(allFlags).toHaveProperty('SETTINGS_REDESIGN')
       expect(allFlags).toHaveProperty('SETTINGS_ADVANCED_SEARCH')
       expect(allFlags).toHaveProperty('SETTINGS_QUICK_ACTIONS')
       expect(allFlags).toHaveProperty('SETTINGS_BULK_OPERATIONS')
-      
+
       // Check structure of flag config
       expect(allFlags.SETTINGS_REDESIGN).toHaveProperty('enabled')
       expect(allFlags.SETTINGS_REDESIGN).toHaveProperty('description')
@@ -179,63 +180,63 @@ describe('Feature Flag System', () => {
   })
 
   describe('Error Handling', () => {
-    it('handles invalid rollout percentages gracefully', () => {
+    it('handles invalid rollout percentages gracefully', async () => {
       process.env.NEXT_PUBLIC_SETTINGS_REDESIGN_ROLLOUT = 'invalid'
-      
-      jest.resetModules()
-      const { isSettingsRedesignEnabled } = require('../feature-flags')
-      
+
+      vi.resetModules()
+      const { isSettingsRedesignEnabled } = await import('../feature-flags')
+
       // Should default to 0 for invalid values
       expect(isSettingsRedesignEnabled('test-user')).toBe(false)
     })
 
-    it('handles missing environment variables gracefully', () => {
+    it('handles missing environment variables gracefully', async () => {
       delete process.env.NEXT_PUBLIC_ENABLE_SETTINGS_REDESIGN
       delete process.env.NEXT_PUBLIC_SETTINGS_REDESIGN_ROLLOUT
-      
-      jest.resetModules()
-      const { isSettingsRedesignEnabled } = require('../feature-flags')
-      
+
+      vi.resetModules()
+      const { isSettingsRedesignEnabled } = await import('../feature-flags')
+
       // Should default to false when env vars are missing
       expect(isSettingsRedesignEnabled('test-user')).toBe(false)
     })
   })
 
   describe('Development Utilities', () => {
-    it('provides logging in development mode', () => {
-      const consoleSpy = jest.spyOn(console, 'group').mockImplementation()
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
-      const consoleGroupEndSpy = jest.spyOn(console, 'groupEnd').mockImplementation()
-      
+    it('provides logging in development mode', async () => {
+      const consoleSpy = vi.spyOn(console, 'group').mockImplementation()
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation()
+      const consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation()
+
       process.env.NODE_ENV = 'development'
-      
-      jest.resetModules()
-      const { logFeatureFlags } = require('../feature-flags')
-      
+
+      vi.resetModules()
+      const { logFeatureFlags } = await import('../feature-flags')
+
       logFeatureFlags('test-user', ['beta'])
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('🚩 Feature Flags')
       expect(consoleLogSpy).toHaveBeenCalledWith('User ID:', 'test-user')
       expect(consoleLogSpy).toHaveBeenCalledWith('User Groups:', ['beta'])
       expect(consoleGroupEndSpy).toHaveBeenCalled()
-      
+
       consoleSpy.mockRestore()
       consoleLogSpy.mockRestore()
       consoleGroupEndSpy.mockRestore()
     })
 
-    it('does not log in production mode', () => {
-      const consoleSpy = jest.spyOn(console, 'group').mockImplementation()
-      
+    it('does not log in production mode', async () => {
+      const consoleSpy = vi.spyOn(console, 'group').mockImplementation()
+
       process.env.NODE_ENV = 'production'
-      
-      jest.resetModules()
-      const { logFeatureFlags } = require('../feature-flags')
-      
+
+      vi.resetModules()
+      const { logFeatureFlags } = await import('../feature-flags')
+
       logFeatureFlags('test-user', ['beta'])
-      
+
       expect(consoleSpy).not.toHaveBeenCalled()
-      
+
       consoleSpy.mockRestore()
     })
   })

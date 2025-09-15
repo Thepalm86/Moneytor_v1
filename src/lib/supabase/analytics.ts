@@ -1,5 +1,14 @@
 import { supabase } from '@/lib/supabase/client'
-import { subMonths, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfYear, endOfYear } from 'date-fns'
+import {
+  subMonths as _subMonths,
+  subDays as _subDays,
+  startOfMonth as _startOfMonth,
+  endOfMonth as _endOfMonth,
+  startOfWeek as _startOfWeek,
+  endOfWeek as _endOfWeek,
+  startOfYear as _startOfYear,
+  endOfYear as _endOfYear,
+} from 'date-fns'
 
 export interface DateRange {
   from: Date
@@ -79,7 +88,8 @@ export async function getFinancialKPIs(
   try {
     const { data: transactions, error: transactionsError } = await supabase
       .from('transactions')
-      .select(`
+      .select(
+        `
         id,
         amount,
         type,
@@ -89,7 +99,8 @@ export async function getFinancialKPIs(
           name,
           color
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .gte('date', dateRange.from.toISOString().split('T')[0])
       .lte('date', dateRange.to.toISOString().split('T')[0])
@@ -99,12 +110,12 @@ export async function getFinancialKPIs(
     }
 
     const currentTransactions = transactions || []
-    
+
     // Get previous period for comparison (same length as current period)
     const periodLength = dateRange.to.getTime() - dateRange.from.getTime()
     const previousDateRange = {
       from: new Date(dateRange.from.getTime() - periodLength),
-      to: new Date(dateRange.to.getTime() - periodLength)
+      to: new Date(dateRange.to.getTime() - periodLength),
     }
 
     const { data: previousTransactions, error: previousError } = await supabase
@@ -122,32 +133,40 @@ export async function getFinancialKPIs(
     const currentIncome = currentTransactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
-    
+
     const currentExpenses = currentTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
-    
+
     const currentNet = currentIncome - currentExpenses
 
     const previousIncome = (previousTransactions || [])
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
-    
+
     const previousExpenses = (previousTransactions || [])
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
     // Calculate growth rates
-    const incomeGrowth = previousIncome > 0 
-      ? ((currentIncome - previousIncome) / previousIncome) * 100 
-      : currentIncome > 0 ? 100 : 0
-    
-    const expenseGrowth = previousExpenses > 0 
-      ? ((currentExpenses - previousExpenses) / previousExpenses) * 100 
-      : currentExpenses > 0 ? 100 : 0
+    const incomeGrowth =
+      previousIncome > 0
+        ? ((currentIncome - previousIncome) / previousIncome) * 100
+        : currentIncome > 0
+          ? 100
+          : 0
+
+    const expenseGrowth =
+      previousExpenses > 0
+        ? ((currentExpenses - previousExpenses) / previousExpenses) * 100
+        : currentExpenses > 0
+          ? 100
+          : 0
 
     // Calculate days in period for monthly averages
-    const daysInPeriod = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))
+    const daysInPeriod = Math.ceil(
+      (dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)
+    )
     const monthlyMultiplier = 30 / daysInPeriod
 
     const monthlyIncome = currentIncome * monthlyMultiplier
@@ -162,11 +181,12 @@ export async function getFinancialKPIs(
 
     // Emergency fund ratio (assume 3-6 months of expenses is ideal)
     // This is a simplified calculation - in practice, you'd need actual savings data
-    const emergencyFundRatio = monthlyExpenses > 0 ? Math.max(0, currentNet) / (monthlyExpenses * 3) : 0
+    const emergencyFundRatio =
+      monthlyExpenses > 0 ? Math.max(0, currentNet) / (monthlyExpenses * 3) : 0
 
     // Financial health score (0-100 based on various factors)
     let healthScore = 50 // Base score
-    
+
     // Positive savings rate increases score
     if (savingsRate > 20) healthScore += 30
     else if (savingsRate > 10) healthScore += 20
@@ -191,32 +211,37 @@ export async function getFinancialKPIs(
     // Find top spending category
     const categorySpending = currentTransactions
       .filter(t => t.type === 'expense' && t.category)
-      .reduce((acc, transaction) => {
-        const categoryId = transaction.category.id
-        const categoryName = transaction.category.name
-        if (!acc[categoryId]) {
-          acc[categoryId] = {
-            name: categoryName,
-            amount: 0,
-            count: 0
+      .reduce(
+        (acc, transaction) => {
+          const categoryId = transaction.category.id
+          const categoryName = transaction.category.name
+          if (!acc[categoryId]) {
+            acc[categoryId] = {
+              name: categoryName,
+              amount: 0,
+              count: 0,
+            }
           }
-        }
-        acc[categoryId].amount += Number(transaction.amount)
-        acc[categoryId].count++
-        return acc
-      }, {} as Record<string, { name: string; amount: number; count: number }>)
+          acc[categoryId].amount += Number(transaction.amount)
+          acc[categoryId].count++
+          return acc
+        },
+        {} as Record<string, { name: string; amount: number; count: number }>
+      )
 
-    const topSpendingCategory = Object.keys(categorySpending).length > 0
-      ? Object.values(categorySpending).reduce((max, category) =>
-          category.amount > max.amount ? category : max
-        )
-      : null
+    const topSpendingCategory =
+      Object.keys(categorySpending).length > 0
+        ? Object.values(categorySpending).reduce((max, category) =>
+            category.amount > max.amount ? category : max
+          )
+        : null
 
     const topSpendingCategoryData = topSpendingCategory
       ? {
           name: topSpendingCategory.name,
           amount: topSpendingCategory.amount,
-          percentage: currentExpenses > 0 ? (topSpendingCategory.amount / currentExpenses) * 100 : 0
+          percentage:
+            currentExpenses > 0 ? (topSpendingCategory.amount / currentExpenses) * 100 : 0,
         }
       : null
 
@@ -231,7 +256,7 @@ export async function getFinancialKPIs(
       emergencyFundRatio: Math.min(emergencyFundRatio, 2), // Cap at 200%
       topSpendingCategory: topSpendingCategoryData,
       incomeGrowth,
-      expenseGrowth
+      expenseGrowth,
     }
 
     return { data: kpis, error: null }
@@ -250,17 +275,25 @@ export async function getPeriodComparison(
   try {
     // Calculate comparison period
     let previousPeriod: DateRange
-    
+
     if (comparisonType === 'year-over-year') {
       previousPeriod = {
-        from: new Date(currentPeriod.from.getFullYear() - 1, currentPeriod.from.getMonth(), currentPeriod.from.getDate()),
-        to: new Date(currentPeriod.to.getFullYear() - 1, currentPeriod.to.getMonth(), currentPeriod.to.getDate())
+        from: new Date(
+          currentPeriod.from.getFullYear() - 1,
+          currentPeriod.from.getMonth(),
+          currentPeriod.from.getDate()
+        ),
+        to: new Date(
+          currentPeriod.to.getFullYear() - 1,
+          currentPeriod.to.getMonth(),
+          currentPeriod.to.getDate()
+        ),
       }
     } else {
       const periodLength = currentPeriod.to.getTime() - currentPeriod.from.getTime()
       previousPeriod = {
         from: new Date(currentPeriod.from.getTime() - periodLength),
-        to: new Date(currentPeriod.to.getTime() - periodLength)
+        to: new Date(currentPeriod.to.getTime() - periodLength),
       }
     }
 
@@ -292,7 +325,7 @@ export async function getPeriodComparison(
     const currentIncome = (currentData || [])
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
-    
+
     const currentExpenses = (currentData || [])
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
@@ -304,7 +337,7 @@ export async function getPeriodComparison(
     const previousIncome = (previousData || [])
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
-    
+
     const previousExpenses = (previousData || [])
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
@@ -327,13 +360,13 @@ export async function getPeriodComparison(
         income: currentIncome,
         expenses: currentExpenses,
         net: currentNet,
-        transactionCount: currentCount
+        transactionCount: currentCount,
       },
       previousPeriod: {
         income: previousIncome,
         expenses: previousExpenses,
         net: previousNet,
-        transactionCount: previousCount
+        transactionCount: previousCount,
       },
       changes: {
         incomeChange,
@@ -342,8 +375,8 @@ export async function getPeriodComparison(
         transactionCountChange,
         incomePercentChange,
         expensePercentChange,
-        netPercentChange
-      }
+        netPercentChange,
+      },
     }
 
     return { data: comparison, error: null }
@@ -373,13 +406,13 @@ export async function getSpendingTrends(
 
     // Group transactions by date
     const dailyData: Record<string, { income: number; expenses: number }> = {}
-    
+
     ;(transactions || []).forEach(transaction => {
       const date = transaction.date
       if (!dailyData[date]) {
         dailyData[date] = { income: 0, expenses: 0 }
       }
-      
+
       if (transaction.type === 'income') {
         dailyData[date].income += Number(transaction.amount)
       } else {
@@ -398,7 +431,7 @@ export async function getSpendingTrends(
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
       const dateStr = date.toISOString().split('T')[0]
       const dayData = dailyData[dateStr] || { income: 0, expenses: 0 }
-      
+
       cumulativeIncome += dayData.income
       cumulativeExpenses += dayData.expenses
 
@@ -409,7 +442,7 @@ export async function getSpendingTrends(
         net: dayData.income - dayData.expenses,
         cumulativeIncome,
         cumulativeExpenses,
-        cumulativeNet: cumulativeIncome - cumulativeExpenses
+        cumulativeNet: cumulativeIncome - cumulativeExpenses,
       })
     }
 
@@ -429,7 +462,8 @@ export async function getCategoryInsights(
   try {
     let query = supabase
       .from('transactions')
-      .select(`
+      .select(
+        `
         amount,
         type,
         date,
@@ -438,7 +472,8 @@ export async function getCategoryInsights(
           name,
           color
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .gte('date', dateRange.from.toISOString().split('T')[0])
       .lte('date', dateRange.to.toISOString().split('T')[0])
@@ -457,12 +492,13 @@ export async function getCategoryInsights(
     const periodLength = dateRange.to.getTime() - dateRange.from.getTime()
     const previousDateRange = {
       from: new Date(dateRange.from.getTime() - periodLength),
-      to: new Date(dateRange.to.getTime() - periodLength)
+      to: new Date(dateRange.to.getTime() - periodLength),
     }
 
     let previousQuery = supabase
       .from('transactions')
-      .select(`
+      .select(
+        `
         amount,
         type,
         category:categories (
@@ -470,7 +506,8 @@ export async function getCategoryInsights(
           name,
           color
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .gte('date', previousDateRange.from.toISOString().split('T')[0])
       .lte('date', previousDateRange.to.toISOString().split('T')[0])
@@ -486,13 +523,16 @@ export async function getCategoryInsights(
     }
 
     // Process current period data
-    const categoryData: Record<string, {
-      categoryId: string
-      categoryName: string
-      categoryColor: string
-      totalAmount: number
-      transactionCount: number
-    }> = {}
+    const categoryData: Record<
+      string,
+      {
+        categoryId: string
+        categoryName: string
+        categoryColor: string
+        totalAmount: number
+        transactionCount: number
+      }
+    > = {}
 
     ;(transactions || []).forEach(transaction => {
       if (!transaction.category) return
@@ -504,7 +544,7 @@ export async function getCategoryInsights(
           categoryName: transaction.category.name,
           categoryColor: transaction.category.color,
           totalAmount: 0,
-          transactionCount: 0
+          transactionCount: 0,
         }
       }
 
@@ -517,22 +557,28 @@ export async function getCategoryInsights(
     ;(previousTransactions || []).forEach(transaction => {
       if (!transaction.category) return
       const categoryId = transaction.category.id
-      previousCategoryData[categoryId] = (previousCategoryData[categoryId] || 0) + Number(transaction.amount)
+      previousCategoryData[categoryId] =
+        (previousCategoryData[categoryId] || 0) + Number(transaction.amount)
     })
 
     // Calculate total for percentage calculations
     const totalAmount = Object.values(categoryData).reduce((sum, cat) => sum + cat.totalAmount, 0)
-    
+
     // Calculate monthly average (assuming current period length)
-    const daysInPeriod = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))
+    const daysInPeriod = Math.ceil(
+      (dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)
+    )
     const monthlyMultiplier = 30 / daysInPeriod
 
     // Generate insights
     const insights: CategoryInsight[] = Object.values(categoryData).map(category => {
       const previousAmount = previousCategoryData[category.categoryId] || 0
-      const trendPercentage = previousAmount > 0 
-        ? ((category.totalAmount - previousAmount) / previousAmount) * 100 
-        : category.totalAmount > 0 ? 100 : 0
+      const trendPercentage =
+        previousAmount > 0
+          ? ((category.totalAmount - previousAmount) / previousAmount) * 100
+          : category.totalAmount > 0
+            ? 100
+            : 0
 
       let trend: 'up' | 'down' | 'stable'
       if (Math.abs(trendPercentage) < 5) {
@@ -549,11 +595,12 @@ export async function getCategoryInsights(
         categoryColor: category.categoryColor,
         totalAmount: category.totalAmount,
         transactionCount: category.transactionCount,
-        averageTransaction: category.transactionCount > 0 ? category.totalAmount / category.transactionCount : 0,
+        averageTransaction:
+          category.transactionCount > 0 ? category.totalAmount / category.transactionCount : 0,
         percentage: totalAmount > 0 ? (category.totalAmount / totalAmount) * 100 : 0,
         monthlyAverage: category.totalAmount * monthlyMultiplier,
         trend,
-        trendPercentage
+        trendPercentage,
       }
     })
 

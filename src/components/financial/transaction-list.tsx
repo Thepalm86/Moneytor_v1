@@ -10,13 +10,25 @@ import { formatTransactionDate } from '@/lib/utils/date'
 import { getIcon } from '@/lib/utils/icons'
 import { useTransactions, useDeleteTransaction } from '@/hooks/use-transactions'
 import { useCategories } from '@/hooks/use-categories'
-import type { Transaction, TransactionFilters, TransactionSortBy, TransactionSortOrder } from '@/lib/validations/transaction'
+import type {
+  Transaction,
+  TransactionFilters,
+  TransactionSortBy,
+  TransactionSortOrder,
+} from '@/lib/validations/transaction'
+import type { Category } from '@/lib/validations/category'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -41,10 +53,10 @@ interface TransactionListProps {
   onEditTransaction?: (transaction: Transaction) => void
 }
 
-export function TransactionList({ 
-  userId, 
-  onAddTransaction, 
-  onEditTransaction 
+export function TransactionList({
+  userId,
+  onAddTransaction,
+  onEditTransaction,
 }: TransactionListProps) {
   const [filters, setFilters] = useState<TransactionFilters>({
     type: 'all',
@@ -57,7 +69,14 @@ export function TransactionList({
 
   const { data: transactionsData, isLoading } = useTransactions(userId, filters, sortBy, sortOrder)
   const { data: categoriesData } = useCategories(userId)
-  const deleteTransaction = useDeleteTransaction()
+  const deleteMutation = useDeleteTransaction()
+
+  // Adapter to match expected interface
+  const deleteTransaction = {
+    mutate: (id: string) => deleteMutation.mutate({ id, userId }),
+    mutateAsync: (data: { id: string; userId: string }) => deleteMutation.mutateAsync(data),
+    isPending: deleteMutation.isPending,
+  }
 
   const transactions = useMemo(() => transactionsData?.data || [], [transactionsData?.data])
   const categories = categoriesData?.data || []
@@ -116,12 +135,16 @@ interface DesktopTransactionListProps {
   transactionToDelete: Transaction | null
   setTransactionToDelete: React.Dispatch<React.SetStateAction<Transaction | null>>
   transactions: Transaction[]
-  categories: any[]
+  categories: Category[]
   isLoading: boolean
-  deleteTransaction: any
+  deleteTransaction: {
+    mutate: (id: string) => void
+    mutateAsync: (data: { id: string; userId: string }) => Promise<any>
+    isPending: boolean
+  }
 }
 
-function DesktopTransactionList({ 
+function DesktopTransactionList({
   userId,
   onAddTransaction,
   onEditTransaction,
@@ -138,19 +161,18 @@ function DesktopTransactionList({
   transactions,
   categories,
   isLoading,
-  deleteTransaction
+  deleteTransaction,
 }: DesktopTransactionListProps) {
-
   const handleFilterChange = (key: keyof TransactionFilters, value: string) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value === 'all' ? undefined : value
+      [key]: value === 'all' ? undefined : value,
     }))
   }
 
   const handleSort = (newSortBy: TransactionSortBy) => {
     if (sortBy === newSortBy) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortBy(newSortBy)
       setSortOrder('desc')
@@ -175,7 +197,7 @@ function DesktopTransactionList({
 
   const groupedTransactions = useMemo(() => {
     const groups: { [key: string]: Transaction[] } = {}
-    
+
     transactions.forEach(transaction => {
       const date = format(new Date(transaction.date), 'yyyy-MM-dd')
       if (!groups[date]) {
@@ -184,9 +206,7 @@ function DesktopTransactionList({
       groups[date].push(transaction)
     })
 
-    return Object.entries(groups).sort(([a], [b]) => 
-      new Date(b).getTime() - new Date(a).getTime()
-    )
+    return Object.entries(groups).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
   }, [transactions])
 
   if (isLoading) {
@@ -194,7 +214,7 @@ function DesktopTransactionList({
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
             <p className="mt-4 text-gray-600">Loading transactions...</p>
           </div>
         </CardContent>
@@ -205,14 +225,14 @@ function DesktopTransactionList({
   return (
     <div className="space-y-6">
       {/* Header with Add Button */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Transactions</h2>
           <p className="text-gray-600">Manage your income and expenses</p>
         </div>
         {onAddTransaction && (
           <Button onClick={onAddTransaction}>
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Transaction
           </Button>
         )}
@@ -221,14 +241,14 @@ function DesktopTransactionList({
       {/* Filters and Search */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="Search transactions..."
                 value={filters.search || ''}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={e => handleFilterChange('search', e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -236,7 +256,7 @@ function DesktopTransactionList({
             {/* Type Filter */}
             <Select
               value={filters.type || 'all'}
-              onValueChange={(value) => handleFilterChange('type', value)}
+              onValueChange={value => handleFilterChange('type', value)}
             >
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue />
@@ -251,14 +271,14 @@ function DesktopTransactionList({
             {/* Category Filter */}
             <Select
               value={filters.categoryId || 'all'}
-              onValueChange={(value) => handleFilterChange('categoryId', value)}
+              onValueChange={value => handleFilterChange('categoryId', value)}
             >
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
+                {categories.map(category => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
@@ -270,7 +290,7 @@ function DesktopTransactionList({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-auto">
-                  <ArrowUpDown className="w-4 h-4 mr-2" />
+                  <ArrowUpDown className="mr-2 h-4 w-4" />
                   Sort
                 </Button>
               </DropdownMenuTrigger>
@@ -297,18 +317,18 @@ function DesktopTransactionList({
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="w-8 h-8 text-gray-400" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                <Plus className="h-8 w-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No transactions found</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">No transactions found</h3>
+              <p className="mb-4 text-gray-600">
                 {filters.search || filters.type !== 'all' || filters.categoryId
                   ? 'Try adjusting your filters or search terms'
                   : 'Start by adding your first transaction'}
               </p>
               {onAddTransaction && (
                 <Button onClick={onAddTransaction}>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="mr-2 h-4 w-4" />
                   Add Transaction
                 </Button>
               )}
@@ -319,11 +339,11 @@ function DesktopTransactionList({
         <div className="space-y-6">
           {groupedTransactions.map(([date, dateTransactions]) => (
             <div key={date}>
-              <h3 className="text-sm font-semibold text-gray-500 mb-3">
+              <h3 className="mb-3 text-sm font-semibold text-gray-500">
                 {formatTransactionDate(new Date(date))}
               </h3>
               <div className="space-y-2">
-                {dateTransactions.map((transaction) => (
+                {dateTransactions.map(transaction => (
                   <TransactionCard
                     key={transaction.id}
                     transaction={transaction}
@@ -347,10 +367,7 @@ function DesktopTransactionList({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
             <Button
@@ -379,25 +396,23 @@ function TransactionCard({ transaction, onEdit, onDelete }: TransactionCardProps
   const IconComponent = getIcon(category?.icon || null)
 
   return (
-    <Card className="hover:shadow-sm transition-shadow">
+    <Card className="transition-shadow hover:shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {category && (
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center"
+                className="flex h-10 w-10 items-center justify-center rounded-full"
                 style={{ backgroundColor: category.color }}
               >
-                <IconComponent className="w-5 h-5 text-white" />
+                <IconComponent className="h-5 w-5 text-white" />
               </div>
             )}
             <div>
               <h4 className="font-semibold text-gray-900">
                 {transaction.description || 'No description'}
               </h4>
-              <p className="text-sm text-gray-500">
-                {category?.name || 'No category'}
-              </p>
+              <p className="text-sm text-gray-500">{category?.name || 'No category'}</p>
             </div>
           </div>
 
@@ -405,8 +420,8 @@ function TransactionCard({ transaction, onEdit, onDelete }: TransactionCardProps
             <div className="text-right">
               <div
                 className={cn(
-                  "font-semibold",
-                  transaction.type === 'income' ? "text-green-600" : "text-red-600"
+                  'font-semibold',
+                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                 )}
               >
                 {transaction.type === 'income' ? '+' : '-'}
@@ -415,10 +430,10 @@ function TransactionCard({ transaction, onEdit, onDelete }: TransactionCardProps
               <Badge
                 variant={transaction.type === 'income' ? 'default' : 'secondary'}
                 className={cn(
-                  "text-xs",
+                  'text-xs',
                   transaction.type === 'income'
-                    ? "bg-green-100 text-green-800 hover:bg-green-100"
-                    : "bg-red-100 text-red-800 hover:bg-red-100"
+                    ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                    : 'bg-red-100 text-red-800 hover:bg-red-100'
                 )}
               >
                 {transaction.type}
@@ -428,22 +443,19 @@ function TransactionCard({ transaction, onEdit, onDelete }: TransactionCardProps
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <ArrowUpDown className="w-4 h-4" />
+                  <ArrowUpDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {onEdit && (
                   <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
-                  <DropdownMenuItem
-                    onClick={() => onDelete(transaction)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                  <DropdownMenuItem onClick={() => onDelete(transaction)} className="text-red-600">
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
                 )}

@@ -4,27 +4,31 @@ import { useState } from 'react'
 import {
   Share2,
   Users,
-  Heart,
+  Heart as _Heart,
   MessageCircle,
   Lock,
   Globe,
   UserCheck,
   Trophy,
-  TrendingUp,
-  Target,
+  TrendingUp as _TrendingUp,
+  Target as _Target,
   Copy,
-  Bell,
+  Bell as _Bell,
 } from 'lucide-react'
-import { format } from 'date-fns'
+import { format as _format } from 'date-fns'
 
 import { cn } from '@/lib/utils'
 import type { GoalWithProgress } from '@/lib/validations/goal'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Progress } from '@/components/ui/progress'
+import { Badge as _Badge } from '@/components/ui/badge'
+import {
+  Avatar as _Avatar,
+  AvatarFallback as _AvatarFallback,
+  AvatarImage as _AvatarImage,
+} from '@/components/ui/avatar'
+import { Progress as _Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -57,7 +61,7 @@ interface ShareOptions {
   customMessage?: string
 }
 
-interface SocialPost {
+interface _SocialPost {
   id: string
   userId: string
   userName: string
@@ -74,7 +78,7 @@ interface SocialPost {
   hasLiked: boolean
 }
 
-interface AccountabilityPartner {
+interface _AccountabilityPartner {
   id: string
   name: string
   avatar?: string
@@ -85,7 +89,7 @@ interface AccountabilityPartner {
   encouragementReceived: number
 }
 
-interface CommunityChallenge {
+interface _CommunityChallenge {
   id: string
   title: string
   description: string
@@ -121,17 +125,18 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
     toast.success('Goal shared successfully!')
   }
 
-  const handleLike = (postId: string) => {
-    setSocialPosts(posts => posts.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            hasLiked: !post.hasLiked,
-            likes: post.hasLiked ? post.likes - 1 : post.likes + 1 
-          }
-        : post
-    ))
-  }
+  // TODO: Implement social posts functionality
+  // const handleLike = (postId: string) => {
+  //   setSocialPosts(posts => posts.map(post =>
+  //     post.id === postId
+  //       ? {
+  //           ...post,
+  //           hasLiked: !post.hasLiked,
+  //           likes: post.hasLiked ? post.likes - 1 : post.likes + 1
+  //         }
+  //       : post
+  //   ))
+  // }
 
   const generateShareLink = () => {
     const link = `${window.location.origin}/goals/shared/${goal.id}`
@@ -142,13 +147,13 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
   return (
     <div className={cn('space-y-6', className)}>
       {/* Social Features Header */}
-      <Card className="border-0 bg-gradient-to-br from-pink-50 to-purple-100 relative overflow-hidden">
+      <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-pink-50 to-purple-100">
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm" />
         <CardContent className="relative p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
-                <Share2 className="w-6 h-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-purple-600">
+                <Share2 className="h-6 w-6 text-white" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900">Social Goals</h3>
@@ -159,7 +164,7 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
               onClick={() => setShareModalOpen(true)}
               className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
             >
-              <Share2 className="w-4 h-4 mr-2" />
+              <Share2 className="mr-2 h-4 w-4" />
               Share Goal
             </Button>
           </div>
@@ -196,8 +201,9 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
             <CardContent className="p-8 text-center">
               <MessageCircle className="mx-auto mb-4 h-12 w-12 text-gray-400" />
               <h3 className="mb-2 text-lg font-semibold text-gray-900">No Activity Yet</h3>
-              <p className="text-gray-600 mb-4">
-                Social features are coming soon! Share your goals and get encouragement from friends.
+              <p className="mb-4 text-gray-600">
+                Social features are coming soon! Share your goals and get encouragement from
+                friends.
               </p>
             </CardContent>
           </Card>
@@ -208,18 +214,19 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserCheck className="w-5 h-5" />
+                <UserCheck className="h-5 w-5" />
                 Accountability Partners
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="py-8 text-center">
+                <Users className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">
                   Find Accountability Partners
                 </h3>
-                <p className="text-gray-600 mb-4">
-                  Connect with friends to stay motivated and support each other. Feature coming soon!
+                <p className="mb-4 text-gray-600">
+                  Connect with friends to stay motivated and support each other. Feature coming
+                  soon!
                 </p>
                 <Button variant="outline" disabled>
                   Invite Friends (Coming Soon)
@@ -234,9 +241,12 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
           <Card>
             <CardContent className="p-8 text-center">
               <Trophy className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-              <h3 className="mb-2 text-lg font-semibold text-gray-900">Community Challenges Coming Soon</h3>
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">
+                Community Challenges Coming Soon
+              </h3>
               <p className="text-gray-600">
-                Join savings challenges with other users and compete for rewards. This feature is under development.
+                Join savings challenges with other users and compete for rewards. This feature is
+                under development.
               </p>
             </CardContent>
           </Card>
@@ -257,7 +267,7 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
                   </div>
                   <Switch defaultChecked />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Show Progress</h4>
@@ -265,7 +275,7 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
                   </div>
                   <Switch defaultChecked />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Show Amount</h4>
@@ -273,7 +283,7 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
                   </div>
                   <Switch />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Allow Encouragement</h4>
@@ -285,7 +295,7 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
 
               <div className="border-t pt-4">
                 <Button onClick={generateShareLink} variant="outline" className="w-full">
-                  <Copy className="w-4 h-4 mr-2" />
+                  <Copy className="mr-2 h-4 w-4" />
                   Copy Share Link
                 </Button>
               </div>
@@ -306,10 +316,10 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Privacy Level</label>
+              <label className="mb-2 block text-sm font-medium">Privacy Level</label>
               <Select
                 value={shareOptions.privacy}
-                onValueChange={(value: 'public' | 'friends' | 'private') => 
+                onValueChange={(value: 'public' | 'friends' | 'private') =>
                   setShareOptions(prev => ({ ...prev, privacy: value }))
                 }
               >
@@ -317,10 +327,10 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {privacyOptions.map((option) => (
+                  {privacyOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
                       <div className="flex items-center gap-2">
-                        <option.icon className="w-4 h-4" />
+                        <option.icon className="h-4 w-4" />
                         <div>
                           <div className="font-medium">{option.label}</div>
                           <div className="text-xs text-gray-500">{option.description}</div>
@@ -337,17 +347,17 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
                 <label className="text-sm font-medium">Include Progress</label>
                 <Switch
                   checked={shareOptions.includeProgress}
-                  onCheckedChange={(checked) =>
+                  onCheckedChange={checked =>
                     setShareOptions(prev => ({ ...prev, includeProgress: checked }))
                   }
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Include Amount</label>
                 <Switch
                   checked={shareOptions.includeAmount}
-                  onCheckedChange={(checked) =>
+                  onCheckedChange={checked =>
                     setShareOptions(prev => ({ ...prev, includeAmount: checked }))
                   }
                 />
@@ -355,11 +365,11 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Custom Message (Optional)</label>
+              <label className="mb-2 block text-sm font-medium">Custom Message (Optional)</label>
               <Textarea
                 placeholder="Add a personal message about your goal..."
                 value={shareOptions.customMessage || ''}
-                onChange={(e) =>
+                onChange={e =>
                   setShareOptions(prev => ({ ...prev, customMessage: e.target.value }))
                 }
                 className="min-h-[80px]"
@@ -370,10 +380,7 @@ export function GoalSocialFeatures({ goal, onShare, className }: GoalSocialFeatu
               <Button onClick={handleShare} className="flex-1">
                 Share Goal
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShareModalOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setShareModalOpen(false)}>
                 Cancel
               </Button>
             </div>

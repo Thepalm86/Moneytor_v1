@@ -2,7 +2,7 @@
  * Settings and preferences types for Moneytor V2
  */
 
-import type { Currency } from '@/lib/utils/currency'
+import type { Currency as _Currency } from '@/lib/utils/currency'
 import type { UserProfile } from './supabase'
 
 export interface UserSettings {
@@ -11,13 +11,13 @@ export interface UserSettings {
   dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD'
   numberFormat: 'US' | 'EU' | 'UK'
   timezone: string
-  
+
   // App Preferences
   theme: 'light' | 'dark' | 'system'
   defaultTransactionType: 'income' | 'expense'
   dashboardLayout: 'compact' | 'comfortable' | 'detailed'
   startOfWeek: 'monday' | 'sunday'
-  
+
   // Notifications
   budgetAlerts: boolean
   goalMilestones: boolean
@@ -25,14 +25,14 @@ export interface UserSettings {
   pushNotifications: boolean
   weeklyReports: boolean
   monthlyReports: boolean
-  
+
   // Privacy & Security
   dataRetentionDays: number
   analyticsConsent: boolean
   marketingConsent: boolean
   twoFactorEnabled: boolean
   sessionTimeout: number // minutes
-  
+
   // Advanced
   autoCategorizationEnabled: boolean
   duplicateDetectionEnabled: boolean
@@ -47,7 +47,7 @@ export interface UserPreferences extends UserSettings {
   updatedAt: string
 }
 
-export type SettingsCategory = 
+export type SettingsCategory =
   | 'currency'
   | 'profile'
   | 'preferences'

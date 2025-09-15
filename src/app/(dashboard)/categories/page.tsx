@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import {
-  ResponsiveModal,
   ResponsiveModalContent,
   ResponsiveModalDescription,
   ResponsiveModalFooter,
@@ -108,11 +107,11 @@ export default function CategoriesPage() {
   const headerIncomeCategories = categoriesWithStats.filter(cat => cat.type === 'income')
   const headerExpenseCategories = categoriesWithStats.filter(cat => cat.type === 'expense')
   const totalIncomeAmount = headerIncomeCategories.reduce(
-    (sum, cat) => sum + ((cat as any).total_amount || 0),
+    (sum, cat) => sum + (cat.total_amount || 0),
     0
   )
   const totalExpenseAmount = headerExpenseCategories.reduce(
-    (sum, cat) => sum + ((cat as any).total_amount || 0),
+    (sum, cat) => sum + (cat.total_amount || 0),
     0
   )
 
@@ -349,7 +348,11 @@ export default function CategoriesPage() {
             </ResponsiveModalDescription>
           </ResponsiveModalHeader>
           <ResponsiveModalFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="w-full lg:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="w-full lg:w-auto"
+            >
               Cancel
             </Button>
             <Button
@@ -366,7 +369,10 @@ export default function CategoriesPage() {
 
       {/* Create Category Modal - Form Modal for mobile optimization */}
       <FormModal open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <ResponsiveModalContent mobileVariant="form" className="max-h-[85vh] max-w-3xl overflow-y-auto">
+        <ResponsiveModalContent
+          mobileVariant="form"
+          className="max-h-[85vh] max-w-3xl overflow-y-auto"
+        >
           <ResponsiveModalHeader showMobileClose={true} mobileVariant="form">
             <ResponsiveModalTitle className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
               Create New Category
@@ -389,7 +395,10 @@ export default function CategoriesPage() {
 
       {/* Edit Category Modal - Form Modal for mobile optimization */}
       <FormModal open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <ResponsiveModalContent mobileVariant="form" className="max-h-[85vh] max-w-3xl overflow-y-auto">
+        <ResponsiveModalContent
+          mobileVariant="form"
+          className="max-h-[85vh] max-w-3xl overflow-y-auto"
+        >
           <ResponsiveModalHeader showMobileClose={true} mobileVariant="form">
             <ResponsiveModalTitle className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               Edit Category

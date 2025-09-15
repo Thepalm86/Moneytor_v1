@@ -29,10 +29,11 @@ import {
   X,
   Plus,
   Zap,
-  User,
+  User as UserIcon,
   LogOut,
   Loader2,
   ChevronDown,
+  TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { navigationThemeColors } from '@/lib/utils/page-themes'
@@ -218,7 +219,7 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
       current: pathname === '/transactions',
     },
     {
-      name: 'Analytics', 
+      name: 'Analytics',
       href: '/analytics',
       icon: BarChart3,
       current: pathname === '/analytics',
@@ -270,27 +271,27 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex items-center justify-between border-b border-gray-200/30 bg-gradient-to-br from-emerald-600 via-blue-600 to-indigo-700 px-6 py-6 relative overflow-hidden">
+          <div className="relative flex items-center justify-between overflow-hidden border-b border-gray-200/30 bg-gradient-to-br from-emerald-600 via-blue-600 to-indigo-700 px-6 py-6">
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10"></div>
-            <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-white/5 blur-xl"></div>
+            <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/5 blur-xl"></div>
             <div className="absolute -bottom-2 -left-2 h-12 w-12 rounded-full bg-white/5 blur-lg"></div>
-            
-            <div className="flex items-center relative z-10">
-              <div className="mr-4 relative">
+
+            <div className="relative z-10 flex items-center">
+              <div className="relative mr-4">
                 {/* Enhanced icon container with premium styling */}
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-white/25 to-white/10 border border-white/20 shadow-xl backdrop-blur-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-gradient-to-br from-white/25 to-white/10 shadow-xl backdrop-blur-sm">
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent"></div>
-                  <span className="text-2xl relative z-10 drop-shadow-sm">💰</span>
+                  <TrendingUp className="relative z-10 h-6 w-6 text-white drop-shadow-sm" />
                 </div>
                 {/* Glow effect */}
-                <div className="absolute -inset-2 rounded-xl bg-white/20 blur-md opacity-50"></div>
+                <div className="absolute -inset-2 rounded-xl bg-white/20 opacity-50 blur-md"></div>
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white tracking-tight drop-shadow-sm">
+                <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-sm">
                   Moneytor
                 </h1>
-                <p className="text-xs text-emerald-100/90 font-medium tracking-wide uppercase">
+                <p className="text-xs font-medium uppercase tracking-wide text-emerald-100/90">
                   Financial Intelligence
                 </p>
               </div>
@@ -299,14 +300,14 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
             {/* Close button for mobile */}
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="rounded-xl p-2.5 text-white/80 transition-all duration-200 hover:bg-white/15 hover:text-white hover:scale-105 lg:hidden relative z-10 border border-white/10"
+              className="relative z-10 rounded-xl border border-white/10 p-2.5 text-white/80 transition-all duration-200 hover:scale-105 hover:bg-white/15 hover:text-white lg:hidden"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-2 px-4 py-4 overflow-y-auto min-h-0">
+          <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4">
             {navigation.map((item, index) => {
               const IconComponent = item.icon
               const pageTheme =
@@ -391,10 +392,10 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
           <div className="sticky bottom-0 mt-auto border-t border-gray-200/30 bg-gradient-to-b from-gray-50/40 to-gray-50/60 px-4 py-4 backdrop-blur-md">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="group w-full flex items-center justify-between rounded-2xl bg-gradient-to-r from-white/70 to-white/50 p-4 transition-all duration-300 hover:from-white/90 hover:to-white/70 hover:shadow-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                <button className="group flex w-full items-center justify-between rounded-2xl border border-white/20 bg-gradient-to-r from-white/70 to-white/50 p-4 transition-all duration-300 hover:from-white/90 hover:to-white/70 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                   <div className="flex min-w-0 flex-1 items-center">
-                    <div className="mr-3 relative">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 via-blue-500 to-indigo-600 shadow-lg border border-white/20">
+                    <div className="relative mr-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-gradient-to-br from-emerald-500 via-blue-500 to-indigo-600 shadow-lg">
                         <span className="text-sm font-bold text-white drop-shadow-sm">
                           {(user.user_metadata?.full_name || user.email?.split('@')[0] || 'U')
                             .charAt(0)
@@ -402,23 +403,19 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
                         </span>
                       </div>
                       {/* Subtle glow effect */}
-                      <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-emerald-400/20 to-blue-400/20 blur-sm opacity-60"></div>
+                      <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-emerald-400/20 to-blue-400/20 opacity-60 blur-sm"></div>
                     </div>
                     <div className="min-w-0 flex-1 text-left">
                       <p className="truncate text-sm font-semibold text-gray-900">
                         {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="truncate text-xs text-gray-600 font-medium">{user.email}</p>
+                      <p className="truncate text-xs font-medium text-gray-600">{user.email}</p>
                     </div>
                   </div>
-                  <ChevronDown className="ml-3 h-4 w-4 text-gray-500 group-hover:text-gray-700 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  <ChevronDown className="ml-3 h-4 w-4 text-gray-500 transition-transform duration-200 group-hover:text-gray-700 group-data-[state=open]:rotate-180" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
-                className="w-64 mb-2 mr-4"
-                side="top"
-              >
+              <DropdownMenuContent align="end" className="mb-2 mr-4 w-64" side="top">
                 <DropdownMenuLabel className="font-medium">
                   <div className="flex items-center space-x-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 via-blue-500 to-indigo-600">
@@ -428,18 +425,18 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
                           .toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-gray-900">
                         {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="text-xs text-gray-600 truncate">{user.email}</p>
+                      <p className="truncate text-xs text-gray-600">{user.email}</p>
                     </div>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
+                    <UserIcon className="mr-2 h-4 w-4" />
                     Profile & Account
                   </Link>
                 </DropdownMenuItem>
@@ -453,7 +450,7 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
                 <DropdownMenuItem
                   onClick={handleSignOut}
                   disabled={isSigningOut}
-                  className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50"
+                  className="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 focus:bg-red-50 focus:text-red-700"
                 >
                   {isSigningOut ? (
                     <>
@@ -486,7 +483,7 @@ export function DashboardWrapper({ children, initialUser }: DashboardWrapperProp
       {/* Main content */}
       <div className="lg:ml-64">
         <GamificationProvider>
-          <div className="p-4 pt-20 pb-24 lg:p-8 lg:pt-8 lg:pb-8">{children}</div>
+          <div className="p-4 pb-24 pt-20 lg:p-8 lg:pb-8 lg:pt-8">{children}</div>
           <DashboardCelebrations />
         </GamificationProvider>
       </div>

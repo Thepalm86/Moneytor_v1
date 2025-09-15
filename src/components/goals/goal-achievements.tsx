@@ -4,13 +4,13 @@ import { useState } from 'react'
 import {
   Trophy,
   Star,
-  Flame,
+  Flame as _Flame,
   Target,
   TrendingUp,
-  Award,
+  Award as _Award,
   Medal,
   Crown,
-  Zap,
+  Zap as _Zap,
   Sparkles,
   CheckCircle2,
   Lock,
@@ -27,7 +27,7 @@ import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
+  DialogHeader as _DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
@@ -67,7 +67,7 @@ interface GoalAchievementsProps {
 
 const tierColors = {
   bronze: 'from-amber-600 to-amber-800',
-  silver: 'from-slate-400 to-slate-600', 
+  silver: 'from-slate-400 to-slate-600',
   gold: 'from-yellow-400 to-yellow-600',
   platinum: 'from-purple-400 to-purple-600',
 }
@@ -81,7 +81,7 @@ const rarityColors = {
 
 export function GoalAchievements({ goals }: GoalAchievementsProps) {
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null)
-  const [showCelebration, setShowCelebration] = useState<Achievement | null>(null)
+  const [showCelebration, _setShowCelebration] = useState<Achievement | null>(null)
 
   // Calculate achievement progress
   const achievements = calculateAchievements(goals)
@@ -106,10 +106,10 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
       <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-500/10 to-purple-600/10 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm" />
         <CardContent className="relative p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-600">
+                <Trophy className="h-6 w-6 text-white" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900">Achievement Center</h3>
@@ -118,17 +118,21 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-purple-600">{totalPoints}</div>
-              <div className="text-xs text-gray-600 uppercase tracking-wide">Achievement Points</div>
+              <div className="text-xs uppercase tracking-wide text-gray-600">
+                Achievement Points
+              </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-lg font-bold text-green-600">{unlockedAchievements.length}</div>
               <div className="text-xs text-gray-600">Unlocked</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-blue-600">{achievements.length - unlockedAchievements.length}</div>
+              <div className="text-lg font-bold text-blue-600">
+                {achievements.length - unlockedAchievements.length}
+              </div>
               <div className="text-xs text-gray-600">Locked</div>
             </div>
             <div className="text-center">
@@ -142,8 +146,8 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
       </Card>
 
       {/* Achievement Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {achievements.map((achievement) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {achievements.map(achievement => (
           <AchievementCard
             key={achievement.id}
             achievement={achievement}
@@ -157,7 +161,7 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Sparkles className="w-5 h-5 text-yellow-500" />
+              <Sparkles className="h-5 w-5 text-yellow-500" />
               Recent Achievements
             </CardTitle>
           </CardHeader>
@@ -166,16 +170,18 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
               {unlockedAchievements
                 .sort((a, b) => (b.unlockedAt?.getTime() || 0) - (a.unlockedAt?.getTime() || 0))
                 .slice(0, 3)
-                .map((achievement) => (
+                .map(achievement => (
                   <div
                     key={achievement.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-blue-50 border border-green-100"
+                    className="flex items-center gap-3 rounded-lg border border-green-100 bg-gradient-to-r from-green-50 to-blue-50 p-3"
                   >
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${tierColors[achievement.tier]} flex items-center justify-center`}>
-                      <achievement.icon className="w-5 h-5 text-white" />
+                    <div
+                      className={`h-10 w-10 rounded-full bg-gradient-to-br ${tierColors[achievement.tier]} flex items-center justify-center`}
+                    >
+                      <achievement.icon className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-sm text-gray-900">{achievement.title}</h4>
+                      <h4 className="text-sm font-semibold text-gray-900">{achievement.title}</h4>
                       <p className="text-xs text-gray-600">
                         {achievement.unlockedAt && format(achievement.unlockedAt, 'MMM d, yyyy')}
                       </p>
@@ -194,22 +200,26 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
       <Dialog open={!!selectedAchievement} onOpenChange={() => setSelectedAchievement(null)}>
         <DialogContent className="sm:max-w-md">
           {selectedAchievement && (
-            <div className="text-center space-y-4">
-              <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${tierColors[selectedAchievement.tier]} flex items-center justify-center`}>
-                <selectedAchievement.icon className="w-10 h-10 text-white" />
+            <div className="space-y-4 text-center">
+              <div
+                className={`mx-auto h-20 w-20 rounded-full bg-gradient-to-br ${tierColors[selectedAchievement.tier]} flex items-center justify-center`}
+              >
+                <selectedAchievement.icon className="h-10 w-10 text-white" />
               </div>
-              
+
               <div>
                 <DialogTitle className="text-xl font-bold text-gray-900">
                   {selectedAchievement.title}
                 </DialogTitle>
-                <DialogDescription className="text-gray-600 mt-2">
+                <DialogDescription className="mt-2 text-gray-600">
                   {selectedAchievement.description}
                 </DialogDescription>
               </div>
 
               <div className="flex items-center justify-center gap-4">
-                <Badge className={`${tierColors[selectedAchievement.tier]} border-0 text-white px-3 py-1`}>
+                <Badge
+                  className={`${tierColors[selectedAchievement.tier]} border-0 px-3 py-1 text-white`}
+                >
                   {selectedAchievement.tier.toUpperCase()}
                 </Badge>
                 <Badge variant="outline" className="px-3 py-1">
@@ -217,7 +227,7 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
                 </Badge>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="space-y-2 rounded-lg bg-gray-50 p-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Achievement Points</span>
                   <span className="font-bold text-purple-600">+{selectedAchievement.points}</span>
@@ -243,27 +253,21 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+            className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
           >
-            <div className="text-center space-y-4">
+            <div className="space-y-4 text-center">
               <motion.div
                 animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
                 transition={{ duration: 1, repeat: 2 }}
-                className={`w-32 h-32 mx-auto rounded-full bg-gradient-to-br ${tierColors[showCelebration.tier]} flex items-center justify-center shadow-2xl`}
+                className={`mx-auto h-32 w-32 rounded-full bg-gradient-to-br ${tierColors[showCelebration.tier]} flex items-center justify-center shadow-2xl`}
               >
-                <showCelebration.icon className="w-16 h-16 text-white" />
+                <showCelebration.icon className="h-16 w-16 text-white" />
               </motion.div>
-              
-              <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Achievement Unlocked! 🎉
-                </h2>
-                <p className="text-lg font-semibold text-purple-600">
-                  {showCelebration.title}
-                </p>
-                <p className="text-sm text-gray-600 mt-2">
-                  +{showCelebration.points} points
-                </p>
+
+              <div className="rounded-2xl bg-white/95 p-6 shadow-2xl backdrop-blur-sm">
+                <h2 className="mb-2 text-2xl font-bold text-gray-900">Achievement Unlocked! 🎉</h2>
+                <p className="text-lg font-semibold text-purple-600">{showCelebration.title}</p>
+                <p className="mt-2 text-sm text-gray-600">+{showCelebration.points} points</p>
               </div>
             </div>
           </motion.div>
@@ -273,14 +277,14 @@ export function GoalAchievements({ goals }: GoalAchievementsProps) {
   )
 }
 
-function AchievementCard({ 
-  achievement, 
-  onClick 
-}: { 
+function AchievementCard({
+  achievement,
+  onClick,
+}: {
   achievement: Achievement
-  onClick: () => void 
+  onClick: () => void
 }) {
-  const progressPercentage = achievement.current 
+  const progressPercentage = achievement.current
     ? Math.min((achievement.current / achievement.requirement) * 100, 100)
     : 0
 
@@ -289,7 +293,7 @@ function AchievementCard({
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        'relative overflow-hidden rounded-xl border-2 cursor-pointer transition-all duration-200',
+        'relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200',
         achievement.isUnlocked
           ? `${rarityColors[achievement.rarity]} shadow-md hover:shadow-lg`
           : 'border-gray-200 bg-gray-50/50 opacity-60',
@@ -297,39 +301,43 @@ function AchievementCard({
       )}
       onClick={onClick}
     >
-      <div className="p-4 space-y-3">
+      <div className="space-y-3 p-4">
         {/* Achievement Icon & Status */}
         <div className="flex items-center justify-between">
-          <div className={cn(
-            'w-12 h-12 rounded-full flex items-center justify-center transition-all',
-            achievement.isUnlocked
-              ? `bg-gradient-to-br ${tierColors[achievement.tier]} shadow-md`
-              : 'bg-gray-200'
-          )}>
+          <div
+            className={cn(
+              'flex h-12 w-12 items-center justify-center rounded-full transition-all',
+              achievement.isUnlocked
+                ? `bg-gradient-to-br ${tierColors[achievement.tier]} shadow-md`
+                : 'bg-gray-200'
+            )}
+          >
             {achievement.isUnlocked ? (
-              <achievement.icon className="w-6 h-6 text-white" />
+              <achievement.icon className="h-6 w-6 text-white" />
             ) : (
-              <Lock className="w-6 h-6 text-gray-400" />
+              <Lock className="h-6 w-6 text-gray-400" />
             )}
           </div>
-          
-          {achievement.isUnlocked && (
-            <CheckCircle2 className="w-5 h-5 text-green-500" />
-          )}
+
+          {achievement.isUnlocked && <CheckCircle2 className="h-5 w-5 text-green-500" />}
         </div>
 
         {/* Achievement Info */}
         <div className="space-y-1">
-          <h3 className={cn(
-            'font-semibold text-sm leading-tight',
-            achievement.isUnlocked ? 'text-gray-900' : 'text-gray-500'
-          )}>
+          <h3
+            className={cn(
+              'text-sm font-semibold leading-tight',
+              achievement.isUnlocked ? 'text-gray-900' : 'text-gray-500'
+            )}
+          >
             {achievement.title}
           </h3>
-          <p className={cn(
-            'text-xs leading-relaxed',
-            achievement.isUnlocked ? 'text-gray-600' : 'text-gray-400'
-          )}>
+          <p
+            className={cn(
+              'text-xs leading-relaxed',
+              achievement.isUnlocked ? 'text-gray-600' : 'text-gray-400'
+            )}
+          >
             {achievement.description}
           </p>
         </div>
@@ -341,9 +349,7 @@ function AchievementCard({
               <span className="text-gray-500">
                 {achievement.current}/{achievement.requirement}
               </span>
-              <span className="text-gray-500">
-                {Math.round(progressPercentage)}%
-              </span>
+              <span className="text-gray-500">{Math.round(progressPercentage)}%</span>
             </div>
             <Progress value={progressPercentage} className="h-2" />
           </div>
@@ -351,21 +357,23 @@ function AchievementCard({
 
         {/* Tier & Points */}
         <div className="flex items-center justify-between pt-1">
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={cn(
-              'text-xs px-2 py-0.5',
-              achievement.isUnlocked 
+              'px-2 py-0.5 text-xs',
+              achievement.isUnlocked
                 ? `border-${achievement.tier === 'gold' ? 'yellow' : achievement.tier === 'platinum' ? 'purple' : achievement.tier === 'silver' ? 'slate' : 'amber'}-300`
                 : 'border-gray-300 text-gray-400'
             )}
           >
             {achievement.tier}
           </Badge>
-          <span className={cn(
-            'text-xs font-medium',
-            achievement.isUnlocked ? 'text-purple-600' : 'text-gray-400'
-          )}>
+          <span
+            className={cn(
+              'text-xs font-medium',
+              achievement.isUnlocked ? 'text-purple-600' : 'text-gray-400'
+            )}
+          >
             {achievement.points}pts
           </span>
         </div>
@@ -373,7 +381,7 @@ function AchievementCard({
 
       {/* Rarity Glow Effect */}
       {achievement.isUnlocked && achievement.rarity === 'legendary' && (
-        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-transparent to-yellow-400/20 animate-pulse" />
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-yellow-400/20 via-transparent to-yellow-400/20" />
       )}
     </motion.div>
   )
@@ -494,17 +502,20 @@ function calculateAchievements(goals: GoalWithProgress[]): Achievement[] {
       type: 'speed',
       tier: 'gold',
       requirement: 30,
-      current: completedGoals.length > 0 ? Math.min(
-        ...completedGoals.map(g => 
-          differenceInDays(new Date(), new Date(g.created_at))
-        )
-      ) : undefined,
-      isUnlocked: completedGoals.some(g => 
-        differenceInDays(new Date(), new Date(g.created_at)) <= 30
+      current:
+        completedGoals.length > 0
+          ? Math.min(
+              ...completedGoals.map(g => differenceInDays(new Date(), new Date(g.created_at)))
+            )
+          : undefined,
+      isUnlocked: completedGoals.some(
+        g => differenceInDays(new Date(), new Date(g.created_at)) <= 30
       ),
-      unlockedAt: completedGoals.some(g => 
-        differenceInDays(new Date(), new Date(g.created_at)) <= 30
-      ) ? new Date() : undefined,
+      unlockedAt: completedGoals.some(
+        g => differenceInDays(new Date(), new Date(g.created_at)) <= 30
+      )
+        ? new Date()
+        : undefined,
       rarity: 'epic',
       points: 250,
     },

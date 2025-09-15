@@ -1,14 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, TrendingUp, TrendingDown, BarChart3, ArrowUpDown, ArrowRight } from 'lucide-react'
+import {
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  ArrowUpDown,
+  ArrowRight,
+} from 'lucide-react'
 import { format } from 'date-fns'
 import { useCurrency } from '@/contexts/currency-context'
 import { usePeriodComparison } from '@/hooks/use-period-comparison'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { DateRange } from '@/lib/supabase/analytics'
 
@@ -37,36 +50,32 @@ function ComparisonMetric({
   percentChange,
   isPositive,
   icon,
-  subtitle
+  subtitle,
 }: ComparisonMetricProps) {
   const { formatCurrency } = useCurrency()
   const isIncrease = change >= 0
-  const isGoodChange = isPositive !== undefined ? (isPositive ? isIncrease : !isIncrease) : isIncrease
+  const isGoodChange =
+    isPositive !== undefined ? (isPositive ? isIncrease : !isIncrease) : isIncrease
 
   return (
     <Card className="glass-card border-premium interactive-card">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <div className="p-2 rounded-full bg-muted/50">
-          {icon}
-        </div>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <div className="rounded-full bg-muted/50 p-2">{icon}</div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-foreground">
-              {formatCurrency(currentValue)}
-            </div>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            )}
+            <div className="text-2xl font-bold text-foreground">{formatCurrency(currentValue)}</div>
+            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Badge variant={isGoodChange ? 'default' : 'destructive'} className="flex items-center gap-1">
+              <Badge
+                variant={isGoodChange ? 'default' : 'destructive'}
+                className="flex items-center gap-1"
+              >
                 {isIncrease ? (
                   <TrendingUp className="h-3 w-3" />
                 ) : (
@@ -80,7 +89,7 @@ function ComparisonMetric({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-border/50">
+          <div className="border-t border-border/50 pt-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Previous:</span>
               <span className="font-medium">{formatCurrency(previousValue)}</span>
@@ -98,21 +107,25 @@ interface PeriodSelectorProps {
   onComparisonTypeChange: (type: 'previous' | 'year-over-year') => void
 }
 
-function PeriodSelector({ currentPeriod, comparisonType, onComparisonTypeChange }: PeriodSelectorProps) {
+function PeriodSelector({
+  currentPeriod,
+  comparisonType,
+  onComparisonTypeChange,
+}: PeriodSelectorProps) {
   return (
-    <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/20">
+    <div className="flex items-center gap-4 rounded-lg border bg-muted/20 p-4">
       <div className="flex items-center gap-2">
         <Calendar className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm font-medium">Comparing:</span>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="text-xs">
           {format(currentPeriod.from, 'MMM dd')} - {format(currentPeriod.to, 'MMM dd, yyyy')}
         </Badge>
         <ArrowRight className="h-3 w-3 text-muted-foreground" />
         <Select value={comparisonType} onValueChange={onComparisonTypeChange}>
-          <SelectTrigger className="w-[160px] h-8">
+          <SelectTrigger className="h-8 w-[160px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -160,9 +173,8 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
   const totalCurrentActivity = currentPeriod.income + currentPeriod.expenses
   const totalPreviousActivity = previousPeriod.income + previousPeriod.expenses
   const activityChange = totalCurrentActivity - totalPreviousActivity
-  const activityPercentChange = totalPreviousActivity > 0 
-    ? (activityChange / totalPreviousActivity) * 100 
-    : 0
+  const activityPercentChange =
+    totalPreviousActivity > 0 ? (activityChange / totalPreviousActivity) * 100 : 0
 
   const insights = []
 
@@ -170,21 +182,21 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
   if (Math.abs(changes.incomePercentChange) > 10) {
     insights.push({
       type: changes.incomePercentChange > 0 ? 'positive' : 'negative',
-      message: `Income ${changes.incomePercentChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(changes.incomePercentChange).toFixed(1)}%`
+      message: `Income ${changes.incomePercentChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(changes.incomePercentChange).toFixed(1)}%`,
     })
   }
 
   if (Math.abs(changes.expensePercentChange) > 10) {
     insights.push({
       type: changes.expensePercentChange < 0 ? 'positive' : 'negative',
-      message: `Expenses ${changes.expensePercentChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(changes.expensePercentChange).toFixed(1)}%`
+      message: `Expenses ${changes.expensePercentChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(changes.expensePercentChange).toFixed(1)}%`,
     })
   }
 
   if (Math.abs(activityPercentChange) > 15) {
     insights.push({
       type: 'neutral',
-      message: `Overall financial activity ${activityPercentChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(activityPercentChange).toFixed(1)}%`
+      message: `Overall financial activity ${activityPercentChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(activityPercentChange).toFixed(1)}%`,
     })
   }
 
@@ -192,14 +204,14 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
   if (Math.abs(changes.netChange) > 100) {
     insights.push({
       type: netImprovement ? 'positive' : 'negative',
-      message: `Net position ${netImprovement ? 'improved' : 'declined'} by ${formatCurrency(Math.abs(changes.netChange))}`
+      message: `Net position ${netImprovement ? 'improved' : 'declined'} by ${formatCurrency(Math.abs(changes.netChange))}`,
     })
   }
 
   return (
     <Card className="glass-card border-premium">
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <BarChart3 className="h-5 w-5" />
           Variance Analysis
         </CardTitle>
@@ -221,7 +233,7 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">
                 {comparisonType === 'year-over-year' ? 'Same Period Last Year' : 'Previous Period'}
@@ -248,12 +260,12 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
                   <div
                     key={index}
                     className={cn(
-                      'p-3 rounded-lg border text-sm',
-                      insight.type === 'positive' 
+                      'rounded-lg border p-3 text-sm',
+                      insight.type === 'positive'
                         ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300'
                         : insight.type === 'negative'
-                        ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300'
-                        : 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300'
+                          ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300'
+                          : 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300'
                     )}
                   >
                     {insight.message}
@@ -267,23 +279,25 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-muted-foreground">Detailed Breakdown</h4>
             <div className="space-y-2">
-              <div className="flex items-center justify-between py-2 border-b border-border/50">
+              <div className="flex items-center justify-between border-b border-border/50 py-2">
                 <span className="text-sm">Activity Change:</span>
                 <div className="flex items-center gap-2">
                   <Badge variant={activityPercentChange >= 0 ? 'default' : 'destructive'}>
-                    {activityPercentChange >= 0 ? '+' : ''}{activityPercentChange.toFixed(1)}%
+                    {activityPercentChange >= 0 ? '+' : ''}
+                    {activityPercentChange.toFixed(1)}%
                   </Badge>
                   <span className="text-sm text-muted-foreground">
                     {formatCurrency(activityChange)}
                   </span>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm">Transaction Count Change:</span>
                 <div className="flex items-center gap-2">
                   <Badge variant={changes.transactionCountChange >= 0 ? 'default' : 'destructive'}>
-                    {changes.transactionCountChange >= 0 ? '+' : ''}{changes.transactionCountChange}
+                    {changes.transactionCountChange >= 0 ? '+' : ''}
+                    {changes.transactionCountChange}
                   </Badge>
                 </div>
               </div>
@@ -297,27 +311,33 @@ function VarianceAnalysis({ comparison, comparisonType }: VarianceAnalysisProps)
 
 export function ComparisonTools({ currentPeriod, className }: ComparisonToolsProps) {
   const [comparisonType, setComparisonType] = useState<'previous' | 'year-over-year'>('previous')
-  
-  const { data: comparisonData, isLoading, error } = usePeriodComparison(currentPeriod, comparisonType)
+
+  const {
+    data: comparisonData,
+    isLoading,
+    error,
+  } = usePeriodComparison(currentPeriod, comparisonType)
 
   if (isLoading) {
     return (
       <div className={cn('space-y-6', className)}>
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-foreground">Period Comparison</h2>
-          <p className="text-muted-foreground">Compare financial performance across different time periods</p>
+          <p className="text-muted-foreground">
+            Compare financial performance across different time periods
+          </p>
         </div>
-        
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i} className="glass-card border-premium">
               <CardHeader className="space-y-0 pb-2">
-                <div className="h-4 bg-muted animate-pulse rounded w-3/4"></div>
+                <div className="h-4 w-3/4 animate-pulse rounded bg-muted"></div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="h-8 bg-muted animate-pulse rounded w-full"></div>
-                  <div className="h-4 bg-muted animate-pulse rounded w-1/2"></div>
+                  <div className="h-8 w-full animate-pulse rounded bg-muted"></div>
+                  <div className="h-4 w-1/2 animate-pulse rounded bg-muted"></div>
                 </div>
               </CardContent>
             </Card>
@@ -332,10 +352,12 @@ export function ComparisonTools({ currentPeriod, className }: ComparisonToolsPro
       <div className={cn('space-y-6', className)}>
         <Card className="glass-card border-premium">
           <CardContent className="pt-6">
-            <div className="text-center space-y-2">
+            <div className="space-y-2 text-center">
               <div className="text-muted-foreground">Unable to load comparison data</div>
               <p className="text-sm text-muted-foreground">
-                {error || 'An error occurred while calculating the comparison'}
+                {error instanceof Error
+                  ? error.message
+                  : error || 'An error occurred while calculating the comparison'}
               </p>
             </div>
           </CardContent>
@@ -351,7 +373,9 @@ export function ComparisonTools({ currentPeriod, className }: ComparisonToolsPro
       <div className="space-y-4">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-foreground">Period Comparison</h2>
-          <p className="text-muted-foreground">Compare financial performance across different time periods</p>
+          <p className="text-muted-foreground">
+            Compare financial performance across different time periods
+          </p>
         </div>
 
         <PeriodSelector

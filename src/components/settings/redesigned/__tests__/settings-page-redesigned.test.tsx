@@ -3,6 +3,7 @@
  * Comprehensive test coverage for settings functionality
  */
 
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -11,23 +12,23 @@ import { useSettings, useTimezones } from '@/hooks/use-settings'
 import { useCurrency } from '@/contexts/currency-context'
 
 // Mock dependencies
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
-  useSearchParams: jest.fn(),
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
+  useSearchParams: vi.fn(),
 }))
 
-jest.mock('@/hooks/use-settings', () => ({
-  useSettings: jest.fn(),
-  useTimezones: jest.fn(),
+vi.mock('@/hooks/use-settings', () => ({
+  useSettings: vi.fn(),
+  useTimezones: vi.fn(),
 }))
 
-jest.mock('@/contexts/currency-context', () => ({
-  useCurrency: jest.fn(),
+vi.mock('@/contexts/currency-context', () => ({
+  useCurrency: vi.fn(),
 }))
 
-jest.mock('@/components/ui/toast', () => ({
+vi.mock('@/components/ui/toast', () => ({
   useToast: () => ({
-    toast: jest.fn(),
+    toast: vi.fn(),
   }),
 }))
 
@@ -75,35 +76,29 @@ const createTestQueryClient = () => {
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = createTestQueryClient()
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
-  )
+  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>)
 }
 
 describe('SettingsPageRedesigned', () => {
   const mockRouter = {
-    push: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
-    refresh: jest.fn(),
-    replace: jest.fn(),
+    push: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
   }
 
   const mockSearchParams = new URLSearchParams()
 
-  const mockUpdateSettings = jest.fn()
-  const mockUpdateProfile = jest.fn()
-  const mockSetCurrency = jest.fn()
+  const mockUpdateSettings = vi.fn()
+  const mockUpdateProfile = vi.fn()
+  const mockSetCurrency = vi.fn()
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    
-    ;(useRouter as jest.Mock).mockReturnValue(mockRouter)
-    ;(useSearchParams as jest.Mock).mockReturnValue(mockSearchParams)
-    
-    ;(useSettings as jest.Mock).mockReturnValue({
+    vi.clearAllMocks()
+    ;(useRouter as vi.Mock).mockReturnValue(mockRouter)
+    ;(useSearchParams as vi.Mock).mockReturnValue(mockSearchParams)
+    ;(useSettings as vi.Mock).mockReturnValue({
       profile: mockProfile,
       settings: mockSettings,
       isLoading: false,
@@ -112,10 +107,8 @@ describe('SettingsPageRedesigned', () => {
       isUpdatingSettings: false,
       isUpdatingProfile: false,
     })
-    
-    ;(useTimezones as jest.Mock).mockReturnValue(mockTimezones)
-    
-    ;(useCurrency as jest.Mock).mockReturnValue({
+    ;(useTimezones as vi.Mock).mockReturnValue(mockTimezones)
+    ;(useCurrency as vi.Mock).mockReturnValue({
       currency: { code: 'USD', symbol: '$', name: 'US Dollar', position: 'left', locale: 'en-US' },
       setCurrency: mockSetCurrency,
     })
@@ -124,7 +117,7 @@ describe('SettingsPageRedesigned', () => {
   describe('Rendering', () => {
     it('renders the settings page with all sections', () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       expect(screen.getByText('Settings')).toBeInTheDocument()
       expect(screen.getByText('Account & Profile')).toBeInTheDocument()
       expect(screen.getByText('App Preferences')).toBeInTheDocument()
@@ -133,7 +126,7 @@ describe('SettingsPageRedesigned', () => {
     })
 
     it('shows loading state when data is loading', () => {
-      ;(useSettings as jest.Mock).mockReturnValue({
+      ;(useSettings as vi.Mock).mockReturnValue({
         profile: null,
         settings: null,
         isLoading: true,
@@ -144,20 +137,20 @@ describe('SettingsPageRedesigned', () => {
       })
 
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       expect(screen.getByText('Loading settings...')).toBeInTheDocument()
     })
 
     it('displays user profile information correctly', () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       expect(screen.getByDisplayValue('John Doe')).toBeInTheDocument()
       expect(screen.getByDisplayValue('https://example.com/avatar.jpg')).toBeInTheDocument()
     })
 
     it('displays current settings values correctly', () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       expect(screen.getByDisplayValue('USD - US Dollar')).toBeInTheDocument()
       expect(screen.getByDisplayValue('EST - Eastern Standard Time')).toBeInTheDocument()
     })
@@ -166,10 +159,10 @@ describe('SettingsPageRedesigned', () => {
   describe('Search and Filtering', () => {
     it('filters settings based on search query', async () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const searchInput = screen.getByPlaceholderText('Search settings...')
       fireEvent.change(searchInput, { target: { value: 'notification' } })
-      
+
       await waitFor(() => {
         expect(screen.getByText('Email Notifications')).toBeInTheDocument()
         expect(screen.getByText('Push Notifications')).toBeInTheDocument()
@@ -179,10 +172,10 @@ describe('SettingsPageRedesigned', () => {
 
     it('shows no results message when search yields no matches', async () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const searchInput = screen.getByPlaceholderText('Search settings...')
       fireEvent.change(searchInput, { target: { value: 'nonexistent' } })
-      
+
       await waitFor(() => {
         expect(screen.getByText('No settings found')).toBeInTheDocument()
         expect(screen.getByText('Clear filters')).toBeInTheDocument()
@@ -191,17 +184,17 @@ describe('SettingsPageRedesigned', () => {
 
     it('clears search when clear filters button is clicked', async () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const searchInput = screen.getByPlaceholderText('Search settings...')
       fireEvent.change(searchInput, { target: { value: 'nonexistent' } })
-      
+
       await waitFor(() => {
         expect(screen.getByText('No settings found')).toBeInTheDocument()
       })
-      
+
       const clearButton = screen.getByText('Clear filters')
       fireEvent.click(clearButton)
-      
+
       await waitFor(() => {
         expect(screen.getByText('Account & Profile')).toBeInTheDocument()
         expect(searchInput).toHaveValue('')
@@ -212,11 +205,11 @@ describe('SettingsPageRedesigned', () => {
   describe('Settings Updates', () => {
     it('updates profile settings when form values change', async () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const nameInput = screen.getByDisplayValue('John Doe')
       fireEvent.change(nameInput, { target: { value: 'Jane Smith' } })
       fireEvent.blur(nameInput)
-      
+
       await waitFor(() => {
         expect(mockUpdateProfile).toHaveBeenCalledWith({ fullName: 'Jane Smith' })
       })
@@ -224,10 +217,10 @@ describe('SettingsPageRedesigned', () => {
 
     it('updates app settings when dropdown values change', async () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const currencySelect = screen.getByDisplayValue('USD - US Dollar')
       fireEvent.change(currencySelect, { target: { value: 'EUR' } })
-      
+
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalledWith({ currency: 'EUR' })
         expect(mockSetCurrency).toHaveBeenCalledWith('EUR')
@@ -236,17 +229,17 @@ describe('SettingsPageRedesigned', () => {
 
     it('updates notification settings when toggles are clicked', async () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const emailToggle = screen.getByRole('switch', { name: /email notifications/i })
       fireEvent.click(emailToggle)
-      
+
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalledWith({ email_notifications: false })
       })
     })
 
     it('shows loading state during updates', async () => {
-      ;(useSettings as jest.Mock).mockReturnValue({
+      ;(useSettings as vi.Mock).mockReturnValue({
         profile: mockProfile,
         settings: mockSettings,
         isLoading: false,
@@ -257,7 +250,7 @@ describe('SettingsPageRedesigned', () => {
       })
 
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       expect(screen.getByText('Saving...')).toBeInTheDocument()
     })
   })
@@ -265,24 +258,24 @@ describe('SettingsPageRedesigned', () => {
   describe('Accessibility', () => {
     it('has proper heading structure', () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const mainHeading = screen.getByRole('heading', { level: 1 })
       expect(mainHeading).toHaveTextContent('Settings')
-      
+
       const sectionHeadings = screen.getAllByRole('heading', { level: 2 })
       expect(sectionHeadings).toHaveLength(4) // Account, Preferences, Notifications, Privacy
     })
 
     it('has proper form labels and descriptions', () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       expect(screen.getByLabelText('Full Name')).toBeInTheDocument()
       expect(screen.getByText('Your display name in the application')).toBeInTheDocument()
     })
 
     it('has proper form controls with required attributes', () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const nameInput = screen.getByLabelText('Full Name')
       expect(nameInput).toHaveAttribute('required')
     })
@@ -291,16 +284,16 @@ describe('SettingsPageRedesigned', () => {
   describe('Quick Actions', () => {
     it('renders quick actions panel', () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       expect(screen.getByText('Quick Actions')).toBeInTheDocument()
     })
 
     it('handles quick action clicks', async () => {
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const exportButton = screen.getByText('Export Data')
       fireEvent.click(exportButton)
-      
+
       // Note: This will need to be updated when actual export functionality is implemented
       await waitFor(() => {
         expect(console.log).toHaveBeenCalledWith('Export data clicked')
@@ -312,12 +305,12 @@ describe('SettingsPageRedesigned', () => {
     it('handles settings update errors gracefully', async () => {
       const errorMessage = 'Failed to update settings'
       mockUpdateSettings.mockRejectedValueOnce(new Error(errorMessage))
-      
+
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const toggle = screen.getByRole('switch', { name: /email notifications/i })
       fireEvent.click(toggle)
-      
+
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalled()
         // Error handling would be tested here once implemented
@@ -327,13 +320,13 @@ describe('SettingsPageRedesigned', () => {
     it('handles profile update errors gracefully', async () => {
       const errorMessage = 'Failed to update profile'
       mockUpdateProfile.mockRejectedValueOnce(new Error(errorMessage))
-      
+
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       const nameInput = screen.getByDisplayValue('John Doe')
       fireEvent.change(nameInput, { target: { value: 'Jane Smith' } })
       fireEvent.blur(nameInput)
-      
+
       await waitFor(() => {
         expect(mockUpdateProfile).toHaveBeenCalled()
         // Error handling would be tested here once implemented
@@ -351,7 +344,7 @@ describe('SettingsPageRedesigned', () => {
       })
 
       renderWithProviders(<SettingsPageRedesigned />)
-      
+
       // Check for mobile-specific classes or behavior
       const container = screen.getByRole('main') || document.querySelector('[class*="space-y"]')
       expect(container).toBeInTheDocument()

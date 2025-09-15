@@ -7,12 +7,7 @@ import { useNetworkStatus, useOfflineStorage } from '@/lib/utils/offline-storage
 import { useServiceWorker } from '@/lib/utils/service-worker'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/popover'
+// Tooltip components temporarily disabled for build compatibility
 
 interface OfflineIndicatorProps {
   className?: string
@@ -60,7 +55,7 @@ export function OfflineIndicator({ className, showDetails = false }: OfflineIndi
       // Request background sync
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({
-          type: 'SYNC_OFFLINE_DATA'
+          type: 'SYNC_OFFLINE_DATA',
         })
       }
 
@@ -106,7 +101,7 @@ export function OfflineIndicator({ className, showDetails = false }: OfflineIndi
           variant={isOnline ? 'secondary' : 'destructive'}
           className={cn(
             'flex items-center space-x-1 transition-all duration-200',
-            getStatusColor().replace('bg-', 'bg-opacity-10 border-'),
+            getStatusColor().replace('bg-', 'border- bg-opacity-10')
           )}
         >
           {getStatusIcon()}
@@ -115,22 +110,15 @@ export function OfflineIndicator({ className, showDetails = false }: OfflineIndi
 
         {/* Sync Button */}
         {isOnline && offlineQueueCount > 0 && !syncInProgress && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleSync}
-            className="h-6 px-2 text-xs"
-          >
-            <Upload className="h-3 w-3 mr-1" />
+          <Button size="sm" variant="outline" onClick={handleSync} className="h-6 px-2 text-xs">
+            <Upload className="mr-1 h-3 w-3" />
             Sync Now
           </Button>
         )}
 
         {/* Connection Type */}
         {isOnline && connectionType !== 'unknown' && (
-          <span className="text-xs text-muted-foreground">
-            {connectionType.toUpperCase()}
-          </span>
+          <span className="text-xs text-muted-foreground">{connectionType.toUpperCase()}</span>
         )}
       </div>
     )
@@ -138,56 +126,31 @@ export function OfflineIndicator({ className, showDetails = false }: OfflineIndi
 
   // Compact indicator
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={cn(
-              'flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 cursor-default',
-              getStatusColor(),
-              'hover:scale-105',
-              className
-            )}
-          >
-            <div className="text-white">
-              {getStatusIcon()}
-            </div>
+    <div
+      className={cn(
+        'flex h-8 w-8 cursor-default items-center justify-center rounded-full transition-all duration-200',
+        getStatusColor(),
+        'hover:scale-105',
+        className
+      )}
+      title={getStatusText()} // Simple title tooltip instead of complex Tooltip component
+    >
+      <div className="text-white">{getStatusIcon()}</div>
 
-            {/* Pulse animation for sync */}
-            {syncInProgress && (
-              <div className="absolute w-8 h-8 rounded-full bg-current opacity-20 animate-ping"></div>
-            )}
+      {/* Pulse animation for sync */}
+      {syncInProgress && (
+        <div className="absolute h-8 w-8 animate-ping rounded-full bg-current opacity-20"></div>
+      )}
 
-            {/* Queue count badge */}
-            {offlineQueueCount > 0 && !syncInProgress && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white font-bold">
-                  {offlineQueueCount > 9 ? '9+' : offlineQueueCount}
-                </span>
-              </div>
-            )}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="text-center">
-            <p className="font-medium">{getStatusText()}</p>
-            {isSlowConnection && (
-              <p className="text-xs text-muted-foreground">Limited functionality</p>
-            )}
-            {offlineQueueCount > 0 && isOnline && (
-              <p className="text-xs text-muted-foreground">
-                Click to sync pending changes
-              </p>
-            )}
-            {!isOnline && (
-              <p className="text-xs text-muted-foreground">
-                Some features unavailable
-              </p>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+      {/* Queue count badge */}
+      {offlineQueueCount > 0 && !syncInProgress && (
+        <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500">
+          <span className="text-xs font-bold text-white">
+            {offlineQueueCount > 9 ? '9+' : offlineQueueCount}
+          </span>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -206,8 +169,8 @@ export function MobileOfflineBanner() {
   if (isOnline || isDismissed) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 lg:hidden">
-      <div className="bg-amber-500 text-white p-3 flex items-center justify-between shadow-lg">
+    <div className="fixed left-0 right-0 top-0 z-50 lg:hidden">
+      <div className="flex items-center justify-between bg-amber-500 p-3 text-white shadow-lg">
         <div className="flex items-center space-x-2">
           <WifiOff className="h-4 w-4" />
           <span className="text-sm font-medium">
@@ -217,7 +180,7 @@ export function MobileOfflineBanner() {
         <Button
           size="sm"
           variant="ghost"
-          className="text-white hover:bg-white/20 h-6 w-6 p-0"
+          className="h-6 w-6 p-0 text-white hover:bg-white/20"
           onClick={() => setIsDismissed(true)}
         >
           ×

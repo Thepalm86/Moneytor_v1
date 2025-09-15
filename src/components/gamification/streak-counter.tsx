@@ -35,7 +35,7 @@ export function StreakCounter({
   size = 'md',
   showBest = true,
   animate = true,
-  className
+  className,
 }: StreakCounterProps) {
   const sizeClasses = {
     sm: {
@@ -44,7 +44,7 @@ export function StreakCounter({
       title: 'text-sm',
       description: 'text-xs',
       icon: 'h-5 w-5',
-      flame: 'h-4 w-4'
+      flame: 'h-4 w-4',
     },
     md: {
       container: 'p-4',
@@ -52,7 +52,7 @@ export function StreakCounter({
       title: 'text-base',
       description: 'text-sm',
       icon: 'h-6 w-6',
-      flame: 'h-5 w-5'
+      flame: 'h-5 w-5',
     },
     lg: {
       container: 'p-6',
@@ -60,8 +60,8 @@ export function StreakCounter({
       title: 'text-lg',
       description: 'text-base',
       icon: 'h-8 w-8',
-      flame: 'h-6 w-6'
-    }
+      flame: 'h-6 w-6',
+    },
   }
 
   const sizes = sizeClasses[size]
@@ -73,35 +73,35 @@ export function StreakCounter({
         color: 'text-orange-600',
         bg: 'bg-gradient-to-br from-orange-50 to-red-50',
         border: 'border-orange-200',
-        intensity: 'legendary'
+        intensity: 'legendary',
       }
     } else if (streak >= 14) {
       return {
         color: 'text-red-600',
         bg: 'bg-gradient-to-br from-red-50 to-orange-50',
         border: 'border-red-200',
-        intensity: 'epic'
+        intensity: 'epic',
       }
     } else if (streak >= 7) {
       return {
         color: 'text-yellow-600',
         bg: 'bg-gradient-to-br from-yellow-50 to-orange-50',
         border: 'border-yellow-200',
-        intensity: 'hot'
+        intensity: 'hot',
       }
     } else if (streak >= 3) {
       return {
         color: 'text-amber-600',
         bg: 'bg-gradient-to-br from-amber-50 to-yellow-50',
         border: 'border-amber-200',
-        intensity: 'warm'
+        intensity: 'warm',
       }
     } else {
       return {
         color: 'text-gray-600',
         bg: 'bg-gray-50',
         border: 'border-gray-200',
-        intensity: 'cold'
+        intensity: 'cold',
       }
     }
   }
@@ -113,7 +113,16 @@ export function StreakCounter({
     transaction_streak: <Target className={sizes.icon} />,
     budget_streak: <TrendingUp className={sizes.icon} />,
     goal_streak: <Target className={sizes.icon} />,
-    login_streak: <Calendar className={sizes.icon} />
+    login_streak: <Calendar className={sizes.icon} />,
+    net_positive_months: <TrendingUp className={sizes.icon} />,
+    goals_completed: <Target className={sizes.icon} />,
+    budgets_created: <TrendingUp className={sizes.icon} />,
+    categories_used: <Target className={sizes.icon} />,
+    categories_created: <Target className={sizes.icon} />,
+    categories_customized: <Target className={sizes.icon} />,
+    categories_used_monthly: <Target className={sizes.icon} />,
+    total_transactions: <Target className={sizes.icon} />,
+    savings_contributions: <Target className={sizes.icon} />,
   }
 
   const displayIcon = icon || defaultIcons[streakType] || <Flame className={sizes.icon} />
@@ -121,52 +130,61 @@ export function StreakCounter({
   // Default titles for streak types
   const defaultTitles = {
     transaction_streak: 'Transaction Streak',
-    budget_streak: 'Budget Streak', 
+    budget_streak: 'Budget Streak',
     goal_streak: 'Savings Streak',
-    login_streak: 'Login Streak'
+    login_streak: 'Login Streak',
+    net_positive_months: 'Net Positive Months',
+    goals_completed: 'Goals Completed',
+    budgets_created: 'Budgets Created',
+    categories_used: 'Categories Used',
+    categories_created: 'Categories Created',
+    categories_customized: 'Categories Customized',
+    categories_used_monthly: 'Monthly Categories',
+    total_transactions: 'Total Transactions',
+    savings_contributions: 'Savings Contributions',
   }
 
   const displayTitle = title || defaultTitles[streakType] || 'Streak'
 
   return (
-    <Card className={cn(
-      'relative overflow-hidden transition-all duration-300 hover:shadow-lg',
-      streakStyle.bg,
-      streakStyle.border,
-      className
-    )}>
+    <Card
+      className={cn(
+        'relative overflow-hidden transition-all duration-300 hover:shadow-lg',
+        streakStyle.bg,
+        streakStyle.border,
+        className
+      )}
+    >
       <CardHeader className={cn('pb-2', sizes.container)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className={cn('text-gray-600', streakStyle.color)}>
-              {displayIcon}
-            </div>
-            <h3 className={cn('font-semibold text-gray-900', sizes.title)}>
-              {displayTitle}
-            </h3>
+            <div className={cn('text-gray-600', streakStyle.color)}>{displayIcon}</div>
+            <h3 className={cn('font-semibold text-gray-900', sizes.title)}>{displayTitle}</h3>
           </div>
-          
+
           {/* Fire indicator */}
           <div className="flex items-center space-x-1">
             {Array.from({ length: Math.min(5, Math.floor(currentStreak / 7) + 1) }).map((_, i) => (
               <motion.div
                 key={i}
-                animate={animate ? {
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 5, -5, 0]
-                } : undefined}
+                animate={
+                  animate
+                    ? {
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 5, -5, 0],
+                      }
+                    : undefined
+                }
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  delay: i * 0.2
+                  delay: i * 0.2,
                 }}
               >
-                <Flame 
+                <Flame
                   className={cn(
                     sizes.flame,
-                    currentStreak >= (i + 1) * 7 
-                      ? streakStyle.color 
-                      : 'text-gray-300'
+                    currentStreak >= (i + 1) * 7 ? streakStyle.color : 'text-gray-300'
                   )}
                 />
               </motion.div>
@@ -180,18 +198,18 @@ export function StreakCounter({
           {/* Current streak */}
           <div className="flex items-baseline space-x-2">
             <motion.span
-              className={cn(
-                'font-bold',
-                sizes.counter,
-                streakStyle.color
-              )}
-              animate={animate && currentStreak > 0 ? {
-                scale: [1, 1.05, 1]
-              } : undefined}
+              className={cn('font-bold', sizes.counter, streakStyle.color)}
+              animate={
+                animate && currentStreak > 0
+                  ? {
+                      scale: [1, 1.05, 1],
+                    }
+                  : undefined
+              }
               transition={{
                 duration: 0.5,
                 repeat: Infinity,
-                repeatDelay: 2
+                repeatDelay: 2,
               }}
             >
               {currentStreak}
@@ -216,11 +234,7 @@ export function StreakCounter({
           )}
 
           {/* Description */}
-          {description && (
-            <p className={cn('text-gray-600', sizes.description)}>
-              {description}
-            </p>
-          )}
+          {description && <p className={cn('text-gray-600', sizes.description)}>{description}</p>}
 
           {/* Milestone indicators */}
           <StreakMilestones currentStreak={currentStreak} size={size} />
@@ -229,10 +243,7 @@ export function StreakCounter({
 
       {/* Glow effect for hot streaks */}
       {currentStreak >= 7 && (
-        <div className={cn(
-          'absolute inset-0 opacity-20 blur-xl',
-          streakStyle.bg
-        )} />
+        <div className={cn('absolute inset-0 opacity-20 blur-xl', streakStyle.bg)} />
       )}
     </Card>
   )
@@ -255,28 +266,21 @@ function StreakMilestones({ currentStreak, size }: StreakMilestonesProps) {
     return null
   }
 
-  const progress = nextMilestone 
-    ? (currentStreak / nextMilestone) * 100
-    : 100
+  const progress = nextMilestone ? (currentStreak / nextMilestone) * 100 : 100
 
   const sizeClasses = {
     sm: 'h-1',
-    md: 'h-1.5', 
-    lg: 'h-2'
+    md: 'h-1.5',
+    lg: 'h-2',
   }
 
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs text-gray-500">
         <span>Next milestone</span>
-        {nextMilestone && (
-          <span>{nextMilestone} days</span>
-        )}
+        {nextMilestone && <span>{nextMilestone} days</span>}
       </div>
-      <div className={cn(
-        'w-full rounded-full bg-gray-200',
-        sizeClasses[size]
-      )}>
+      <div className={cn('w-full rounded-full bg-gray-200', sizeClasses[size])}>
         <motion.div
           className={cn(
             'rounded-full bg-gradient-to-r from-orange-400 to-red-500 transition-all duration-300',
@@ -309,25 +313,16 @@ interface StreakGridProps {
   className?: string
 }
 
-export function StreakGrid({ 
-  streaks, 
-  columns = 2, 
-  size = 'md',
-  className 
-}: StreakGridProps) {
+export function StreakGrid({ streaks, columns = 2, size = 'md', className }: StreakGridProps) {
   const gridCols = {
     1: 'grid-cols-1',
     2: 'grid-cols-1 md:grid-cols-2',
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
   }
 
   return (
-    <div className={cn(
-      'grid gap-4',
-      gridCols[columns],
-      className
-    )}>
+    <div className={cn('grid gap-4', gridCols[columns], className)}>
       {streaks.map((streak, index) => (
         <motion.div
           key={streak.type}
@@ -364,27 +359,27 @@ interface StreakSummaryProps {
 
 export function StreakSummary({
   totalStreaks,
-  activeStreaks, 
+  activeStreaks,
   longestStreak,
   size = 'md',
-  className
+  className,
 }: StreakSummaryProps) {
   const sizeClasses = {
     sm: {
       container: 'p-3',
       stat: 'text-lg',
-      label: 'text-xs'
+      label: 'text-xs',
     },
     md: {
       container: 'p-4',
       stat: 'text-xl',
-      label: 'text-sm'
+      label: 'text-sm',
     },
     lg: {
       container: 'p-6',
       stat: 'text-2xl',
-      label: 'text-base'
-    }
+      label: 'text-base',
+    },
   }
 
   const sizes = sizeClasses[size]
@@ -393,18 +388,18 @@ export function StreakSummary({
     {
       label: 'Total Streaks',
       value: totalStreaks,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
     },
     {
       label: 'Active Now',
       value: activeStreaks,
-      color: 'text-green-600'
+      color: 'text-green-600',
     },
     {
       label: 'Longest Ever',
       value: longestStreak,
-      color: 'text-orange-600'
-    }
+      color: 'text-orange-600',
+    },
   ]
 
   return (
@@ -419,12 +414,8 @@ export function StreakSummary({
               animate={{ scale: 1 }}
               transition={{ delay: index * 0.1 }}
             >
-              <div className={cn('font-bold', sizes.stat, stat.color)}>
-                {stat.value}
-              </div>
-              <div className={cn('text-gray-600', sizes.label)}>
-                {stat.label}
-              </div>
+              <div className={cn('font-bold', sizes.stat, stat.color)}>{stat.value}</div>
+              <div className={cn('text-gray-600', sizes.label)}>{stat.label}</div>
             </motion.div>
           ))}
         </div>

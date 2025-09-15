@@ -1,7 +1,9 @@
 import { supabase } from '@/lib/supabase/client'
 import type { Category, CategoryInput, CategoryWithTransactions } from '@/lib/validations/category'
 
-export async function getCategories(userId: string): Promise<{ data: Category[]; error: string | null }> {
+export async function getCategories(
+  userId: string
+): Promise<{ data: Category[]; error: string | null }> {
   try {
     const { data, error } = await supabase
       .from('categories')
@@ -22,7 +24,7 @@ export async function getCategories(userId: string): Promise<{ data: Category[];
 }
 
 export async function getCategoriesByType(
-  userId: string, 
+  userId: string,
   type: 'income' | 'expense'
 ): Promise<{ data: Category[]; error: string | null }> {
   try {
@@ -45,16 +47,20 @@ export async function getCategoriesByType(
   }
 }
 
-export async function getCategoriesWithStats(userId: string): Promise<{ data: CategoryWithTransactions[]; error: string | null }> {
+export async function getCategoriesWithStats(
+  userId: string
+): Promise<{ data: CategoryWithTransactions[]; error: string | null }> {
   try {
     const { data, error } = await supabase
       .from('categories')
-      .select(`
+      .select(
+        `
         *,
         transactions (
           amount
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('name')
 
@@ -64,23 +70,27 @@ export async function getCategoriesWithStats(userId: string): Promise<{ data: Ca
     }
 
     // Calculate stats for each category
-    const categoriesWithStats = data?.map(category => {
-      const transactions = category.transactions || []
-      const transactions_count = transactions.length
-      const total_amount = transactions.reduce((sum: number, t: any) => sum + Number(t.amount), 0)
+    const categoriesWithStats =
+      data?.map(category => {
+        const transactions = category.transactions || []
+        const transactions_count = transactions.length
+        const total_amount = transactions.reduce(
+          (sum: number, t: { amount: number }) => sum + Number(t.amount),
+          0
+        )
 
-      return {
-        id: category.id,
-        user_id: category.user_id,
-        name: category.name,
-        type: category.type,
-        color: category.color,
-        icon: category.icon,
-        created_at: category.created_at,
-        transactions_count,
-        total_amount,
-      }
-    }) || []
+        return {
+          id: category.id,
+          user_id: category.user_id,
+          name: category.name,
+          type: category.type,
+          color: category.color,
+          icon: category.icon,
+          created_at: category.created_at,
+          transactions_count,
+          total_amount,
+        }
+      }) || []
 
     return { data: categoriesWithStats, error: null }
   } catch (err) {
@@ -89,7 +99,10 @@ export async function getCategoriesWithStats(userId: string): Promise<{ data: Ca
   }
 }
 
-export async function getCategory(id: string, userId: string): Promise<{ data: Category | null; error: string | null }> {
+export async function getCategory(
+  id: string,
+  userId: string
+): Promise<{ data: Category | null; error: string | null }> {
   try {
     const { data, error } = await supabase
       .from('categories')
@@ -165,13 +178,16 @@ export async function updateCategory(
   }
 }
 
-export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { from: Date; to: Date }): Promise<{ 
+export async function getCategoryUsageAnalytics(
+  userId: string,
+  _dateRange?: { from: Date; to: Date }
+): Promise<{
   data: {
     totalTransactions: number
     mostUsedCategory: { category: Category; count: number; amount: number } | null
     leastUsedCategory: { category: Category; count: number; amount: number } | null
     unusedCategories: Category[]
-    categoryPerformance: Array<{ 
+    categoryPerformance: Array<{
       category: Category
       transactionCount: number
       totalAmount: number
@@ -183,7 +199,7 @@ export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { f
       categories: Array<{ categoryId: string; categoryName: string; count: number; amount: number }>
     }>
   }
-  error: string | null 
+  error: string | null
 }> {
   try {
     // Note: dateRange parameter reserved for future filtering functionality
@@ -191,7 +207,8 @@ export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { f
     // Get categories with transaction stats
     const { data: categoriesData, error: categoriesError } = await supabase
       .from('categories')
-      .select(`
+      .select(
+        `
         *,
         transactions!inner(
           id,
@@ -199,7 +216,8 @@ export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { f
           date,
           created_at
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('name')
 
@@ -224,56 +242,65 @@ export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { f
     const unusedCategories = allCategories?.filter(c => !usedCategoryIds.has(c.id)) || []
 
     // Process category performance
-    const categoryPerformance = categoriesData?.map(category => {
-      const transactions = category.transactions || []
-      const transactionCount = transactions.length
-      const totalAmount = transactions.reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount)), 0)
-      const averageAmount = transactionCount > 0 ? totalAmount / transactionCount : 0
-      
-      // Find last used date
-      const lastUsed = transactions.length > 0 
-        ? transactions.reduce((latest: any, t: any) => 
-            new Date(t.date) > new Date(latest.date) ? t : latest
-          ).date
-        : null
+    const categoryPerformance =
+      categoriesData
+        ?.map(category => {
+          const transactions = category.transactions || []
+          const transactionCount = transactions.length
+          const totalAmount = transactions.reduce(
+            (sum: number, t: any) => sum + Math.abs(Number(t.amount)),
+            0
+          )
+          const averageAmount = transactionCount > 0 ? totalAmount / transactionCount : 0
 
-      return {
-        category: {
-          id: category.id,
-          user_id: category.user_id,
-          name: category.name,
-          type: category.type,
-          color: category.color,
-          icon: category.icon,
-          created_at: category.created_at,
-        },
-        transactionCount,
-        totalAmount,
-        averageAmount,
-        lastUsed
-      }
-    }).sort((a, b) => b.transactionCount - a.transactionCount) || []
+          // Find last used date
+          const lastUsed =
+            transactions.length > 0
+              ? transactions.reduce((latest: any, t: any) =>
+                  new Date(t.date) > new Date(latest.date) ? t : latest
+                ).date
+              : null
+
+          return {
+            category: {
+              id: category.id,
+              user_id: category.user_id,
+              name: category.name,
+              type: category.type,
+              color: category.color,
+              icon: category.icon,
+              created_at: category.created_at,
+            },
+            transactionCount,
+            totalAmount,
+            averageAmount,
+            lastUsed,
+          }
+        })
+        .sort((a, b) => b.transactionCount - a.transactionCount) || []
 
     const totalTransactions = categoryPerformance.reduce((sum, cp) => sum + cp.transactionCount, 0)
-    const mostUsedCategory = categoryPerformance.length > 0 
-      ? { 
-          category: categoryPerformance[0].category, 
-          count: categoryPerformance[0].transactionCount,
-          amount: categoryPerformance[0].totalAmount
-        }
-      : null
-    const leastUsedCategory = categoryPerformance.length > 0 
-      ? {
-          category: categoryPerformance[categoryPerformance.length - 1].category,
-          count: categoryPerformance[categoryPerformance.length - 1].transactionCount,
-          amount: categoryPerformance[categoryPerformance.length - 1].totalAmount
-        }
-      : null
+    const mostUsedCategory =
+      categoryPerformance.length > 0
+        ? {
+            category: categoryPerformance[0].category,
+            count: categoryPerformance[0].transactionCount,
+            amount: categoryPerformance[0].totalAmount,
+          }
+        : null
+    const leastUsedCategory =
+      categoryPerformance.length > 0
+        ? {
+            category: categoryPerformance[categoryPerformance.length - 1].category,
+            count: categoryPerformance[categoryPerformance.length - 1].transactionCount,
+            amount: categoryPerformance[categoryPerformance.length - 1].totalAmount,
+          }
+        : null
 
     // Generate monthly trends (last 6 months)
     const monthlyTrends = []
     const now = new Date()
-    
+
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const monthStart = new Date(month.getFullYear(), month.getMonth(), 1)
@@ -281,43 +308,45 @@ export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { f
 
       const { data: monthlyTransactions, error: monthlyError } = await supabase
         .from('transactions')
-        .select(`
+        .select(
+          `
           category_id,
           amount,
           categories!inner(name)
-        `)
+        `
+        )
         .eq('user_id', userId)
         .gte('date', monthStart.toISOString().split('T')[0])
         .lte('date', monthEnd.toISOString().split('T')[0])
 
       if (!monthlyError && monthlyTransactions) {
         const categoryStats = new Map()
-        
+
         monthlyTransactions.forEach((transaction: any) => {
           const categoryId = transaction.category_id
           const categoryName = transaction.categories.name
           const amount = Math.abs(Number(transaction.amount))
-          
+
           if (categoryStats.has(categoryId)) {
             const existing = categoryStats.get(categoryId)
             categoryStats.set(categoryId, {
               ...existing,
               count: existing.count + 1,
-              amount: existing.amount + amount
+              amount: existing.amount + amount,
             })
           } else {
             categoryStats.set(categoryId, {
               categoryId,
               categoryName,
               count: 1,
-              amount
+              amount,
             })
           }
         })
 
         monthlyTrends.push({
           month: month.toLocaleDateString('default', { month: 'short', year: 'numeric' }),
-          categories: Array.from(categoryStats.values())
+          categories: Array.from(categoryStats.values()),
         })
       }
     }
@@ -329,9 +358,9 @@ export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { f
         leastUsedCategory,
         unusedCategories,
         categoryPerformance,
-        monthlyTrends
+        monthlyTrends,
       },
-      error: null
+      error: null,
     }
   } catch (err) {
     console.error('Unexpected error fetching category analytics:', err)
@@ -339,7 +368,10 @@ export async function getCategoryUsageAnalytics(userId: string, _dateRange?: { f
   }
 }
 
-export async function deleteCategory(id: string, userId: string): Promise<{ error: string | null }> {
+export async function deleteCategory(
+  id: string,
+  userId: string
+): Promise<{ error: string | null }> {
   try {
     // First check if category has transactions
     const { data: transactions, error: checkError } = await supabase
@@ -355,14 +387,13 @@ export async function deleteCategory(id: string, userId: string): Promise<{ erro
     }
 
     if (transactions && transactions.length > 0) {
-      return { error: 'Cannot delete category with existing transactions. Please reassign or delete transactions first.' }
+      return {
+        error:
+          'Cannot delete category with existing transactions. Please reassign or delete transactions first.',
+      }
     }
 
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
+    const { error } = await supabase.from('categories').delete().eq('id', id).eq('user_id', userId)
 
     if (error) {
       console.error('Error deleting category:', error)

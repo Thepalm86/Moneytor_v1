@@ -31,7 +31,8 @@ const MobileModalOverlay = React.forwardRef<
 MobileModalOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 // Full Screen Mobile Modal - Takes full viewport height with safe area
-interface MobileModalContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+interface MobileModalContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   variant?: 'fullscreen' | 'bottom-sheet' | 'action-sheet'
   showHandle?: boolean
   swipeToClose?: boolean
@@ -40,139 +41,152 @@ interface MobileModalContentProps extends React.ComponentPropsWithoutRef<typeof 
 const MobileModalContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   MobileModalContentProps
->(({ className, children, variant = 'fullscreen', showHandle = false, swipeToClose = true, ...props }, ref) => {
-  const [isPanning, setIsPanning] = React.useState(false)
-  const [translateY, setTranslateY] = React.useState(0)
-  const contentRef = React.useRef<HTMLDivElement>(null)
+>(
+  (
+    {
+      className,
+      children,
+      variant = 'fullscreen',
+      showHandle = false,
+      swipeToClose = true,
+      ...props
+    },
+    ref
+  ) => {
+    const [isPanning, setIsPanning] = React.useState(false)
+    const [translateY, setTranslateY] = React.useState(0)
+    const contentRef = React.useRef<HTMLDivElement>(null)
 
-  // Gesture handlers for swipe-to-dismiss
-  const swipeHandlers = useSwipeGesture({
-    onSwipeStart: () => {
-      if (swipeToClose && variant !== 'fullscreen') {
-        setIsPanning(true)
-      }
-    },
-    onSwipeMove: (deltaY) => {
-      if (swipeToClose && variant !== 'fullscreen' && isPanning && deltaY > 0) {
-        // Only allow downward swipes
-        setTranslateY(Math.min(deltaY * 0.7, 200)) // Add resistance
-      }
-    },
-    onSwipeEnd: (deltaY, velocity) => {
-      if (swipeToClose && variant !== 'fullscreen' && isPanning) {
-        setIsPanning(false)
-        
-        // Dismiss if swiped down far enough or with sufficient velocity
-        if (deltaY > 120 || velocity > 0.5) {
-          // Trigger close via the DialogPrimitive
-          const closeButton = contentRef.current?.querySelector('[data-dismiss-trigger]') as HTMLElement
-          closeButton?.click()
-        } else {
-          // Snap back to original position
-          setTranslateY(0)
+    // Gesture handlers for swipe-to-dismiss
+    const swipeHandlers = useSwipeGesture({
+      onSwipeStart: () => {
+        if (swipeToClose && variant !== 'fullscreen') {
+          setIsPanning(true)
         }
+      },
+      onSwipeMove: delta => {
+        const deltaY = typeof delta === 'number' ? delta : delta.y
+        if (swipeToClose && variant !== 'fullscreen' && isPanning && deltaY > 0) {
+          // Only allow downward swipes
+          setTranslateY(Math.min(deltaY * 0.7, 200)) // Add resistance
+        }
+      },
+      onSwipeEnd: (deltaY, velocity) => {
+        if (swipeToClose && variant !== 'fullscreen' && isPanning) {
+          setIsPanning(false)
+
+          // Dismiss if swiped down far enough or with sufficient velocity
+          if (deltaY > 120 || velocity > 0.5) {
+            // Trigger close via the DialogPrimitive
+            const closeButton = contentRef.current?.querySelector(
+              '[data-dismiss-trigger]'
+            ) as HTMLElement
+            closeButton?.click()
+          } else {
+            // Snap back to original position
+            setTranslateY(0)
+          }
+        }
+      },
+      threshold: 10,
+    })
+
+    // Variant-specific styling
+    const getVariantClasses = () => {
+      switch (variant) {
+        case 'fullscreen':
+          return 'fixed inset-0 z-50 bg-white'
+        case 'bottom-sheet':
+          return 'fixed inset-x-0 bottom-0 z-50 max-h-[90vh] rounded-t-3xl bg-white'
+        case 'action-sheet':
+          return 'fixed inset-x-4 bottom-4 z-50 max-h-[80vh] rounded-2xl bg-white'
+        default:
+          return 'fixed inset-0 z-50 bg-white'
       }
-    },
-    direction: 'vertical',
-    threshold: 10,
-  })
-
-  // Variant-specific styling
-  const getVariantClasses = () => {
-    switch (variant) {
-      case 'fullscreen':
-        return 'fixed inset-0 z-50 bg-white'
-      case 'bottom-sheet':
-        return 'fixed inset-x-0 bottom-0 z-50 max-h-[90vh] rounded-t-3xl bg-white'
-      case 'action-sheet':
-        return 'fixed inset-x-4 bottom-4 z-50 max-h-[80vh] rounded-2xl bg-white'
-      default:
-        return 'fixed inset-0 z-50 bg-white'
     }
-  }
 
-  // Animation classes based on variant
-  const getAnimationClasses = () => {
-    switch (variant) {
-      case 'fullscreen':
-        return cn(
-          'duration-300 ease-out',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom'
-        )
-      case 'bottom-sheet':
-        return cn(
-          'duration-300 ease-out',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom'
-        )
-      case 'action-sheet':
-        return cn(
-          'duration-200 ease-out',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-100'
-        )
-      default:
-        return ''
+    // Animation classes based on variant
+    const getAnimationClasses = () => {
+      switch (variant) {
+        case 'fullscreen':
+          return cn(
+            'duration-300 ease-out',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out',
+            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom'
+          )
+        case 'bottom-sheet':
+          return cn(
+            'duration-300 ease-out',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out',
+            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom'
+          )
+        case 'action-sheet':
+          return cn(
+            'duration-200 ease-out',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out',
+            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-100'
+          )
+        default:
+          return ''
+      }
     }
-  }
 
-  return (
-    <MobileModalPortal>
-      <MobileModalOverlay />
-      <DialogPrimitive.Content
-        ref={ref}
-        {...(swipeToClose && variant !== 'fullscreen' ? swipeHandlers : {})}
-        className={cn(
-          getVariantClasses(),
-          getAnimationClasses(),
-          // Transform for gesture handling
-          isPanning && 'transition-none',
-          className
-        )}
-        style={{
-          transform: swipeToClose && variant !== 'fullscreen' && translateY > 0 
-            ? `translateY(${translateY}px)` 
-            : undefined
-        }}
-        {...props}
-      >
-        <div ref={contentRef} className="flex h-full flex-col">
-          {/* Handle bar for bottom sheet and action sheet */}
-          {showHandle && variant !== 'fullscreen' && (
-            <div className="flex justify-center py-3">
-              <div className="h-1 w-12 rounded-full bg-gray-300" />
-            </div>
+    return (
+      <MobileModalPortal>
+        <MobileModalOverlay />
+        <DialogPrimitive.Content
+          ref={ref}
+          {...(swipeToClose && variant !== 'fullscreen' ? swipeHandlers : {})}
+          className={cn(
+            getVariantClasses(),
+            getAnimationClasses(),
+            // Transform for gesture handling
+            isPanning && 'transition-none',
+            className
           )}
+          style={{
+            transform:
+              swipeToClose && variant !== 'fullscreen' && translateY > 0
+                ? `translateY(${translateY}px)`
+                : undefined,
+          }}
+          {...props}
+        >
+          <div ref={contentRef} className="flex h-full flex-col">
+            {/* Handle bar for bottom sheet and action sheet */}
+            {showHandle && variant !== 'fullscreen' && (
+              <div className="flex justify-center py-3">
+                <div className="h-1 w-12 rounded-full bg-gray-300" />
+              </div>
+            )}
 
-          {/* Content wrapper with proper scrolling */}
-          <div className={cn(
-            'flex-1 overflow-y-auto',
-            variant === 'fullscreen' && 'safe-area-padding',
-            variant !== 'fullscreen' && 'px-4 pb-4'
-          )}>
-            {children}
+            {/* Content wrapper with proper scrolling */}
+            <div
+              className={cn(
+                'flex-1 overflow-y-auto',
+                variant === 'fullscreen' && 'safe-area-padding',
+                variant !== 'fullscreen' && 'px-4 pb-4'
+              )}
+            >
+              {children}
+            </div>
+
+            {/* Hidden close trigger for gesture dismissal */}
+            <DialogPrimitive.Close data-dismiss-trigger className="sr-only" aria-hidden="true" />
           </div>
-
-          {/* Hidden close trigger for gesture dismissal */}
-          <DialogPrimitive.Close 
-            data-dismiss-trigger
-            className="sr-only"
-            aria-hidden="true"
-          />
-        </div>
-      </DialogPrimitive.Content>
-    </MobileModalPortal>
-  )
-})
+        </DialogPrimitive.Content>
+      </MobileModalPortal>
+    )
+  }
+)
 MobileModalContent.displayName = 'MobileModalContent'
 
 // Mobile Modal Header with improved spacing and accessibility
 const MobileModalHeader = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { 
+  React.HTMLAttributes<HTMLDivElement> & {
     showClose?: boolean
     variant?: 'fullscreen' | 'bottom-sheet' | 'action-sheet'
   }
@@ -181,18 +195,16 @@ const MobileModalHeader = React.forwardRef<
     ref={ref}
     className={cn(
       'flex items-center justify-between border-b border-gray-200/50 pb-4',
-      variant === 'fullscreen' && 'px-4 pt-4 safe-area-padding-top',
+      variant === 'fullscreen' && 'safe-area-padding-top px-4 pt-4',
       variant !== 'fullscreen' && 'pt-2',
       className
     )}
     {...props}
   >
-    <div className="flex-1 pr-4">
-      {children}
-    </div>
-    
+    <div className="flex-1 pr-4">{children}</div>
+
     {showClose && (
-      <DialogPrimitive.Close className="flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200/50 bg-gray-50/50 backdrop-blur-sm transition-all duration-200 hover:bg-gray-100/50 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400/30 focus:ring-offset-2">
+      <DialogPrimitive.Close className="flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200/50 bg-gray-50/50 backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-gray-100/50 focus:outline-none focus:ring-2 focus:ring-gray-400/30 focus:ring-offset-2">
         <X className="h-5 w-5 text-gray-600" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -212,7 +224,7 @@ const MobileModalFooter = React.forwardRef<
     ref={ref}
     className={cn(
       'flex flex-col gap-3 border-t border-gray-200/50 pt-4',
-      variant === 'fullscreen' && 'px-4 pb-4 safe-area-padding-bottom',
+      variant === 'fullscreen' && 'safe-area-padding-bottom px-4 pb-4',
       variant !== 'fullscreen' && 'pb-2',
       className
     )}
@@ -306,10 +318,10 @@ const MobileFormModal = React.forwardRef<
       // Prevent viewport zoom on input focus
       const viewport = document.querySelector('meta[name=viewport]')
       const originalContent = viewport?.getAttribute('content')
-      
+
       if (viewport) {
         viewport.setAttribute('content', originalContent + ', user-scalable=no')
-        
+
         return () => {
           if (originalContent) {
             viewport.setAttribute('content', originalContent)
@@ -324,11 +336,7 @@ const MobileFormModal = React.forwardRef<
       ref={ref}
       variant="fullscreen"
       swipeToClose={false}
-      className={cn(
-        'bg-gray-50',
-        keyboardOptimized && 'keyboard-optimized',
-        className
-      )}
+      className={cn('bg-gray-50', keyboardOptimized && 'keyboard-optimized', className)}
       {...props}
     />
   )

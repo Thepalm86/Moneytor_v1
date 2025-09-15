@@ -7,15 +7,7 @@
  */
 
 import { ReactNode, useState } from 'react'
-import { 
-  Download, 
-  Upload, 
-  RefreshCw, 
-  Shield, 
-  Bell, 
-  Globe,
-  ArrowRight
-} from 'lucide-react'
+import { Download, Upload, RefreshCw, Shield, Bell, Globe, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -66,38 +58,40 @@ function QuickAction({
       onClick={onClick}
       disabled={disabled || loading}
       className={cn(
-        'w-full p-4 rounded-xl border-2 transition-all duration-200 text-left',
-        'focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+        'w-full rounded-xl border-2 p-4 text-left transition-all duration-200',
+        'focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20',
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
         variantStyles[variant],
         className
       )}
     >
       <div className="flex items-start space-x-3">
-        <div className={cn(
-          'flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm flex-shrink-0',
-          iconStyles[variant]
-        )}>
+        <div
+          className={cn(
+            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white shadow-sm',
+            iconStyles[variant]
+          )}
+        >
           {loading ? (
-            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
           ) : (
             icon
           )}
         </div>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-1">
-            <h3 className="font-medium text-gray-900 truncate">{title}</h3>
+
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center space-x-2">
+            <h3 className="truncate font-medium text-gray-900">{title}</h3>
             {badge && (
               <Badge variant="secondary" className="text-xs">
                 {badge}
               </Badge>
             )}
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
+          <p className="line-clamp-2 text-sm text-gray-600">{description}</p>
         </div>
-        
-        <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0 mt-3" />
+
+        <ArrowRight className="mt-3 h-4 w-4 flex-shrink-0 text-gray-400" />
       </div>
     </button>
   )
@@ -112,13 +106,13 @@ interface QuickActionsProps {
   compact?: boolean
 }
 
-export function QuickActions({ 
-  className, 
+export function QuickActions({
+  className,
   onActionClick,
   onResetSettings,
   onExportData,
   onImportSettings,
-  compact = false 
+  compact = false,
 }: QuickActionsProps) {
   const { toast } = useToast()
   const { settings, updateSettings, isUpdatingSettings } = useSettings()
@@ -157,21 +151,23 @@ export function QuickActions({
       title: 'Export Your Data',
       description: 'Download all your financial data as CSV or JSON files',
       variant: 'default' as const,
-      action: onExportData || (async () => {
-        toast({
-          title: 'Export Started',
-          description: 'Your data export will be ready for download shortly.',
-        })
-      }),
+      action:
+        onExportData ||
+        (async () => {
+          toast({
+            title: 'Export Started',
+            description: 'Your data export will be ready for download shortly.',
+          })
+        }),
     },
     {
       id: 'toggle-notifications',
       icon: <Bell className="h-5 w-5" />,
       title: settings?.emailNotifications ? 'Disable Notifications' : 'Enable Notifications',
-      description: settings?.emailNotifications 
-        ? 'Turn off email notifications for budget alerts' 
+      description: settings?.emailNotifications
+        ? 'Turn off email notifications for budget alerts'
         : 'Get notified about budget limits and milestones',
-      variant: settings?.emailNotifications ? 'warning' : 'success' as const,
+      variant: settings?.emailNotifications ? 'warning' : ('success' as const),
       action: async () => {
         await updateSettings({
           emailNotifications: !settings?.emailNotifications,
@@ -183,7 +179,7 @@ export function QuickActions({
       icon: <Shield className="h-5 w-5" />,
       title: 'Security Checkup',
       description: 'Review your security settings and enable 2FA protection',
-      variant: settings?.twoFactorEnabled ? 'success' : 'warning' as const,
+      variant: settings?.twoFactorEnabled ? 'success' : ('warning' as const),
       badge: settings?.twoFactorEnabled ? 'Secure' : 'Action Needed',
       action: async () => {
         toast({
@@ -205,7 +201,7 @@ export function QuickActions({
         const commonCurrencies = ['USD', 'EUR', 'ILS', 'GBP']
         const currentIndex = commonCurrencies.indexOf(currency.code)
         const nextIndex = (currentIndex + 1) % commonCurrencies.length
-        
+
         toast({
           title: 'Currency Changed',
           description: `Switched to ${commonCurrencies[nextIndex]}`,
@@ -218,12 +214,14 @@ export function QuickActions({
       title: 'Reset Preferences',
       description: 'Restore all settings to their default values',
       variant: 'warning' as const,
-      action: onResetSettings || (async () => {
-        toast({
-          title: 'Preferences Reset',
-          description: 'All settings have been restored to defaults.',
-        })
-      }),
+      action:
+        onResetSettings ||
+        (async () => {
+          toast({
+            title: 'Preferences Reset',
+            description: 'All settings have been restored to defaults.',
+          })
+        }),
     },
     {
       id: 'import-settings',
@@ -232,19 +230,21 @@ export function QuickActions({
       description: 'Upload a previously exported settings configuration file',
       variant: 'default' as const,
       badge: 'Coming Soon',
-      action: onImportSettings || (async () => {
-        toast({
-          title: 'Feature Coming Soon',
-          description: 'Settings import will be available in a future update.',
-        })
-      }),
+      action:
+        onImportSettings ||
+        (async () => {
+          toast({
+            title: 'Feature Coming Soon',
+            description: 'Settings import will be available in a future update.',
+          })
+        }),
     },
   ]
 
   if (compact) {
     return (
       <div className={cn('flex flex-wrap gap-2', className)}>
-        {quickActions.slice(0, 3).map((action) => (
+        {quickActions.slice(0, 3).map(action => (
           <Button
             key={action.id}
             variant="outline"
@@ -254,7 +254,7 @@ export function QuickActions({
             className="flex items-center space-x-1"
           >
             {loadingActions.has(action.id) ? (
-              <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+              <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
             ) : (
               action.icon
             )}
@@ -266,69 +266,73 @@ export function QuickActions({
   }
 
   return (
-    <Card className={cn('shadow-sm border-gray-200', className)}>
-      <CardHeader className="pb-4 p-4 sm:p-6">
-        <CardTitle className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+    <Card className={cn('border-gray-200 shadow-sm', className)}>
+      <CardHeader className="p-4 pb-4 sm:p-6">
+        <CardTitle className="flex items-center space-x-2 text-lg font-semibold text-gray-900">
           <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-100 text-blue-600">
             <ArrowRight className="h-3 w-3" />
           </div>
           <span>Quick Actions</span>
         </CardTitle>
-        <p className="text-sm text-gray-600 leading-relaxed">
+        <p className="text-sm leading-relaxed text-gray-600">
           Common settings tasks you can complete with one click
         </p>
       </CardHeader>
-      
-      <CardContent className="space-y-3 p-4 sm:p-6 pt-0">
+
+      <CardContent className="space-y-3 p-4 pt-0 sm:p-6">
         <div className="grid gap-3 sm:gap-4">
-          {quickActions.map((action) => (
+          {quickActions.map(action => (
             <QuickAction
               key={action.id}
               icon={action.icon}
               title={action.title}
               description={action.description}
-              variant={action.variant}
+              variant={
+                action.variant as 'default' | 'destructive' | 'success' | 'warning' | undefined
+              }
               badge={action.badge}
               loading={loadingActions.has(action.id) || isUpdatingSettings}
               onClick={() => handleQuickAction(action.id, action.action)}
             />
           ))}
         </div>
-        
+
         {/* Quick Settings Summary */}
-        <div className="pt-4 mt-6 border-t border-gray-100">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">Current Settings</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div className="mt-6 border-t border-gray-100 pt-4">
+          <h4 className="mb-3 text-sm font-medium text-gray-900">Current Settings</h4>
+          <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
             <div className="flex items-center space-x-2">
-              <div className={cn(
-                'w-2 h-2 rounded-full',
-                settings?.email_notifications ? 'bg-green-500' : 'bg-gray-300'
-              )} />
+              <div
+                className={cn(
+                  'h-2 w-2 rounded-full',
+                  settings?.emailNotifications ? 'bg-green-500' : 'bg-gray-300'
+                )}
+              />
               <span className="text-gray-600">
-                Notifications {settings?.email_notifications ? 'On' : 'Off'}
+                Notifications {settings?.emailNotifications ? 'On' : 'Off'}
               </span>
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <div className={cn(
-                'w-2 h-2 rounded-full',
-                settings?.two_factor_enabled ? 'bg-green-500' : 'bg-amber-500'
-              )} />
+              <div
+                className={cn(
+                  'h-2 w-2 rounded-full',
+                  settings?.twoFactorEnabled ? 'bg-green-500' : 'bg-amber-500'
+                )}
+              />
               <span className="text-gray-600">
-                2FA {settings?.two_factor_enabled ? 'Enabled' : 'Disabled'}
+                2FA {settings?.twoFactorEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <div className="h-2 w-2 rounded-full bg-blue-500" />
               <span className="text-gray-600">Currency {currency.code}</span>
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-purple-500" />
-              <span className="text-gray-600">
-                Theme {settings?.theme || 'System'}
-              </span>
+              <div className="h-2 w-2 rounded-full bg-purple-500" />
+              <span className="text-gray-600">Theme {settings?.theme || 'System'}</span>
             </div>
           </div>
         </div>
@@ -353,11 +357,7 @@ interface QuickActionsGridProps {
   className?: string
 }
 
-export function QuickActionsGrid({
-  actions,
-  columns = 2,
-  className,
-}: QuickActionsGridProps) {
+export function QuickActionsGrid({ actions, columns = 2, className }: QuickActionsGridProps) {
   const gridStyles = {
     1: 'grid-cols-1',
     2: 'grid-cols-1 sm:grid-cols-2',
@@ -366,7 +366,7 @@ export function QuickActionsGrid({
 
   return (
     <div className={cn('grid gap-4', gridStyles[columns], className)}>
-      {actions.map((action) => (
+      {actions.map(action => (
         <QuickAction
           key={action.id}
           icon={action.icon}

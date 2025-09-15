@@ -172,7 +172,7 @@ export function SettingsPage({ initialSection = 'currency' }: SettingsPageProps)
         sidebar={
           <SettingsSidebar
             activeSection={activeSection}
-            onSectionChange={setActiveSection}
+            onSectionChange={section => setActiveSection(section as SettingsCategory)}
             sections={sections}
           />
         }

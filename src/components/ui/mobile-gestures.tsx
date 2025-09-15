@@ -8,6 +8,9 @@ interface SwipeGestureOptions {
   onSwipeRight?: () => void
   onSwipeUp?: () => void
   onSwipeDown?: () => void
+  onSwipeStart?: () => void
+  onSwipeMove?: (delta: { x: number; y: number }) => void
+  onSwipeEnd?: (deltaY: number, velocity: number) => void
   threshold?: number
   touchStartThreshold?: number
 }
@@ -25,6 +28,9 @@ export function useSwipeGesture(options: SwipeGestureOptions) {
     onSwipeRight,
     onSwipeUp,
     onSwipeDown,
+    onSwipeStart,
+    onSwipeMove,
+    onSwipeEnd,
     threshold = 50,
     touchStartThreshold = 10,
   } = options
@@ -32,29 +38,53 @@ export function useSwipeGesture(options: SwipeGestureOptions) {
   const touchStart = React.useRef<{ x: number; y: number } | null>(null)
   const touchEnd = React.useRef<{ x: number; y: number } | null>(null)
 
-  const handleTouchStart = React.useCallback((e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return
-    
-    const touch = e.touches[0]
-    touchStart.current = { x: touch.clientX, y: touch.clientY }
-    touchEnd.current = null
-  }, [])
+  const handleTouchStart = React.useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length !== 1) return
 
-  const handleTouchMove = React.useCallback((e: React.TouchEvent) => {
-    if (!touchStart.current || e.touches.length !== 1) return
-    
-    const touch = e.touches[0]
-    touchEnd.current = { x: touch.clientX, y: touch.clientY }
-  }, [])
+      const touch = e.touches[0]
+      touchStart.current = { x: touch.clientX, y: touch.clientY }
+      touchEnd.current = null
+
+      if (onSwipeStart) {
+        onSwipeStart()
+      }
+    },
+    [onSwipeStart]
+  )
+
+  const handleTouchMove = React.useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchStart.current || e.touches.length !== 1) return
+
+      const touch = e.touches[0]
+      touchEnd.current = { x: touch.clientX, y: touch.clientY }
+
+      if (onSwipeMove) {
+        const deltaX = touch.clientX - touchStart.current.x
+        const deltaY = touch.clientY - touchStart.current.y
+        onSwipeMove({ x: deltaX, y: deltaY })
+      }
+    },
+    [onSwipeMove]
+  )
 
   const handleTouchEnd = React.useCallback(() => {
     if (!touchStart.current || !touchEnd.current) return
 
     const deltaX = touchEnd.current.x - touchStart.current.x
     const deltaY = touchEnd.current.y - touchStart.current.y
-    
+
     const absDeltaX = Math.abs(deltaX)
     const absDeltaY = Math.abs(deltaY)
+
+    // Calculate velocity (simplified)
+    const velocity = Math.abs(deltaY) / 100 // Basic velocity calculation
+
+    // Call onSwipeEnd if provided
+    if (onSwipeEnd) {
+      onSwipeEnd(deltaY, velocity)
+    }
 
     // Ignore small movements
     if (absDeltaX < touchStartThreshold && absDeltaY < touchStartThreshold) return
@@ -83,7 +113,15 @@ export function useSwipeGesture(options: SwipeGestureOptions) {
     // Reset
     touchStart.current = null
     touchEnd.current = null
-  }, [onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, threshold, touchStartThreshold])
+  }, [
+    onSwipeLeft,
+    onSwipeRight,
+    onSwipeUp,
+    onSwipeDown,
+    onSwipeEnd,
+    threshold,
+    touchStartThreshold,
+  ])
 
   return {
     onTouchStart: handleTouchStart,
@@ -97,35 +135,41 @@ export function usePullToRefresh(options: PullToRefreshOptions) {
   const { onRefresh, refreshThreshold = 80, enabled = true } = options
   const [isRefreshing, setIsRefreshing] = React.useState(false)
   const [pullDistance, setPullDistance] = React.useState(0)
-  
+
   const touchStart = React.useRef<{ y: number } | null>(null)
   const scrollElement = React.useRef<HTMLElement | null>(null)
 
-  const handleTouchStart = React.useCallback((e: React.TouchEvent) => {
-    if (!enabled || isRefreshing) return
-    
-    const element = e.currentTarget as HTMLElement
-    scrollElement.current = element
-    
-    // Only trigger pull-to-refresh when at the top of the container
-    if (element.scrollTop <= 0) {
-      touchStart.current = { y: e.touches[0].clientY }
-    }
-  }, [enabled, isRefreshing])
+  const handleTouchStart = React.useCallback(
+    (e: React.TouchEvent) => {
+      if (!enabled || isRefreshing) return
 
-  const handleTouchMove = React.useCallback((e: React.TouchEvent) => {
-    if (!enabled || isRefreshing || !touchStart.current || !scrollElement.current) return
+      const element = e.currentTarget as HTMLElement
+      scrollElement.current = element
 
-    const currentY = e.touches[0].clientY
-    const deltaY = currentY - touchStart.current.y
+      // Only trigger pull-to-refresh when at the top of the container
+      if (element.scrollTop <= 0) {
+        touchStart.current = { y: e.touches[0].clientY }
+      }
+    },
+    [enabled, isRefreshing]
+  )
 
-    // Only allow pulling down when at top
-    if (scrollElement.current.scrollTop <= 0 && deltaY > 0) {
-      e.preventDefault() // Prevent default scroll behavior
-      const distance = Math.min(deltaY * 0.5, refreshThreshold * 1.5) // Add resistance
-      setPullDistance(distance)
-    }
-  }, [enabled, isRefreshing, refreshThreshold])
+  const handleTouchMove = React.useCallback(
+    (e: React.TouchEvent) => {
+      if (!enabled || isRefreshing || !touchStart.current || !scrollElement.current) return
+
+      const currentY = e.touches[0].clientY
+      const deltaY = currentY - touchStart.current.y
+
+      // Only allow pulling down when at top
+      if (scrollElement.current.scrollTop <= 0 && deltaY > 0) {
+        e.preventDefault() // Prevent default scroll behavior
+        const distance = Math.min(deltaY * 0.5, refreshThreshold * 1.5) // Add resistance
+        setPullDistance(distance)
+      }
+    },
+    [enabled, isRefreshing, refreshThreshold]
+  )
 
   const handleTouchEnd = React.useCallback(async () => {
     if (!enabled || isRefreshing || !touchStart.current) return
@@ -205,12 +249,12 @@ export function SwipeAction({
 
     const deltaX = e.touches[0].clientX - touchStart.current.x
     const maxSwipe = 120 // Maximum swipe distance
-    
+
     // Constrain swipe based on available actions
     let constrainedDelta = deltaX
     if (deltaX > 0 && leftActions.length === 0) constrainedDelta = 0
     if (deltaX < 0 && rightActions.length === 0) constrainedDelta = 0
-    
+
     constrainedDelta = Math.max(-maxSwipe, Math.min(maxSwipe, constrainedDelta))
     setSwipeOffset(constrainedDelta)
   }
@@ -219,7 +263,7 @@ export function SwipeAction({
     if (!touchStart.current) return
 
     setIsAnimating(true)
-    
+
     // Snap to action threshold or return to center
     if (Math.abs(swipeOffset) >= threshold) {
       // Keep at action position
@@ -233,21 +277,38 @@ export function SwipeAction({
     touchStart.current = null
   }
 
-  const executeAction = (action: SwipeActionProps['leftActions'][0]) => {
+  const executeAction = (action: {
+    icon: React.ComponentType<{ className?: string }>
+    label: string
+    onClick: () => void
+    className?: string
+    color?: 'primary' | 'destructive' | 'success' | 'warning'
+  }) => {
     action.onClick()
     setSwipeOffset(0)
     setIsAnimating(true)
   }
 
-  const renderActions = (actions: SwipeActionProps['leftActions'], side: 'left' | 'right') => {
-    if (actions.length === 0) return null
+  const renderActions = (
+    actions:
+      | Array<{
+          icon: React.ComponentType<{ className?: string }>
+          label: string
+          onClick: () => void
+          className?: string
+          color?: 'primary' | 'destructive' | 'success' | 'warning'
+        }>
+      | undefined,
+    side: 'left' | 'right'
+  ) => {
+    if (!actions || actions.length === 0) return null
 
     const isVisible = side === 'left' ? swipeOffset > 0 : swipeOffset < 0
     if (!isVisible) return null
 
     return (
       <div
-        className={`absolute top-0 h-full flex items-center ${
+        className={`absolute top-0 flex h-full items-center ${
           side === 'left' ? 'left-0' : 'right-0'
         }`}
         style={{
@@ -260,13 +321,13 @@ export function SwipeAction({
             <button
               key={index}
               onClick={() => executeAction(action)}
-              className={`h-full px-4 flex items-center justify-center transition-colors ${
+              className={`flex h-full items-center justify-center px-4 transition-colors ${
                 colorClasses[action.color || 'primary']
               } ${action.className || ''}`}
               style={{ width: Math.abs(swipeOffset) / actions.length }}
             >
               <div className="text-center">
-                <ActionIcon className="h-5 w-5 mx-auto mb-1" />
+                <ActionIcon className="mx-auto mb-1 h-5 w-5" />
                 <span className="text-xs font-medium">{action.label}</span>
               </div>
             </button>
@@ -280,7 +341,7 @@ export function SwipeAction({
     <div className={`relative overflow-hidden ${className || ''}`}>
       {renderActions(leftActions, 'left')}
       {renderActions(rightActions, 'right')}
-      
+
       <div
         className={`relative z-10 ${isAnimating ? 'transition-transform duration-300 ease-out' : ''}`}
         style={{
@@ -311,22 +372,22 @@ export function PullToRefreshIndicator({
   className,
 }: PullToRefreshIndicatorProps) {
   const progress = Math.min(distance / threshold, 1)
-  const scale = Math.min(0.6 + (progress * 0.4), 1)
+  const scale = Math.min(0.6 + progress * 0.4, 1)
 
   return (
     <div
-      className={`absolute top-0 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-200 ${className || ''}`}
+      className={`absolute left-1/2 top-0 z-50 -translate-x-1/2 transform transition-all duration-200 ${className || ''}`}
       style={{
         transform: `translateX(-50%) translateY(${Math.max(0, distance - 40)}px) scale(${scale})`,
         opacity: distance > 20 ? 1 : 0,
       }}
     >
-      <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg border border-gray-200/50">
+      <div className="rounded-full border border-gray-200/50 bg-white/90 p-3 shadow-lg backdrop-blur-sm">
         {isRefreshing ? (
-          <div className="animate-spin h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
         ) : (
           <div
-            className="h-6 w-6 border-2 border-gray-300 border-t-blue-600 rounded-full transition-transform duration-200"
+            className="h-6 w-6 rounded-full border-2 border-gray-300 border-t-blue-600 transition-transform duration-200"
             style={{
               transform: `rotate(${progress * 180}deg)`,
             }}
